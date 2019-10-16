@@ -7,7 +7,7 @@ namespace dicr\oclib;
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2019
  */
-class DB extends \mysqli
+class DB extends ArrayObject
 {
     /** @var \mysqli */
     private $link = null;
@@ -22,7 +22,7 @@ class DB extends \mysqli
      * @param int $port
      * @throws DbException
      */
-	public function __construct($hostname, $username, $password, $database, $port = '3306')
+	public function __construct($driver = null, $hostname, $username, $password, $database, $port = '3306')
 	{
 	    $this->link = new \mysqli($hostname, $username, $password, $database);
 
