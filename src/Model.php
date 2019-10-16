@@ -27,7 +27,7 @@ class Model extends ArrayObject
      */
     public static function attributes()
     {
-        $ref = new \ReflectionObject(static::class);
+        $ref = new \ReflectionClass(static::class);
         $attrs = $ref->getProperties(\ReflectionProperty::IS_PUBLIC);
         return array_combine($attrs, $attrs);
     }
