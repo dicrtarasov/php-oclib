@@ -48,7 +48,7 @@ class Template extends ArrayObject
 	    }
 
 	    // полный путь
-	    $path = rtrim(DIR_TEMPLATE, '/') . '/' . latrim($path, '/');
+	    $path = rtrim(DIR_TEMPLATE, '/') . '/' . ltrim($path, '/');
 
 	    // добавляем расширение
 		$ext = pathinfo($path, PATHINFO_EXTENSION);
