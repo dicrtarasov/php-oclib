@@ -122,7 +122,7 @@ class Dao extends Model
      */
     public static function list(array $filter)
     {
-        $sql = sprintf('select * from `%s`');
+        $sql = sprintf('select * from `%s`', static::tableName());
 
         if (!empty($filter['total'])) {
             return self::db()->queryScalar(sprintf(
