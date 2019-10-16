@@ -216,8 +216,9 @@ class Model extends ArrayObject
 
         // выбираем значения для конфига
         $config = [];
+
         foreach (array_keys(static::attributes()) as $attr) {
-            if (array_key_exists($data[$attr])) {
+            if (array_key_exists($attr, $data)) {
                 if (($data[$attr] === null || $data[$attr] === '') && $skipEmpty) {
                     continue;
                 }
