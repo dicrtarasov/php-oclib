@@ -1,0 +1,34 @@
+{
+	"name" : "dicr/php-oclib",
+	"description" : "Улучшенная библиотека OpenCart",
+	"type" : "library",
+	"homepage" : "https://gitlab.com/dicr/php-oclib",
+	"authors" : [{
+			"name" : "Igor Tarasov",
+			"email" : "develop@dicr.org",
+			"homepage" : "http://dicr.org",
+			"role" : "developer"
+		}
+	],
+	"require" : {
+		"php" : ">=7.2"
+	},
+	"repositories" : [{
+			"type" : "composer",
+			"url" : "https://asset-packagist.org"
+		}
+	],
+	"keywords" : [
+		"dicr opencart library"
+	],
+	"autoload" : {
+		"psr-4" : {
+			"dicr\\oclib\\" : "src/"
+		}
+	},
+	"support" : {
+		"source" : "https://gitlab.com/dicr/php-oclib.git"
+	},
+	"license" : "Apache-2.0",
+	"minimum-stability" : "stable"
+}
