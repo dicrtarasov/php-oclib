@@ -7,7 +7,7 @@ namespace dicr\oclib;
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2019
  */
-class DB extends ArrayObject
+class DB
 {
     /** @var \mysqli */
     private $link = null;
