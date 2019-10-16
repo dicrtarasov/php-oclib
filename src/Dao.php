@@ -95,41 +95,6 @@ class Dao extends Model
     }
 
     /**
-     * Сохраняем модель.
-     *
-     * @param bool $validate
-     * @return int|bool
-     */
-    public function save(bool $validate = true)
-    {
-        if ($validate) {
-            $this->validate();
-        }
-
-        $sqlFields = $this->sqlFields();
-        if (empty($sqlFields)) {
-            return false;
-        }
-
-        $idField = static::idName();
-        if (!empty($idField) && !empty($this->$idField)) {
-            static::db()->queryRes(sprintf(
-                'update `%s` set %s where `%s`=%d',
-                static::tableName(), implode(', ', $sqlFields), $idField, $this->$idField
-            ));
-        } else {
-            static::db()->queryRes(sprintf(
-                'insert into `%s` set %s',
-                static::tableName(), implode(', ', $sqlFields)
-            ));
-
-            $this->$idField = static::db()->insertId();
-        }
-
-        return !empty($idField) ? $this->$idField : true;
-    }
-
-    /**
      * Возвращает запись с заданным id.
      *
      * @param int $id
@@ -181,5 +146,97 @@ class Dao extends Model
         }
 
         return static::db()->queryAll($sql, static::class);
+    }
+
+    /**
+     * Создает новую модель.
+     *
+     * @param bool $validate
+     * @return int
+     */
+    public function insert(bool $validate = true)
+    {
+        if ($validate) {
+            $this->validate();
+        }
+
+        $sql = sprintf('insert into `%s`', static::tableName());
+
+        $sqlFields = $this->sqlFields();
+        if (!empty($sqlFields)) {
+            $sql .= ' set ' . implode(', ', $sqlFields);
+        }
+
+        static::db()->queryRes($sql);
+
+        $insertId = static::db()->insertId();
+        $idName = static::idName();
+        if (!empty($idName)) {
+            $this->$idName = $insertId;
+        }
+
+        return $insertId;
+    }
+
+    /**
+     * Сохраняем модель.
+     *
+     * @param bool $validate
+     * @return int|bool
+     */
+    public function update(bool $validate = true)
+    {
+        $idName = static::idName();
+        if (empty($idName) || empty($this->$idName)) {
+            throw new \LogicException('empty id: ' . $idName);
+        }
+
+        if ($validate) {
+            $this->validate();
+        }
+
+        $sqlFields = $this->sqlFields();
+        if (empty($sqlFields)) {
+            return false;
+        }
+
+        static::db()->queryRes(sprintf(
+            'update `%s` set %s where `%s`=%d',
+            static::tableName(), implode(', ', $sqlFields), $idName, $this->$idName
+        ));
+
+        return $this->$idName;
+    }
+
+    /**
+     * Сохраняем модель.
+     *
+     * @param bool $validate
+     * @return int|bool
+     */
+    public function save(bool $validate = true)
+    {
+        $idName = static::idName();
+        return !empty($idName) && !empty($this->$idName) ? $this->update($validate) : $this->insert($validate);
+    }
+
+    /**
+     * Удалить объект.
+     *
+     * @throws \LogicException
+     */
+    public function delete()
+    {
+        $idName = static::idName();
+        if (empty($idName) || empty($this->$idName)) {
+            throw new \LogicException('empty id');
+        }
+
+        static::db()->queryRes(sprintf(
+            'delete from `%s` where `%s`=%d',
+            DB_PREFIX, $idName, $this->$idName
+        ));
+
+        $this->$idName = null;
     }
 }
