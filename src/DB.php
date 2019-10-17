@@ -22,7 +22,7 @@ class DB
      * @param int $port
      * @throws DbException
      */
-	public function __construct($driver = null, $hostname, $username, $password, $database, $port = '3306')
+	public function __construct($hostname, $username, $password, $database, $port = '3306')
 	{
 	    $this->link = new \mysqli($hostname, $username, $password, $database);
 
@@ -55,6 +55,16 @@ class DB
 	public function insertId()
 	{
 	    return $this->link->insert_id;
+	}
+
+	/**
+	 * Возвращает кол-во обновленных записей.
+	 *
+	 * @return int
+	 */
+	public function affectedRows()
+	{
+	    return $this->link->affected_rows;
 	}
 
 	/**
@@ -208,7 +218,7 @@ class DB
 	 */
 	public function countAffected()
 	{
-		return $this->link->affected_rows;
+		return $this->affectedRows();
 	}
 
 	/**

@@ -9,6 +9,9 @@ namespace dicr\oclib;
  */
 class Dao extends Model
 {
+    /** @var \dicr\oclib\DB */
+    private static $_db;
+
     /**
      * возвращает базу данных.
      *
@@ -16,7 +19,11 @@ class Dao extends Model
      */
     public static function db()
     {
-        return Registry::app()->get('db');
+        if (!isset(self::$_db)) {
+            self::$_db = Registry::app()->get('db');
+        }
+
+        return self::$_db;
     }
 
     /**
@@ -30,13 +37,13 @@ class Dao extends Model
     }
 
     /**
-     * Возвращает название поля id.
+     * Возвращает список ключевых полей.
      *
-     * @return string|null
+     * @return string[]
      */
-    public static function idName()
+    public static function keys()
     {
-        return null;
+        return [];
     }
 
     /**
@@ -48,7 +55,6 @@ class Dao extends Model
     public function sqlFields()
     {
         $fields = [];
-
         foreach (static::rules() as $field => $rule) {
             // пропускаем пустые поля
             if (!isset($this->$field)) {
@@ -97,20 +103,41 @@ class Dao extends Model
     /**
      * Возвращает запись с заданным id.
      *
-     * @param int $id
+     * @param string|array $ids значение ключа id либо ассоциативный массив attr => val
      * @throws \LogicException
      * @return static|null
      */
-    public static function get(int $id)
+    public static function get($conds)
     {
-        $idField = static::idName();
-        if (empty($idField)) {
-            throw new \LogicException('idName not implemented');
+        if (empty($conds)) {
+            throw new \InvalidArgumentException('empty conds');
+        }
+
+        if (!is_array($conds)) {
+            $keys = self::keys();
+            if (empty($keys)) {
+                throw new \LogicException('no keys');
+            }
+
+            if (count($keys) != 1) {
+                throw new \InvalidArgumentException('conds: в таблице более 1 поля в ключе');
+            }
+
+            $key = reset($keys);
+
+            $conds = [
+                $key => (string)$conds
+            ];
+        }
+
+        $wheres = [];
+        foreach ($conds as $attr => $val) {
+            $wheres[$attr] = sprintf('`%s`="%s"', $attr, self::db()->esc($val));
         }
 
         return static::db()->queryOne(sprintf(
-            'select * from `%s` where `%s`=%d limit 1',
-            static::tableName(), $idField, $id
+            'select * from `%s` where %s limit 1',
+            static::tableName(), implode(' and ', $wheres)
         ), static::class);
     }
 
@@ -141,8 +168,8 @@ class Dao extends Model
             $sql .= sprintf(' order by `%s` %s', $sort, $order == SORT_DESC ? 'desc' : '');
         }
 
-        if (!empty($filter['offset']) || !empty($filter['limit'])) {
-            $sql .= sprintf(' limit %d,%d', (int)($filter['offset'] ?? 0), (int)($filter['limit'] ?? 999999));
+        if (!empty($filter['start']) || !empty($filter['limit'])) {
+            $sql .= sprintf(' limit %d,%d', (int)($filter['start'] ?? 0), (int)($filter['limit'] ?? 999999));
         }
 
         return static::db()->queryAll($sql, static::class);
@@ -182,15 +209,10 @@ class Dao extends Model
      * Сохраняем модель.
      *
      * @param bool $validate
-     * @return int|bool
+     * @return bool
      */
     public function update(bool $validate = true)
     {
-        $idName = static::idName();
-        if (empty($idName) || empty($this->$idName)) {
-            throw new \LogicException('empty id: ' . $idName);
-        }
-
         if ($validate) {
             $this->validate();
         }
@@ -200,24 +222,86 @@ class Dao extends Model
             return false;
         }
 
+        // переносим ключевые поля из обновления в условие
+        $keys = self::keys();
+        $wheres = [];
+
+        foreach ($keys as $attr) {
+            $wheres[$attr] = $sqlFields[$attr];
+            unset($sqlFields[$attr]);
+        }
+
         static::db()->queryRes(sprintf(
-            'update `%s` set %s where `%s`=%d',
-            static::tableName(), implode(', ', $sqlFields), $idName, $this->$idName
+            'update `%s` set %s where %s',
+            static::tableName(), implode(', ', $sqlFields), implode(' and ', $wheres)
         ));
 
-        return $this->$idName;
+        return true;
     }
 
     /**
-     * Сохраняем модель.
+     * Вставляет/обновляет запись (on duplicate key update).
      *
      * @param bool $validate
-     * @return int|bool
+     * @throws \LogicException
+     * @throws DbException
+     * @return string|string ключ
+     * @see https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
      */
-    public function save(bool $validate = true)
+    public function upsert(bool $validate = true)
     {
-        $idName = static::idName();
-        return !empty($idName) && !empty($this->$idName) ? $this->update($validate) : $this->insert($validate);
+        if ($validate) {
+            $this->validate();
+        }
+
+        // все поля для вставки
+        $insertFields = $this->sqlFields();
+        if (empty($insertFields)) {
+            throw new \LogicException('нет полей для вставки');
+        }
+
+        // готовим поля для обновения
+        $updateFields = array_slice($insertFields, 0);
+
+        // удаляем из полей обновления ключевые поля
+        $keys = static::keys();
+        foreach ($keys as $attr) {
+            unset($updateFields[$attr]);
+        }
+
+        // если не полей для обновления, то on update эмулируем ключами
+        if (empty($updateFields)) {
+            $updateFields = [];
+            foreach ($keys as $attr) {
+                $updateFields[$attr] = sprintf('`%s`=`%s`', $attr, $attr);
+            }
+        }
+
+        static::db()->queryRes(sprintf(
+            'insert into `%s` set %s
+            on duplicate key update %s',
+            static::tableName(), implode(', ', $insertFields), implode(', ', $updateFields)
+        ));
+
+        $insertId = null;
+        switch (static::db()->affectedRows()) {
+            case 2: // запись была добавлена
+                $insertId = static::db()->insertId();
+                break;
+
+            default: // 0, 1 - запись была обновлена или не тронута
+                // формируем ключи из значений объекта
+                $insertId = [];
+                foreach ($keys as $attr) {
+                    $insertId[] = $this->$attr;
+                }
+
+                if (count($insertId) == 1) {
+                    $insertId = reset($insertId);
+                }
+        }
+
+        return $insertId;
     }
 
     /**
@@ -227,16 +311,14 @@ class Dao extends Model
      */
     public function delete()
     {
-        $idName = static::idName();
-        if (empty($idName) || empty($this->$idName)) {
-            throw new \LogicException('empty id');
+        $wheres = [];
+        foreach (self::keys() as $attr) {
+            $wheres[$attr] = sprintf('`%s`="%s"', $attr, static::db()->esc($this->$attr));
         }
 
         static::db()->queryRes(sprintf(
-            'delete from `%s` where `%s`=%d',
-            DB_PREFIX, $idName, $this->$idName
+            'delete from `%s` where %s',
+            DB_PREFIX, implode(' and ', $wheres)
         ));
-
-        $this->$idName = null;
     }
 }

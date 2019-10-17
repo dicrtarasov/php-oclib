@@ -9,6 +9,9 @@ namespace dicr\oclib;
  */
 class Model extends ArrayObject
 {
+    /** @var string */
+    private static $_formName;
+
     /**
      * Имя формы.
      *
@@ -16,9 +19,16 @@ class Model extends ArrayObject
      */
     public static function formName()
     {
-        $path = explode('\\', static::class);
-        return array_pop($path);
+        if (!isset(self::$_formName)) {
+            $path = explode('\\', static::class);
+            self::$_formName = array_pop($path);
+        }
+
+        return self::$_formName;
     }
+
+    /** @var string[] */
+    private static $_attributes;
 
     /**
      * Возвращает список полей модели.
@@ -27,13 +37,17 @@ class Model extends ArrayObject
      */
     public static function attributes()
     {
-        $ref = new \ReflectionClass(static::class);
+        if (!isset(self::$_attributes)) {
+            $ref = new \ReflectionClass(static::class);
 
-        $attrs = array_map(function(\ReflectionProperty $prop) {
-            return $prop->name;
-        }, $ref->getProperties(\ReflectionProperty::IS_PUBLIC));
+            $attrs = array_map(function(\ReflectionProperty $prop) {
+                return $prop->name;
+            }, $ref->getProperties(\ReflectionProperty::IS_PUBLIC));
 
-        return array_combine($attrs, $attrs);
+            self::$_attributes = array_combine($attrs, $attrs);
+        }
+
+        return self::$_attributes;
     }
 
     /**
@@ -203,7 +217,7 @@ class Model extends ArrayObject
      * @param string $formName
      * @param bool $skipEmpty пропускать пустые поля
      */
-    public function load(array $data, string $formName = null, bool $skipEmpty = false)
+    public function load(array $data, string $formName = null, bool $skipEmpty = true)
     {
         if (!isset($formName)) {
             $formName = static::formName();
@@ -219,7 +233,7 @@ class Model extends ArrayObject
 
         foreach (array_keys(static::attributes()) as $attr) {
             if (array_key_exists($attr, $data)) {
-                if (($data[$attr] === null || $data[$attr] === '') && $skipEmpty) {
+                if ($skipEmpty && ($data[$attr] === null || $data[$attr] === '')) {
                     continue;
                 }
 
