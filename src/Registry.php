@@ -4,6 +4,15 @@ namespace dicr\oclib;
 /**
  * Реестр.
  *
+ * @property-read DB $db
+ * @property-read \Loader $load
+ * @property-read \Config $config
+ * @property-read \Url $url
+ * @property-read \Request $request
+ * @property-read \Response $respone
+ * @property-read \Cache $cache
+ * @property-read \Session $session
+ *
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2019
  */

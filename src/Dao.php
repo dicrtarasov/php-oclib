@@ -114,7 +114,7 @@ class Dao extends Model
         }
 
         if (!is_array($conds)) {
-            $keys = self::keys();
+            $keys = static::keys();
             if (empty($keys)) {
                 throw new \LogicException('no keys');
             }
@@ -132,7 +132,7 @@ class Dao extends Model
 
         $wheres = [];
         foreach ($conds as $attr => $val) {
-            $wheres[$attr] = sprintf('`%s`="%s"', $attr, self::db()->esc($val));
+            $wheres[$attr] = sprintf('`%s`="%s"', $attr, static::db()->esc($val));
         }
 
         return static::db()->queryOne(sprintf(
@@ -152,7 +152,7 @@ class Dao extends Model
         $sql = sprintf('select * from `%s`', static::tableName());
 
         if (!empty($filter['total'])) {
-            return self::db()->queryScalar(sprintf(
+            return static::db()->queryScalar(sprintf(
                 'select count(*) from (%s) T', $sql
             ));
         }
@@ -179,7 +179,7 @@ class Dao extends Model
      * Создает новую модель.
      *
      * @param bool $validate
-     * @return int
+     * @return string|string[]
      */
     public function insert(bool $validate = true)
     {
@@ -197,9 +197,12 @@ class Dao extends Model
         static::db()->queryRes($sql);
 
         $insertId = static::db()->insertId();
-        $idName = static::idName();
-        if (!empty($idName)) {
-            $this->$idName = $insertId;
+
+        // устанавливаем ключи
+        // @TODO: непоняно в каком порядке и виде insertId возвращает ключи
+        $keysVals = (array)$insertId;
+        foreach (static::keys() as $attr) {
+            $this->$attr = array_shift($keysVals);
         }
 
         return $insertId;
@@ -223,10 +226,14 @@ class Dao extends Model
         }
 
         // переносим ключевые поля из обновления в условие
-        $keys = self::keys();
+        $keys = static::keys();
         $wheres = [];
 
         foreach ($keys as $attr) {
+            if (!isset($sqlFields[$attr])) {
+                throw new \LogicException('ключ ' . $attr . ' не усановлен');
+            }
+
             $wheres[$attr] = $sqlFields[$attr];
             unset($sqlFields[$attr]);
         }
@@ -312,13 +319,13 @@ class Dao extends Model
     public function delete()
     {
         $wheres = [];
-        foreach (self::keys() as $attr) {
+        foreach (static::keys() as $attr) {
             $wheres[$attr] = sprintf('`%s`="%s"', $attr, static::db()->esc($this->$attr));
         }
 
         static::db()->queryRes(sprintf(
             'delete from `%s` where %s',
-            DB_PREFIX, implode(' and ', $wheres)
+            static::tableName(), implode(' and ', $wheres)
         ));
     }
 }
