@@ -33,7 +33,7 @@ class Dao extends Model
      */
     public static function tableName()
     {
-        return static::formName();
+        return DB_PREFIX . strtolower(static::class);
     }
 
     /**
