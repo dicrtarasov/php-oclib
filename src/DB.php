@@ -26,7 +26,7 @@ class DB
 	{
 	    $this->link = new \mysqli($hostname, $username, $password, $database);
 
-		if ($this->link->connect_error) {
+	    if ($this->link->connect_error) {
 			throw new DbException($this->connect_error);
 		}
 
@@ -100,8 +100,8 @@ class DB
 	 */
 	public function queryAll(string $sql, string $class = null)
 	{
-	    $res = $this->queryRes($sql);
 	    $ret = [];
+	    $res = $this->queryRes($sql);
 
 	    while (true) {
 	        $row = !empty($class) ? $res->fetch_object($class) : $res->fetch_assoc();
@@ -130,7 +130,7 @@ class DB
 	    $res = $this->queryRes($sql);
 
 	    while ($row = $res->fetch_assoc()) {
-	        $ret = !empty($column) ? $row[$column] : reset($row);
+	        $ret[] = !empty($column) ? $row[$column] : reset($row);
 	    }
 
 	    $res->free();
@@ -229,6 +229,16 @@ class DB
 	public function getLastId()
 	{
 		return $this->insertId();
+	}
+
+	/**
+	 * Возвращает состояние подключения к базе.
+	 *
+	 * @return boolean
+	 */
+	public function connected()
+	{
+		return true;
 	}
 
 	/**
