@@ -163,6 +163,8 @@ class Dao extends Model
             if (substr($sort, 0, 1) === '-') {
                 $sort = substr($sort, 1);
                 $order = SORT_DESC;
+            } elseif (($filter['order'] ?? '') == 'DESC') {
+                $order = SORT_DESC;
             }
 
             $sql .= sprintf(' order by `%s` %s', $sort, $order == SORT_DESC ? 'desc' : '');
