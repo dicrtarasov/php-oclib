@@ -7,7 +7,7 @@ namespace dicr\oclib;
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2019
  */
-class NotFoudException extends Exception
+class NotFoundException extends Exception
 {
     /**
      * Конструктор.
