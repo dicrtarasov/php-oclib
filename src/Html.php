@@ -88,12 +88,25 @@ class Html
 	/**
 	 * Тег link.
 	 *
-	 * @param string $href
-	 * @param string $rel
+	 * @param array|string $options если string, то href и rel=stylesheet
 	 * @return string
 	 */
-	public static function link(string $href, string $rel = 'stylesheet')
+	public static function link($options)
 	{
-	    return sprintf('<link rel="%s" href="%s"/>', $rel, self::esc($href));
+	    if (empty($options)) {
+	        return '';
+	    } elseif (!is_array($options)) {
+	        $options = [
+	            'href' => $options,
+	            'rel' => 'stylesheet'
+	        ];
+	    }
+
+	    $opts = [];
+	    foreach ($options as $key => $val) {
+	        $opts[] = sprintf('%s="%s"', $key, self::esc($val));
+	    }
+
+	    return sprintf('<link %s/>', implode(' ', $opts));
 	}
 }
