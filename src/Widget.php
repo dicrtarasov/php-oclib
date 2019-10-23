@@ -68,6 +68,17 @@ class Widget extends ArrayObject
     }
 
     /**
+     * Выводит виджет. Для удобства в коде вместо new.
+     *
+     * @param array $config
+     * @return static
+     */
+    public static function widget(array $config)
+    {
+        return new static($config);
+    }
+
+    /**
      * Конверирует в строку.
      *
      * @return string
