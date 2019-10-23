@@ -169,34 +169,41 @@ class Html
 	{
 	    $str = [];
 	    foreach ($attrs as $name => $val) {
-	        if ($name == 'class') {
-	            $val = self::class2str($val);
-	            if ($val !== '') {
-	                $str[] = sprintf('class="%s"', self::esc($val));
-	            }
-	        } elseif ($name == 'style') {
-	            $val = self::style2str($val);
-	            if ($val !== '') {
-	                $str[] = sprintf('style="%s"', self::esc($val));
-	            }
-	        } elseif ($name == 'data') {
-	            $val = self::data2attr($val);
-	            if ($val !== '') {
-	                $str[] = $val;
-	            }
-	        } elseif (is_numeric($name)) {
-                $str[] = trim($val);
-	        } else {
-	            $val = trim($val);
-	            if ($val === '') {
-	                $str[] = $name;
-	            } else {
-	                $str[] = sprintf('%s="%s"', $name, self::esc($val));
-	            }
-	        }
+	        switch ($name) {
+	            case 'class':
+                    $val = self::class2str($val);
+                    if ($val !== '') {
+                        $str[] = sprintf('class="%s"', self::esc($val));
+                    }
+                    break;
+
+	            case 'style':
+                    $val = self::style2str($val);
+    	            if ($val !== '') {
+    	                $str[] = sprintf('style="%s"', self::esc($val));
+    	            }
+    	            break;
+
+	            case 'data':
+                    $val = self::data2attr($val);
+    	            if ($val !== '') {
+    	                $str[] = $val;
+    	            }
+
+    	            break;
+
+	            default:
+                    if ($val === null || $val === false) {
+                        continue;
+                    } elseif (is_numeric($name) || $val === true) {
+                        $str[] = trim($val);
+                    } else {
+                        $str[] = sprintf('%s="%s"', $name, self::esc($val));
+                    }
+            }
 	    }
 
-	    return implode(' ', $str);
+        return implode(' ', $str);
 	}
 
 	/**
