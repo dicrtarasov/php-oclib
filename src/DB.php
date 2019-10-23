@@ -130,7 +130,7 @@ class DB
 	    $res = $this->queryRes($sql);
 
 	    while ($row = $res->fetch_assoc()) {
-	        $ret = !empty($column) ? $row[$column] : reset($row);
+	        $ret[] = !empty($column) ? $row[$column] : reset($row);
 	    }
 
 	    $res->free();
