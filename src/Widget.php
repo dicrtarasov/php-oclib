@@ -85,10 +85,14 @@ class Widget extends ArrayObject
      */
     public function __toString()
     {
+        $ret = '';
+
         try {
-            return $this->render();
+            $ret = $this->render();
         } catch (\Throwable $ex) {
             trigger_error($ex->getMessage(), E_USER_NOTICE);
         }
+
+        return $ret;
     }
 }

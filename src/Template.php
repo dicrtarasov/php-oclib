@@ -113,16 +113,14 @@ class Template extends ArrayObject
 	 *
 	 * @return string
 	 */
-	public function __toString() {
-	    $ret = null;
+	public function __toString()
+	{
+	    $ret = '';
 
 		try {
 		    $ret = $this->render();
 		} catch (\Throwable $ex) {
-		    if (DEBUG) {
-		        echo $ex;
-		        exit;
-		    }
+		    trigger_error($ex, E_USER_ERROR);
 		}
 
 		return $ret;
