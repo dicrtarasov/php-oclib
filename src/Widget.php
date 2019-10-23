@@ -13,10 +13,10 @@ class Widget extends ArrayObject
     public $id;
 
     /** @var array опции тэга виджета */
-    public $options;
+    public $options = [];
 
     /** @var array опции javascript */
-    public $pluginOptions;
+    public $pluginOptions = [];
 
     /**
      * Конструктор.
