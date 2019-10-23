@@ -109,4 +109,19 @@ class Html
 
 	    return sprintf('<link %s/>', implode(' ', $opts));
 	}
+
+	/**
+	 * Генерирует скрипт подключения jQuery плагина.
+	 *
+	 * @param string $id элемент
+	 * @param string $name плагин
+	 * @param array $options опции плагина
+	 * @return string html
+	 */
+    public static function plugin(string $target, string $name, array $options = [])
+    {
+        return sprintf('<script>$("%s").%s(%s);</script>',
+            $target, $name, self::json($options)
+        );
+    }
 }
