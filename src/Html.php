@@ -9,6 +9,11 @@ namespace dicr\oclib;
  */
 class Html
 {
+    /** @var string[] закрывающиеся теги */
+    const NOBODY_TAGS = [
+        'meta', 'link', 'img', 'input'
+    ];
+
     /**
      * Экранирует строку HTML.
      *
@@ -58,56 +63,441 @@ class Html
 	}
 
 	/**
-	 * Ссылка
+	 * Парсит классы
 	 *
-	 * @param string $href
-	 * @param string $text
-	 * @return string
+	 * @param string|array $classes
+	 * @return string[]
 	 */
-	public static function a(string $href, string $text='', string $attrs='')
+	protected static function parseClasses($classes)
 	{
-	    return sprintf('<a href="%s" %s>%s</a>', self::esc($href), $attrs, self::esc($text ?: $href));
-	}
-
-    /**
-	 * Тег meta.
-	 *
-	 * @param array $options
-	 * @return string
-	 */
-	public static function meta(array $options)
-	{
-	    $opts = [];
-	    foreach ($options as $key => $val) {
-	        $opts[] = sprintf('%s="%s"', $key, self::esc($val));
+	    if (empty($classes)) {
+	        return [];
 	    }
 
-	    return sprintf('<meta %s/>', implode(' ', $opts));
+        return preg_split('~\s+~uism', $classes, -1, PREG_SPLIT_NO_EMPTY);
 	}
 
 	/**
-	 * Тег link.
+	 * Добавляет CSS-класс в аттрибуты
 	 *
-	 * @param array|string $options если string, то href и rel=stylesheet
+	 * @param array $attrs
+	 * @param string $class
+	 * @return array аттрибуты
+	 */
+	public static function addCssClass(array $attrs, string $class)
+	{
+	    $class = trim($class);
+	    if (empty($class)) {
+	        return $attrs;
+	    }
+
+	    $classes = self::parseClasses($attrs['class'] ?? []);
+	    $classes[] = $class;
+	    $classes = array_unique($classes);
+	    $attrs['class'] = implode(' ', $classes);
+	    return $attrs;
+	}
+
+	/**
+	 * Конвертирует значение HTML-аттрибуты class в строку
+	 *
+	 * @param string|array $class
+	 */
+	protected static function class2str($class)
+	{
+        $str = '';
+
+	    if (is_array($class)) {
+            $str = implode(' ', $class);
+	    } else {
+	        $str = (string)$class;
+	    }
+
+	    return trim($str);
+	}
+
+	/**
+	 * Конвертирует значение HTML-атрибута style в строку
+	 *
+	 * @param mixed $style
+	 */
+	protected static function style2str($style)
+	{
+	    $str = '';
+	    if (is_array($style)) {
+	        $str = [];
+	        foreach ($style as $key => $val) {
+	            $str[] = is_numeric($key) ? $val : sprintf('%s: %s', $key, $val);
+	        }
+            $str = implode('; ', $style);
+	    } else {
+	        $str = (string)$style;
+	    }
+
+	    return trim($str);
+	}
+
+	/**
+	 * Конвертирует значения в HTML data-аттрибуты
+	 *
+	 * @param array $data
 	 * @return string
 	 */
-	public static function link($options)
+	protected static function data2attr(array $data)
 	{
-	    if (empty($options)) {
-	        return '';
-	    } elseif (!is_array($options)) {
-	        $options = [
-	            'href' => $options,
-	            'rel' => 'stylesheet'
-	        ];
+        $str = [];
+
+        foreach ($data as $key => $val) {
+            $val = trim($val);
+            if ($val !== '') {
+               $str[] = sprintf('data-%s="%s"', $key, self::esc($val));
+            }
+        }
+
+        $str = implode(' ', $str);
+
+        return trim($str);
+	}
+
+	/**
+	 * Преобразует массив аттриутов в строку
+	 *
+	 * @param array $attrs
+	 * @return string
+	 */
+	public static function attrs2str(array $attrs)
+	{
+	    $str = [];
+	    foreach ($attrs as $name => $val) {
+	        if ($name == 'class') {
+	            $val = self::class2str($val);
+	            if ($val !== '') {
+	                $str[] = sprintf('class="%s"', self::esc($val));
+	            }
+	        } elseif ($name == 'style') {
+	            $val = self::style2str($val);
+	            if ($val !== '') {
+	                $str[] = sprintf('style="%s"', self::esc($val));
+	            }
+	        } elseif ($name == 'data') {
+	            $val = self::data2attr($val);
+	            if ($val !== '') {
+	                $str[] = $val;
+	            }
+	        } elseif (is_numeric($name)) {
+                $str[] = trim($val);
+	        } else {
+	            $val = trim($val);
+	            if ($val === '') {
+	                $str[] = $name;
+	            } else {
+	                $str[] = sprintf('%s="%s"', $name, self::esc($val));
+	            }
+	        }
 	    }
 
-	    $opts = [];
-	    foreach ($options as $key => $val) {
-	        $opts[] = sprintf('%s="%s"', $key, self::esc($val));
+	    return implode(' ', $str);
+	}
+
+	/**
+	 * Начало тега
+	 *
+	 * @param string $name
+	 * @param array $attrs
+	 * @return string
+	 */
+	public static function startTag(string $name, array $attrs=[])
+	{
+	    ob_start();
+
+        echo '<' . $name;
+
+        $attrstr = self::attrs2str($attrs);
+	    if ($attrstr !== '') {
+	        echo ' ' . $attrstr;
 	    }
 
-	    return sprintf('<link %s/>', implode(' ', $opts));
+	    if (in_array($name, self::NOBODY_TAGS)) {
+	        echo '/';
+	    }
+
+	    echo '>';
+
+	    return ob_get_clean();
+	}
+
+    /**
+     * Конец тега
+     *
+     * @param string $name
+     * @return string
+     */
+	public static function endTag(string $name)
+	{
+	    return in_array($name, self::NOBODY_TAGS) ? '' : sprintf('</%s>', $name);
+	}
+
+	/**
+	 * Html-тэг
+	 *
+	 * @param string $name
+	 * @param string $content
+	 * @param array $attrs
+	 * @return string
+	 */
+	public static function tag(string $name, string $content='', array $attrs=[])
+	{
+	    ob_start();
+        echo self::startTag($name, $attrs);
+        if (!in_array($name, self::NOBODY_TAGS)) {
+            echo $content;
+            echo self::endTag($name);
+        }
+        return ob_get_clean();
+	}
+
+	/**
+	 * HTML select
+	 *
+	 * @param string $name имя select
+	 * @param string|null $value текущее значение
+	 * @param array $vals значения val => text
+	 * @param array $options аттрибуты
+	 */
+	public static function select(string $name, string $value=null, array $vals, array $options=[])
+	{
+	    $value = (string)$value;
+
+        $prepend = (array)($options['prepend'] ?? []);
+        unset($options['prepend']);
+
+	    ob_start();
+
+	    $options['name'] = $name;
+
+	    echo self::startTag('select', $options);
+
+    	foreach ($prepend as $val => $text) {
+    	    $opts = [
+    	        'value' => $val
+    	    ];
+
+    	    if ($value === (string)$val) {
+    	        $opts['selected'] = 'selected';
+    	    }
+
+    	    echo self::tag('option', self::esc($text), $opts);
+    	}
+
+    	foreach ($vals as $val => $text) {
+    	    $opts = [
+    	        'value' => $val
+    	    ];
+
+    	    if ($value === (string)$val) {
+    	        $opts['selected'] = 'selected';
+    	    }
+
+    	    echo self::tag('option', self::esc($text), $opts);
+    	}
+
+    	echo self::endTag('select');
+
+	    return ob_get_clean();
+	}
+
+	/**
+	 * HTML img element
+	 *
+	 * @param string $src
+	 * @param array $attrs
+	 */
+	public static function img(string $src, array $attrs=[])
+	{
+	    if (!isset($attrs['alt'])) {
+	        $attrs['alt'] = 'img';
+	    }
+
+	    $attrs['src'] = $src;
+
+	    return self::tag('img', '', $attrs);
+	}
+
+	/**
+	 * HTML Meta element
+	 * @param array $attrs
+	 * @return string
+	 */
+	public static function meta(array $attrs=[])
+	{
+	    return self::tag('meta', '', $attrs);
+	}
+
+	/**
+	 * HTML Link element
+	 *
+	 * @param array $attrs
+	 * @return string
+	 */
+	public static function link(array $attrs=[])
+	{
+	    return self::tag('link', '', $attrs);
+	}
+
+	/**
+	 * HTML link rel="stylesheet".
+	 *
+	 * @param string $css
+	 * @return string
+	 */
+	public static function cssLink(string $css)
+	{
+	    return self::link(['rel' => 'stylesheet', 'href' => $css]);
+	}
+
+	/**
+	 * Подключение скрипта
+	 *
+	 * @param string $js
+	 * @return string
+	 */
+	public static function jsLink(string $js)
+	{
+	    return self::tag('script', '', ['src' => $js]);
+	}
+
+	/**
+	 * HTML Button
+	 *
+	 * @param string $text
+	 * @param array $attrs
+	 * @return string
+	 */
+	public static function button(string $text, array $attrs=[])
+	{
+	    if (empty($attrs['type'])) {
+	        $attrs['type'] = 'button';
+	    }
+
+	    $esc = $attrs['esc'] ?? true;
+	    unset($attrs['esc']);
+
+	    if ($esc) {
+	        $text = self::esc($text);
+	    }
+
+	    return self::tag('button', $text, $attrs);
+	}
+
+	/**
+	 * HTML textarea
+	 *
+	 * @param string $name
+	 * @param string|null $text
+	 * @param array $attrs
+	 * @return string
+	 */
+	public static function textarea(string $name, $text, array $attrs = [])
+	{
+	    $attrs['name'] = $name;
+	    return self::tag('textarea', trim($text), $attrs);
+	}
+
+	/**
+	 * Html input
+	 *
+	 * @param string $type
+	 * @param string $name
+	 * @param string|null $val
+	 * @param array $attrs
+	 * @return string
+	 */
+	public static function input(string $type, string $name, string $value = null, array $attrs = [])
+	{
+	    if (!empty($type)) {
+	        $attrs['type'] = $type;
+	    }
+
+	    if (!empty($name)) {
+	        $attrs['name'] = $name;
+	    }
+
+	    if (isset($value)) {
+	        $attrs['value'] = $value;
+	    }
+
+	    return self::tag('input', '', $attrs);
+	}
+
+	/**
+	 * Html checkbox
+	 *
+	 * @param string $name
+	 * @param bool $checked
+	 * @param array $attrs
+	 * @return string
+	 */
+	public static function checkbox(string $name, bool $checked, array $attrs=[])
+	{
+	    if ($checked) {
+	        $attrs['checked'] = 'checked';
+	    }
+
+	    return self::input('hidden', $name, 0) . self::input('checkbox', $name, 1, $attrs);
+	}
+
+	/**
+	 * Html font awesome icon
+	 *
+	 * @param string $name
+	 * @param array $attrs
+	 * @return string
+	 */
+	public static function fa(string $name, array $attrs = [])
+	{
+	    if (empty($attrs['class'])) {
+	        $attrs['class'] = [];
+	    } elseif (is_scalar($attrs['class'])) {
+            $attrs['class'] = preg_split('~\s+~uism', $attrs['class'], -1, PREG_SPLIT_NO_EMPTY);
+	    }
+
+	    $attrs['class'][] = 'fa';
+	    $attrs['class'][] = 'fa-' . $name;
+
+	    return self::tag('i', '', $attrs);
+	}
+
+	/**
+	 * Html font awesome icon
+	 *
+	 * @param string $name
+	 * @param array $attrs
+	 * @return string
+	 */
+	public static function fas(string $name, array $attrs = [])
+	{
+	    if (empty($attrs['class'])) {
+	        $attrs['class'] = [];
+	    } elseif (is_scalar($attrs['class'])) {
+            $attrs['class'] = preg_split('~\s+~uism', $attrs['class'], -1, PREG_SPLIT_NO_EMPTY);
+	    }
+
+	    $attrs['class'][] = 'fas';
+	    $attrs['class'][] = 'fa-' . $name;
+
+	    return self::tag('i', '', $attrs);
+	}
+
+    /**
+	 * Ссылка
+	 *
+	 * @param string $href
+	 * @param string $html
+	 * @return string
+	 */
+	public static function a(string $href, string $html = '', string $attrs = '')
+	{
+	    return sprintf('<a href="%s" %s>%s</a>', self::esc($href), $attrs, $html ?: self::esc($href));
 	}
 
 	/**
