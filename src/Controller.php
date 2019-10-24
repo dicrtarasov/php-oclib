@@ -50,6 +50,7 @@ abstract class Controller
 	 * Возвращает ответ как JSON.
 	 *
 	 * @param mixed $data
+	 * @return void
 	 */
 	public function asJson($data)
 	{

@@ -64,4 +64,26 @@ class Filter
 
         return $val;
     }
+
+    /**
+     * Фильтрует аргументы запроса рекурсивно, удаляя пустые параметры
+     *
+     * @param array $args
+     * @return array
+     */
+    public static function params(array $args)
+    {
+        foreach ($args as $i => $v) {
+            if (is_array($v)) {
+                $args[$i] = static::filterArgs($v);
+                if (empty($args[$i])) {
+                    unset($args[$i]);
+                }
+            } elseif ($v === '') {
+                unset($args[$i]);
+            }
+        }
+
+        return $args;
+    }
 }

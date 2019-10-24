@@ -76,6 +76,9 @@ class Url
 	 */
 	public function redirectToCanonical(string $route, $args = [])
 	{
+	    $args = Filter::params($args);
+	    ksort($args);
+
         $urlInfo = parse_url($this->link($route, $args));
 
         $canonical = $urlInfo['path'];
