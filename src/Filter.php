@@ -75,7 +75,7 @@ class Filter
     {
         foreach ($args as $i => $v) {
             if (is_array($v)) {
-                $args[$i] = static::filterArgs($v);
+                $args[$i] = static::params($v);
                 if (empty($args[$i])) {
                     unset($args[$i]);
                 }

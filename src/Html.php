@@ -195,7 +195,9 @@ class Html
 	            default:
                     if ($val === null || $val === false) {
                         continue;
-                    } elseif (is_numeric($name) || $val === true) {
+                    } elseif ($val === true) {
+                        $str[] = trim($name);
+                    } elseif (is_numeric($name)) {
                         $str[] = trim($val);
                     } else {
                         $str[] = sprintf('%s="%s"', $name, self::esc($val));

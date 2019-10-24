@@ -31,7 +31,7 @@ class Model extends ArrayObject
     private static $_attributes;
 
     /**
-     * Возвращает список полей модели.
+     * Возвращает список полей модели для загрузки load и выгрузки toArray
      *
      * @return array [ name => text ]
      */
