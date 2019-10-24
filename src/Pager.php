@@ -59,20 +59,39 @@ class Pager extends Model
     }
 
     /**
-     * Правила валидации.
-     *
-     * @return array
+     * {@inheritDoc}
+     * @see \dicr\oclib\Model::validate()
      */
-    public static function rules()
+    public function validate()
     {
-        return [
-            'sort' => ['string'],
-            'order' => ['set', 'vals' => self::ORDERS, 'def' => self::ORDER_ASC],
-            'page' => ['int', 'def' => 1, 'min' => 1],
-            'limit' => ['int', 'def' => 100, 'min' => 1],
-            'total' => ['int', 'def' => 0, 'min' => 0],
-            'route' => ['string', 'req']
-        ];
+        $this->sort = trim($this->sort);
+
+        $this->order = strtoupper($this->order);
+        if ($this->order != self::ORDER_DESC) {
+            $this->order = self::ORDER_ASC;
+        }
+
+        $this->page = (int)$this->page;
+        if ($this->page < 1) {
+            $this->page = 1;
+        }
+
+        $this->limit = (int)$this->limit;
+        if ($this->limit < 1) {
+            throw new ValidateException($this, 'limit');
+        }
+
+        $this->total = (int)$this->total;
+        if ($this->total < 0) {
+            throw new ValidateException($this, 'total');
+        }
+
+        $this->route = trim($this->route);
+        if (empty($this->route)) {
+            throw new ValidateException($this, 'route');
+        }
+
+        $this->params = (array)($this->params ?: []);
     }
 
     /**

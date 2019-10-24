@@ -79,7 +79,7 @@ class Filter
                 if (empty($args[$i])) {
                     unset($args[$i]);
                 }
-            } elseif ($v === '') {
+            } else if (is_null($v) || $v === '') {
                 unset($args[$i]);
             }
         }

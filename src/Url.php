@@ -15,13 +15,24 @@ class Url
 
 	private $rewrite = [];
 
+	/**
+	 * Конструктор.
+	 *
+	 * @param string $url
+	 * @param string $ssl
+	 */
 	public function __construct($url, $ssl = '')
 	{
 		$this->url = $url;
 		$this->ssl = $ssl;
 	}
 
-	public function addRewrite($rewrite)
+	/**
+	 * Добавляе обработчики ЧПУ.
+	 *
+	 * @param object $rewrite
+	 */
+	public function addRewrite(object $rewrite)
 	{
 	    if (!empty($rewrite) && !in_array($rewrite, $this->rewrite)) {
             $this->rewrite[] = $rewrite;
@@ -42,6 +53,7 @@ class Url
 	        throw new \InvalidArgumentException('empty route');
 	    }
 
+	    // преобразуем аргументы в массив
         if (!is_array($args)) {
             $args = trim($args);
             if (empty($args)) {
@@ -51,16 +63,19 @@ class Url
             }
         }
 
+        // фильруем аргументы
+        $args = Filter::params($args);
+
+        // добавляем маршрут
         $args['route'] = $route;
 
-	    $url = sprintf('%sindex.php?%s', $this->url,
-	        preg_replace(
-	        	['~\%2F~uism', '~\%7B~uism', '~%7D~uism'],
-	        	['/', '{', '}'],
-	        	http_build_query($args)
-	        )
-        );
+        // сортируем
+        ksort($args);
 
+        // сроим ссылку
+	    $url = rtrim($this->url, '/') . '/index.php?' . http_build_query($args);
+
+	    // формируем чпу
 	    foreach ($this->rewrite as $rewrite) {
 	    	$url = $rewrite->rewrite($url);
 	    }
