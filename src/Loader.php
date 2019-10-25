@@ -68,8 +68,9 @@ class Loader
 		if (file_exists($file)) {
 			include_once($file);
             $class = 'Model' . preg_replace('/[^a-zA-Z0-9]/', '', $name);
-			$model = new $class(Registry::app());
-			$this->registry->set($key, $model);
+            $registry = Registry::app();
+			$model = new $class($registry);
+			$registry->set($key, $model);
 		} else {
 			trigger_error('Error: Could not load model ' . $file . '!');
 		}
@@ -101,11 +102,13 @@ class Loader
 		}
 	}
 
-	public function config($config) {
-		$this->registry->get('config')->load($config);
+	public function config($config)
+	{
+		Registry::app()->get('config')->load($config);
 	}
 
-	public function language($language) {
-		return $this->registry->get('language')->load($language);
+	public function language($language)
+	{
+		return Registry::app()->get('language')->load($language);
 	}
 }

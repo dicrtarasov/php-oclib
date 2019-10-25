@@ -84,7 +84,7 @@ class Html
 	 * @param string $class
 	 * @return array аттрибуты
 	 */
-	public static function addCssClass(array $attrs, string $class)
+	public static function addCssClass(array &$attrs, string $class)
 	{
 	    $class = trim($class);
 	    if (empty($class)) {
@@ -95,6 +95,7 @@ class Html
 	    $classes[] = $class;
 	    $classes = array_unique($classes);
 	    $attrs['class'] = implode(' ', $classes);
+
 	    return $attrs;
 	}
 
