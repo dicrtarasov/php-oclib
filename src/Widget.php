@@ -90,7 +90,7 @@ class Widget extends ArrayObject
         try {
             $ret = $this->render();
         } catch (\Throwable $ex) {
-            trigger_error($ex->getMessage(), E_USER_NOTICE);
+            trigger_error(DEBUG ? $ex : $ex->getMessage(), E_USER_NOTICE);
         }
 
         return $ret;

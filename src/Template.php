@@ -120,7 +120,7 @@ class Template extends ArrayObject
 		try {
 		    $ret = $this->render();
 		} catch (\Throwable $ex) {
-		    trigger_error($ex, E_USER_ERROR);
+		    trigger_error(DEBUG ? $ex : $ex->getMessage(), E_USER_ERROR);
 		}
 
 		return $ret;

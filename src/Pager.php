@@ -156,6 +156,8 @@ class Pager extends Model
         if (empty($params['limit']) || $params['limit'] == $this->defaultLimit) {
             unset($params['limit']);
         }
+
+        return $params;
     }
 
     /**
@@ -173,7 +175,7 @@ class Pager extends Model
             throw new ValidateException($this, 'route');
         }
 
-        return Registry::app()->link($this->route, $params);
+        return Registry::app()->url->link($this->route, $params);
     }
 
     /**
