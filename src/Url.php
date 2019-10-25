@@ -53,27 +53,22 @@ class Url
 	        throw new \InvalidArgumentException('empty route');
 	    }
 
-	    // преобразуем аргументы в массив
-        if (!is_array($args)) {
-            $args = trim($args);
-            if (empty($args)) {
-                $args = [];
-            } else {
-                parse_str($args, $args);
-            }
-        }
-
-        // фильруем аргументы
-        $args = Filter::params($args);
-
-        // добавляем маршрут
-        $args['route'] = $route;
-
-        // сортируем
-        ksort($args);
-
         // сроим ссылку
-	    $url = rtrim($this->url, '/') . '/index.php?' . http_build_query($args);
+	    $url = rtrim($this->url, '/') . '/index.php';
+	    if (empty($args)) {
+	        $url .= '?route=' . $route;
+	    } elseif (is_string($args)) {
+	        $url .= '?route=' . $route . '&' . $args;
+	    } else {
+            // добавляем маршрут
+            $args['route'] = $route;
+
+            // сортируем
+            ksort($args);
+
+            // сроим ссылку
+    	    $url .= '?' . http_build_query($args);
+	    }
 
 	    // формируем чпу
 	    foreach ($this->rewrite as $rewrite) {
