@@ -19,8 +19,14 @@ class Pager extends Model
     /** @var string тип сортировки */
     public $sort;
 
+    /** @var string сортировка по-умолчанию */
+    public $defaultSort;
+
     /** @var string порядок сортировки */
     public $order;
+
+    /** @var string порядок по-умолчанию */
+    public $defaultOrder;
 
     /** @var int общее кол-во элементов */
     public $total = 0;
@@ -29,7 +35,10 @@ class Pager extends Model
     public $page = 1;
 
     /** @var int кол-во на странице */
-    public $limit = 100;
+    public $limit;
+
+    /** @var int лимит по-умолчанию */
+    public $defaultLimit;
 
     /** @var string маршрут сраницы */
     public $route;
@@ -64,11 +73,17 @@ class Pager extends Model
      */
     public function validate()
     {
-        $this->sort = trim($this->sort);
+        if (empty($this->sort) && !empty($this->defaultSort)) {
+            $this->sort = $this->defaultSort;
+        }
+
+        if (!empty($this->defaultOrder) && !in_array($this->defaultOrder, self::ORDERS)) {
+            throw new ValidateException($this, 'defaultOrder');
+        }
 
         $this->order = strtoupper($this->order);
-        if ($this->order != self::ORDER_DESC) {
-            $this->order = self::ORDER_ASC;
+        if (!in_array($this->order, self::ORDERS)) {
+            $this->order = $this->defaultOrder ?: self::ORDER_ASC;
         }
 
         $this->page = (int)$this->page;
@@ -76,19 +91,23 @@ class Pager extends Model
             $this->page = 1;
         }
 
+        $this->defaultLimit = (int)$this->defaultLimit;
+        if ($this->defaultLimit < 0) {
+            throw new ValidateException($this, 'defaultLimit');
+        }
+
         $this->limit = (int)$this->limit;
         if ($this->limit < 1) {
-            throw new ValidateException($this, 'limit');
+            if (!empty($this->defaultLimit)) {
+                $this->limit = $this->defaultLimit;
+            } else {
+                throw new ValidateException($this, 'limit');
+            }
         }
 
         $this->total = (int)$this->total;
         if ($this->total < 0) {
             throw new ValidateException($this, 'total');
-        }
-
-        $this->route = trim($this->route);
-        if (empty($this->route)) {
-            throw new ValidateException($this, 'route');
         }
 
         $this->params = (array)($this->params ?: []);
@@ -102,60 +121,98 @@ class Pager extends Model
      */
     public function pagesCount()
     {
-        $this->validate();
-        return (int)ceil($this->total / $this->limit);
+        return !empty($this->limit) ? (int)ceil($this->total / $this->limit) : 0;
     }
 
     /**
-     * Возвращае ссылку на заданную страницу.
+     * Возвращает канонические параметры страницы.
      *
-     * @param int $page
+     * @param array $params
+     * @return array
+     */
+    public function buildParams(array $params = [])
+    {
+        // парамеры URL
+        $params = array_merge($this->params, [
+            'sort' => $this->sort ?: $this->defaultSort,
+            'order' => $this->order ?: $this->defaultOrder,
+            'page' => $this->page > 1 ? $this->page : null,
+            'limit' => $this->limit ?: null
+        ], $params);
+
+        // удаляем значения по-умолчанию
+        if (empty($params['sort']) || $params['sort'] == $this->defaultSort) {
+            unset($params['sort']);
+        }
+
+        if (empty($params['order']) || $params['order'] == $this->defaultOrder) {
+            unset($params['order']);
+        }
+
+        if (empty($params['page']) || $params['page'] < 2) {
+            unset($params['page']);
+        }
+
+        if (empty($params['limit']) || $params['limit'] == $this->defaultLimit) {
+            unset($params['limit']);
+        }
+    }
+
+    /**
+     * Сроит ссылку с данными пейджера и дополнительными параметрами.
+     *
+     * @param array $params
      * @return string
      */
-    public function link(int $page)
+    public function link(array $params = [])
     {
-        if ($page < 1) {
-            throw new \InvalidArgumentException('page');
+        // парамеры URL
+        $params = $this->buildParams($params);
+
+        if (empty($this->route)) {
+            throw new ValidateException($this, 'route');
         }
 
-        $params = $this->params ?: [];
-
-        if (!empty($this->sort)) {
-            $params['sort'] = $this->sort;
-        }
-
-        if (!empty($this->order)) {
-            $params['order'] = $this->order;
-        }
-
-        if (!empty($this->limit)) {
-            $params['limit'] = $this->limit;
-        }
-
-        if ($page > 1) {
-            $params['page'] = $page;
-        }
-
-        return Registry::app()->url->link($this->route, $params);
+        return Registry::app()->link($this->route, $params);
     }
 
     /**
-     * Ссылка на первую страницу
+     * Ссылка на предыдущую страницу.
+     *
+     * @return string
+     */
+    public function prev()
+    {
+        return $this->link(['page' => $this->page > 1 ? $this->page - 1 : 1]);
+    }
+
+    /**
+     * Ссылка на следующую сраницу.
+     *
+     * @return string
+     */
+    public function next()
+    {
+        return $this->link(['page' => $this->page < $this->pagesCount() ? $this->page + 1 : $this->pagesCount()]);
+    }
+
+    /**
+     * Ссылка на первую страницу.
      *
      * @return string
      */
     public function first()
     {
-        return $this->link(1);
+        return $this->link(['page' => 1]);
     }
 
     /**
-     * Ссылка на последнюю страницу.
+     * Ссылка на последнюю страницую
      *
      * @return string
      */
     public function last()
     {
-        return $this->link($this->pagesCount());
+        return $this->link(['page' => $this->pagesCount()]);
     }
 }
