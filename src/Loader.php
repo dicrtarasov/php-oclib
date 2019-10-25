@@ -1,6 +1,5 @@
 <?php
-use dicr\oclib\Registry;
-use dicr\oclib\Template;
+namespace dicr\oclib;
 
 /**
  * Загрузчик.
@@ -83,7 +82,7 @@ class Loader
 	 *
 	 * @param string $file относительный файл темплейа
 	 * @param array $data данные для темплейта
-	 * @return dicr\oclib\Template
+	 * @return \dicr\oclib\Template
 	 */
 	public function view($file, $data = [])
 	{
