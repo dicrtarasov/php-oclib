@@ -1,5 +1,16 @@
 <?php
+/**
+ * Copyright (c) 2019.
+ *
+ * @author Igor (Dicr) Tarasov, develop@dicr.org
+ */
+
+/** @noinspection PhpUnused */
+
+declare(strict_types = 1);
 namespace dicr\oclib;
+
+use function in_array;
 
 /**
  * Модель пейджера страниц.
@@ -10,10 +21,13 @@ namespace dicr\oclib;
 class Pager extends Model
 {
     /** Направления сортировки */
-    const ORDER_ASC = 'ASC';
-    const ORDER_DESC = 'DESC';
-    const ORDERS = [
-        self::ORDER_ASC, self::ORDER_DESC
+    public const ORDER_ASC = 'ASC';
+
+    public const ORDER_DESC = 'DESC';
+
+    public const ORDERS = [
+        self::ORDER_ASC,
+        self::ORDER_DESC
     ];
 
     /** @var string тип сортировки */
@@ -73,16 +87,16 @@ class Pager extends Model
      */
     public function validate()
     {
-        if (empty($this->sort) && !empty($this->defaultSort)) {
+        if (empty($this->sort) && ! empty($this->defaultSort)) {
             $this->sort = $this->defaultSort;
         }
 
-        if (!empty($this->defaultOrder) && !in_array($this->defaultOrder, self::ORDERS)) {
+        if (! empty($this->defaultOrder) && ! in_array($this->defaultOrder, self::ORDERS, false)) {
             throw new ValidateException($this, 'defaultOrder');
         }
 
         $this->order = strtoupper($this->order);
-        if (!in_array($this->order, self::ORDERS)) {
+        if (! in_array($this->order, self::ORDERS, false)) {
             $this->order = $this->defaultOrder ?: self::ORDER_ASC;
         }
 
@@ -98,7 +112,7 @@ class Pager extends Model
 
         $this->limit = (int)$this->limit;
         if ($this->limit < 1) {
-            if (!empty($this->defaultLimit)) {
+            if (! empty($this->defaultLimit)) {
                 $this->limit = $this->defaultLimit;
             } else {
                 throw new ValidateException($this, 'limit');
@@ -110,18 +124,38 @@ class Pager extends Model
             throw new ValidateException($this, 'total');
         }
 
-        $this->params = (array)($this->params ?: []);
+        $this->params = $this->params ?: [];
     }
 
     /**
-     * Возвращает количество сраниц.
+     * Ссылка на предыдущую страницу.
      *
-     * @throws \InvalidArgumentException
-     * @return number
+     * @return string
+     * @throws \dicr\oclib\ValidateException
      */
-    public function pagesCount()
+    public function prev()
     {
-        return !empty($this->limit) ? (int)ceil($this->total / $this->limit) : 0;
+        return $this->link(['page' => $this->page > 1 ? $this->page - 1 : 1]);
+    }
+
+    /**
+     * Сроит ссылку с данными пейджера и дополнительными параметрами.
+     *
+     * @param array $params
+     * @return string
+     * @throws \dicr\oclib\ValidateException
+     */
+    public function link(array $params = [])
+    {
+        // парамеры URL
+        $params = $this->buildParams($params);
+
+        if (empty($this->route)) {
+            throw new ValidateException($this, 'route');
+        }
+
+        /** @noinspection PhpUndefinedMethodInspection */
+        return Registry::app()->url->link($this->route, $params);
     }
 
     /**
@@ -141,11 +175,11 @@ class Pager extends Model
         ], $params);
 
         // удаляем значения по-умолчанию
-        if (empty($params['sort']) || $params['sort'] == $this->defaultSort) {
+        if (empty($params['sort']) || $params['sort'] === $this->defaultSort) {
             unset($params['sort']);
         }
 
-        if (empty($params['order']) || $params['order'] == $this->defaultOrder) {
+        if (empty($params['order']) || $params['order'] === $this->defaultOrder) {
             unset($params['order']);
         }
 
@@ -153,7 +187,7 @@ class Pager extends Model
             unset($params['page']);
         }
 
-        if (empty($params['limit']) || $params['limit'] == $this->defaultLimit) {
+        if (empty($params['limit']) || (int)$params['limit'] === $this->defaultLimit) {
             unset($params['limit']);
         }
 
@@ -161,37 +195,10 @@ class Pager extends Model
     }
 
     /**
-     * Сроит ссылку с данными пейджера и дополнительными параметрами.
-     *
-     * @param array $params
-     * @return string
-     */
-    public function link(array $params = [])
-    {
-        // парамеры URL
-        $params = $this->buildParams($params);
-
-        if (empty($this->route)) {
-            throw new ValidateException($this, 'route');
-        }
-
-        return Registry::app()->url->link($this->route, $params);
-    }
-
-    /**
-     * Ссылка на предыдущую страницу.
-     *
-     * @return string
-     */
-    public function prev()
-    {
-        return $this->link(['page' => $this->page > 1 ? $this->page - 1 : 1]);
-    }
-
-    /**
      * Ссылка на следующую сраницу.
      *
      * @return string
+     * @throws \dicr\oclib\ValidateException
      */
     public function next()
     {
@@ -199,9 +206,21 @@ class Pager extends Model
     }
 
     /**
+     * Возвращает количество сраниц.
+     *
+     * @return number
+     * @throws \InvalidArgumentException
+     */
+    public function pagesCount()
+    {
+        return ! empty($this->limit) ? (int)ceil($this->total / $this->limit) : 0;
+    }
+
+    /**
      * Ссылка на первую страницу.
      *
      * @return string
+     * @throws \dicr\oclib\ValidateException
      */
     public function first()
     {
@@ -212,6 +231,7 @@ class Pager extends Model
      * Ссылка на последнюю страницую
      *
      * @return string
+     * @throws \dicr\oclib\ValidateException
      */
     public function last()
     {

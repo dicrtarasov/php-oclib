@@ -1,5 +1,15 @@
 <?php
+/**
+ * Copyright (c) 2019.
+ *
+ * @author Igor (Dicr) Tarasov, develop@dicr.org
+ */
+
+declare(strict_types = 1);
 namespace dicr\oclib;
+
+use InvalidArgumentException;
+use Throwable;
 
 /**
  * Темплейт.
@@ -9,130 +19,138 @@ namespace dicr\oclib;
  */
 class Template extends ArrayObject
 {
-	/** @var string файл */
-	private $_file;
+    /** @var string файл */
+    private $_file;
 
-	/** @var array переменные */
-	private $_data;
+    /** @var array переменные */
+    private $_data;
 
-	/**
-	 * Конструктор.
-	 *
-	 * @param string $file
-	 * @param array $data
-	 */
-	public function __construct(string $file, array $data=[])
-	{
-	    // проверяем аргумент
-	    if (empty($file)) {
-	        throw new \InvalidArgumentException('file');
-	    }
+    /**
+     * Конструктор.
+     *
+     * @param string $file
+     * @param array $data
+     */
+    public function __construct(string $file, array $data = [])
+    {
+        parent::__construct([]);
 
-		$this->_file = $file;
-		$this->_data = $data;
-	}
+        // проверяем аргумент
+        if (empty($file)) {
+            throw new InvalidArgumentException('file');
+        }
 
-	/**
-	 * Возвращаеть путь файла.
-	 *
-	 * @return string полный путь файла для выполнения
-	 */
-	protected function getFilePath()
-	{
-	    $path = $this->_file;
+        $this->_file = $file;
+        $this->_data = $data;
+    }
 
-	    // удаляем тему вначале
-	    $matches = null;
-	    if (preg_match('~^.+?\/template\/([^\/]+\/.+)$~uism', $path, $matches)) {
-	        $path = $matches[1];
-	    }
+    /**
+     * Проверка наличия переменной.
+     *
+     * @param string $key
+     * @return boolean
+     */
+    public function __isset($key)
+    {
+        return Registry::app()->has($key);
+    }
 
-	    // полный путь
-	    $path = rtrim(DIR_TEMPLATE, '/') . '/' . ltrim($path, '/');
+    /**
+     * Возвращает значение переменной
+     *
+     * @param string $key
+     * @return mixed
+     */
+    public function __get($key)
+    {
+        return Registry::app()->get($key);
+    }
 
-	    // добавляем расширение
-		$ext = pathinfo($path, PATHINFO_EXTENSION);
-		if (empty($ext)) {
-		    $path .= '.tpl';
-		}
+    /**
+     * Устанавливает значение переменной.
+     *
+     * @param string $key
+     * @param mixed $value
+     */
+    public function __set($key, $value)
+    {
+        $this->_data[$key] = $value;
+    }
 
-		return $path;
-	}
+    /**
+     * омпилирует в текст
+     *
+     * @return string
+     */
+    public function __toString()
+    {
+        $ret = '';
 
- 	/**
-	 * Рендеринг темплейта в строку
-	 *
-	 * @return string
-	 */
-	public function render()
-	{
-	    // распаковываем данные
-		extract($this->_data, EXTR_REFS|EXTR_SKIP);
+        try {
+            $ret = $this->render();
+        } catch (Throwable $ex) {
+            /** @noinspection PhpUndefinedConstantInspection */
+            trigger_error(DEBUG ? $ex : $ex->getMessage(), E_USER_ERROR);
+        }
 
-		// выполняем файл
-	    ob_start();
-		require($this->getFilePath());
-		return ob_get_clean();
-	}
+        return $ret;
+    }
 
-	/**
-	 * Проверка наличия переменной.
-	 *
-	 * @param string $key
-	 * @return boolean
-	 */
-	public function _isset($key)
-	{
-	    return Registry::app()->has($key);
-	}
+    /**
+     * Рендеринг темплейта в строку
+     *
+     * @return string
+     */
+    public function render()
+    {
+        // распаковываем данные
+        extract($this->_data, EXTR_REFS | EXTR_SKIP);
 
-	/**
-	 * Возвращает значение переменной
-	 *
-	 * @param string $key
-	 * @return mixed
-	 */
-	public function __get($key)
-	{
-		return Registry::app()->get($key);
-	}
+        // выполняем файл
+        ob_start();
+        /** @noinspection PhpIncludeInspection */
+        require($this->getFilePath());
+        return ob_get_clean();
+    }
 
-	/**
-	 * Устанавливает значение переменной.
-	 *
-	 * @param string $key
-	 * @param mixed $value
-	 */
-	public function __set($key, $value)
-	{
-	    $this->_data[$key] = $value;
-	}
+    /**
+     * Возвращаеть путь файла.
+     *
+     * @return string полный путь файла для выполнения
+     */
+    protected function getFilePath()
+    {
+        $path = $this->_file;
 
-	/**
-	 * омпилирует в текст
-	 *
-	 * @return string
-	 */
-	public function __toString()
-	{
-	    $ret = '';
+        // удаляем тему вначале
+        $matches = null;
+        if (preg_match('~^.+?/template/([^/]+/.+)$~uism', $path, $matches)) {
+            $path = $matches[1];
+        }
 
-		try {
-		    $ret = $this->render();
-		} catch (\Throwable $ex) {
-		    trigger_error(DEBUG ? $ex : $ex->getMessage(), E_USER_ERROR);
-		}
+        // полный путь
+        /** @noinspection PhpUndefinedConstantInspection */
+        $path = rtrim(DIR_TEMPLATE, '/') . '/' . ltrim($path, '/');
 
-		return $ret;
-	}
+        // добавляем расширение
+        $ext = pathinfo($path, PATHINFO_EXTENSION);
+        if (empty($ext)) {
+            $path .= '.tpl';
+        }
 
-	/**
-	 * Делает дамп данных
-	 */
-	public function dump($var = null)
-	{
-	    echo '<xmp>';
-	    var_dump($this->_data[$var] ?? null);
-	    exit;
-	}
+        return $path;
+    }
+
+    /**
+     * Делает дамп данных
+     *
+     * @param null $var
+     */
+    public function dump($var = null)
+    {
+        echo '<!--suppress HtmlDeprecatedTag --><xmp>';
+        /** @noinspection ForgottenDebugOutputInspection */
+        var_dump($this->_data[$var] ?? null);
+        exit;
+    }
 }

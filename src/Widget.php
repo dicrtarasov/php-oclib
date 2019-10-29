@@ -1,5 +1,16 @@
 <?php
+/**
+ * Copyright (c) 2019.
+ *
+ * @author Igor (Dicr) Tarasov, develop@dicr.org
+ */
+
+/** @noinspection PhpUnused */
+
+declare(strict_types = 1);
 namespace dicr\oclib;
+
+use Throwable;
 
 /**
  * Виджет.
@@ -31,7 +42,7 @@ class Widget extends ArrayObject
             $this->id = self::generateId();
         }
 
-        if (!isset($this->options['id'])) {
+        if (! isset($this->options['id'])) {
             $this->options['id'] = $this->id;
         }
     }
@@ -43,28 +54,7 @@ class Widget extends ArrayObject
      */
     protected static function generateId()
     {
-        return str_replace('\\', '-', strtolower(static::class)) . '-' . rand();
-    }
-
-    /**
-     * Генерирует HTML подключения плагина.
-     *
-     * @param string $name название плагина.
-     * @return string
-     */
-    protected function plugin(string $name)
-    {
-        return Html::plugin('#' . $this->id, $name, $this->pluginOptions);
-    }
-
-    /**
-     * Рендерит плагин.
-     *
-     * @return string
-     */
-    public function render()
-    {
-        // генерируем html
+        return str_replace('\\', '-', strtolower(static::class)) . '-' . mt_rand();
     }
 
     /**
@@ -89,10 +79,33 @@ class Widget extends ArrayObject
 
         try {
             $ret = $this->render();
-        } catch (\Throwable $ex) {
+        } catch (Throwable $ex) {
+            /** @noinspection PhpUndefinedConstantInspection */
             trigger_error(DEBUG ? $ex : $ex->getMessage(), E_USER_NOTICE);
         }
 
         return $ret;
+    }
+
+    /**
+     * Рендерит плагин.
+     *
+     * @return string
+     */
+    public function render()
+    {
+        // генерируем html
+        return '';
+    }
+
+    /**
+     * Генерирует HTML подключения плагина.
+     *
+     * @param string $name название плагина.
+     * @return string
+     */
+    protected function plugin(string $name)
+    {
+        return Html::plugin('#' . $this->id, $name, $this->pluginOptions);
     }
 }

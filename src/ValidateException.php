@@ -1,5 +1,14 @@
 <?php
+/**
+ * Copyright (c) 2019.
+ *
+ * @author Igor (Dicr) Tarasov, develop@dicr.org
+ */
+
+declare(strict_types = 1);
 namespace dicr\oclib;
+
+use function get_class;
 
 /**
  * Ошибка валидации.
@@ -19,7 +28,7 @@ class ValidateException extends Exception
     public function __construct($obj, string $field, string $message = null)
     {
         $msg = sprintf('Ошибка валидации: %s в %s', $field, get_class($obj));
-        $msg .= ': ' . ($message ?? ($this->$field ?? 'null'));
+        $msg .= ': ' . ($message ?? ($obj->{$field} ?? 'null'));
 
         parent::__construct($msg);
     }

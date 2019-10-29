@@ -1,13 +1,19 @@
 <?php
+/**
+ * Copyright (c) 2019.
+ *
+ * @author Igor (Dicr) Tarasov, develop@dicr.org
+ */
+
+declare(strict_types = 1);
 namespace dicr\oclib;
+
+use ArrayAccess;
 
 /**
  * Базовый объект.
- *
- * @author Igor (Dicr) Tarasov <develop@dicr.org>
- * @version 2019
  */
-class ArrayObject implements \ArrayAccess
+class ArrayObject implements ArrayAccess
 {
     /**
      * Консруктор.
@@ -27,7 +33,7 @@ class ArrayObject implements \ArrayAccess
     public function configure(array $config)
     {
         foreach ($config as $key => $val) {
-            $this->$key = $val;
+            $this->{$key} = $val;
         }
     }
 
@@ -35,35 +41,35 @@ class ArrayObject implements \ArrayAccess
      * {@inheritDoc}
      * @see \ArrayAccess::offsetExists()
      */
-	public function offsetExists($offset)
-	{
-	    return property_exists($this, $offset);
-	}
+    public function offsetExists($offset)
+    {
+        return property_exists($this, $offset);
+    }
 
-	/**
-	 * {@inheritDoc}
-	 * @see \ArrayAccess::offsetGet()
-	 */
-	public function offsetGet($offset)
-	{
-	    return $this->$offset;
-	}
+    /**
+     * {@inheritDoc}
+     * @see \ArrayAccess::offsetGet()
+     */
+    public function offsetGet($offset)
+    {
+        return $this->{$offset};
+    }
 
-	/**
-	 * {@inheritDoc}
-	 * @see \ArrayAccess::offsetSet()
-	 */
-	public function offsetSet($offset, $value)
-	{
-	    $this->$offset = $value;
-	}
+    /**
+     * {@inheritDoc}
+     * @see \ArrayAccess::offsetSet()
+     */
+    public function offsetSet($offset, $value)
+    {
+        $this->{$offset} = $value;
+    }
 
-	/**
-	 * {@inheritDoc}
-	 * @see \ArrayAccess::offsetUnset()
-	 */
-	public function offsetUnset($offset)
-	{
-	    unset($this->$offset);
-	}
+    /**
+     * {@inheritDoc}
+     * @see \ArrayAccess::offsetUnset()
+     */
+    public function offsetUnset($offset)
+    {
+        unset($this->{$offset});
+    }
 }
