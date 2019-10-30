@@ -14,11 +14,8 @@ use function in_array;
 
 /**
  * Модель пейджера страниц.
- *
- * @author Igor (Dicr) Tarasov <develop@dicr.org>
- * @version 2019
  */
-class Pager extends Model
+class Pager extends AbstractModel
 {
     /** Направления сортировки */
     public const ORDER_ASC = 'ASC';
@@ -83,7 +80,7 @@ class Pager extends Model
 
     /**
      * {@inheritDoc}
-     * @see \dicr\oclib\Model::validate()
+     * @see \dicr\oclib\AbstractModel::validate()
      */
     public function validate()
     {
@@ -155,7 +152,7 @@ class Pager extends Model
         }
 
         /** @noinspection PhpUndefinedMethodInspection */
-        return Registry::app()->url->link($this->route, $params);
+        return BaseRegistry::app()->url->link($this->route, $params);
     }
 
     /**

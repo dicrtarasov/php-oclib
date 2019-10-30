@@ -13,11 +13,8 @@ use Throwable;
 
 /**
  * Темплейт.
- *
- * @author Igor (Dicr) Tarasov <develop@dicr.org>
- * @version 2016
  */
-class Template extends ArrayObject
+class BaseTemplate extends RegistryProxy
 {
     /** @var string файл */
     private $_file;
@@ -45,34 +42,12 @@ class Template extends ArrayObject
     }
 
     /**
-     * Проверка наличия переменной.
-     *
-     * @param string $key
-     * @return boolean
-     */
-    public function __isset($key)
-    {
-        return Registry::app()->has($key);
-    }
-
-    /**
-     * Возвращает значение переменной
-     *
-     * @param string $key
-     * @return mixed
-     */
-    public function __get($key)
-    {
-        return Registry::app()->get($key);
-    }
-
-    /**
      * Устанавливает значение переменной.
      *
      * @param string $key
      * @param mixed $value
      */
-    public function __set($key, $value)
+    public function __set(string $key, $value)
     {
         $this->_data[$key] = $value;
     }

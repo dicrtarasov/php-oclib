@@ -16,7 +16,7 @@ namespace dicr\oclib;
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2019
  */
-class NotFoundException extends Exception
+class NotFoundBaseException extends BaseException
 {
     /**
      * Конструктор.
@@ -30,13 +30,13 @@ class NotFoundException extends Exception
 
     /**
      * {@inheritDoc}
-     * @see Exception::process()
+     * @see BaseException::process()
      */
     public function process()
     {
         self::cleanBuffer();
         http_response_code(404);
-        echo Registry::app()->load->view('error/not_found');
+        echo BaseRegistry::app()->load->view('error/not_found');
         exit;
     }
 }

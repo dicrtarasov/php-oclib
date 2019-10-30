@@ -16,7 +16,7 @@ use stdClass;
 /**
  * База данных.
  */
-class DB
+class BaseDB extends AbstractObject
 {
     /** @var \mysqli */
     private $link;
@@ -32,6 +32,8 @@ class DB
      */
     public function __construct($hostname, $username, $password, $database)
     {
+        parent::__construct();
+
         $this->link = new mysqli($hostname, $username, $password, $database);
 
         if ($this->link->connect_error) {
@@ -49,7 +51,7 @@ class DB
      *
      * @param string $sql SQL
      * @param string $class класс объекта
-     * @return array[]|\dicr\oclib\Dao[]
+     * @return array[]|\dicr\oclib\AbstractDao[]
      * @throws DbException
      */
     public function queryAll(string $sql, string $class = null)
@@ -119,7 +121,7 @@ class DB
      *
      * @param string $sql
      * @param string $class
-     * @return array|\dicr\oclib\Dao
+     * @return array|\dicr\oclib\AbstractDao
      * @throws DbException
      */
     public function queryOne(string $sql, string $class = null)

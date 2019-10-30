@@ -18,10 +18,10 @@ use Throwable;
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2019
  */
-class RedirectException extends Exception
+class RedirectException extends BaseException
 {
     /**
-     * Консруктор.
+     * Конструктор.
      *
      * @param string $location
      * @param int $code
@@ -34,7 +34,7 @@ class RedirectException extends Exception
 
     /**
      * {@inheritDoc}
-     * @see Exception::process()
+     * @see BaseException::process()
      */
     public function process()
     {

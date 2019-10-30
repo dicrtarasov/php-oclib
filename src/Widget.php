@@ -18,7 +18,7 @@ use Throwable;
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2019
  */
-class Widget extends ArrayObject
+abstract class Widget extends AbstractObject
 {
     /** @var string id */
     public $id;

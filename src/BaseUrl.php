@@ -18,7 +18,7 @@ use function is_string;
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2019
  */
-class Url
+class BaseUrl extends AbstractObject
 {
     private $url;
 
@@ -31,6 +31,8 @@ class Url
      */
     public function __construct(string $url)
     {
+        parent::__construct([]);
+
         $this->url = $url;
     }
 

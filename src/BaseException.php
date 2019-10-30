@@ -8,12 +8,13 @@
 declare(strict_types = 1);
 namespace dicr\oclib;
 
+use Exception;
 use Throwable;
 
 /**
  * Базовый Exception.
  */
-class Exception extends \Exception
+class BaseException extends Exception
 {
     /**
      * Консруктор.

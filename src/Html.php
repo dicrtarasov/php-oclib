@@ -169,6 +169,47 @@ class Html
     }
 
     /**
+     * Html-тэг
+     *
+     * @param string $name
+     * @param string $content
+     * @param array $attrs
+     * @return string
+     */
+    public static function tag(string $name, string $content = '', array $attrs = [])
+    {
+        ob_start();
+        echo self::startTag($name, $attrs);
+        if (! in_array($name, self::NOBODY_TAGS)) {
+            echo $content;
+            echo self::endTag($name);
+        }
+        return ob_get_clean();
+    }
+
+    /**
+     * Экранирует строку HTML.
+     *
+     * @param string $val
+     * @return string
+     */
+    public static function esc($val)
+    {
+        return htmlspecialchars($val, ENT_QUOTES, 'utf-8');
+    }
+
+    /**
+     * Конец тега
+     *
+     * @param string $name
+     * @return string
+     */
+    public static function endTag(string $name)
+    {
+        return in_array($name, self::NOBODY_TAGS) ? '' : sprintf('</%s>', $name);
+    }
+
+    /**
      * Преобразует массив аттриутов в строку
      *
      * @param array $attrs
@@ -231,17 +272,6 @@ class Html
     }
 
     /**
-     * Экранирует строку HTML.
-     *
-     * @param string $val
-     * @return string
-     */
-    public static function esc($val)
-    {
-        return htmlspecialchars($val, ENT_QUOTES, 'utf-8');
-    }
-
-    /**
      * Конвертирует значение HTML-атрибута style в строку
      *
      * @param mixed $style
@@ -282,36 +312,6 @@ class Html
         $str = implode(' ', $str);
 
         return trim($str);
-    }
-
-    /**
-     * Html-тэг
-     *
-     * @param string $name
-     * @param string $content
-     * @param array $attrs
-     * @return string
-     */
-    public static function tag(string $name, string $content = '', array $attrs = [])
-    {
-        ob_start();
-        echo self::startTag($name, $attrs);
-        if (! in_array($name, self::NOBODY_TAGS)) {
-            echo $content;
-            echo self::endTag($name);
-        }
-        return ob_get_clean();
-    }
-
-    /**
-     * Конец тега
-     *
-     * @param string $name
-     * @return string
-     */
-    public static function endTag(string $name)
-    {
-        return in_array($name, self::NOBODY_TAGS) ? '' : sprintf('</%s>', $name);
     }
 
     /**

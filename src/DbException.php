@@ -11,7 +11,7 @@ namespace dicr\oclib;
 /**
  * Ошибка базы данных.
  */
-class DbException extends Exception
+class DbException extends BaseException
 {
     /**
      * Конструктор.

@@ -15,7 +15,7 @@ use RuntimeException;
 /**
  * Файловый кэш.
  */
-class FileCache extends \ArrayObject
+class BaseFileCache extends AbstractObject
 {
     /** @var int время TTL по-умолчанию */
     public $ttl;
@@ -26,12 +26,11 @@ class FileCache extends \ArrayObject
     /**
      * Конструктор.
      *
-     * @param array $config
      * @throws \Exception
      */
-    public function __construct(array $config = [])
+    public function __construct()
     {
-        parent::__construct($config);
+        parent::__construct([]);
 
         // очищаем кэш с заданной вероятностью
         $this->gc();

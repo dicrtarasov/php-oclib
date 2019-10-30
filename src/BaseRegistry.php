@@ -13,16 +13,16 @@ namespace dicr\oclib;
 /**
  * Реестр.
  *
- * @property-read DB $db
- * @property-read Loader $load
+ * @property-read \dicr\oclib\BaseDB $db
+ * @property-read \dicr\oclib\BaseLoader $load
  * @property-read \Config $config
- * @property-read \Url $url
+ * @property-read \dicr\oclib\BaseUrl $url
  * @property-read \Request $request
  * @property-read \Response $response
  * @property-read \Cache $cache
  * @property-read \Session $session
  */
-class Registry
+class BaseRegistry extends AbstractObject
 {
     /** @var self */
     private static $_instance;
@@ -31,10 +31,14 @@ class Registry
     private $data = [];
 
     /**
-     * Конструктор
+     * Конструктор.
+     *
+     * @param array $config
      */
-    public function __construct()
+    public function __construct(array $config = [])
     {
+        parent::__construct($config);
+
         self::$_instance = $this;
     }
 

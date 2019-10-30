@@ -16,8 +16,16 @@ use function is_callable;
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2019
  */
-class Loader
+class BaseLoader extends AbstractObject
 {
+    /**
+     * Loader constructor.
+     */
+    public function __construct()
+    {
+        parent::__construct([]);
+    }
+
     public function controller(string $route, array $data = [])
     {
         $output = null;
@@ -40,7 +48,7 @@ class Loader
         }
 
         if ($class !== null) {
-            $controller = new $class(Registry::app());
+            $controller = new $class(BaseRegistry::app());
 
             if (! isset($method)) {
                 $method = 'index';
@@ -73,7 +81,7 @@ class Loader
         $key = 'model_' . str_replace('/', '_', $name);
 
         // проверяем уже загруженную модель
-        $model = Registry::app()->get($key);
+        $model = BaseRegistry::app()->get($key);
         if (! empty($model)) {
             return $model;
         }
@@ -84,7 +92,7 @@ class Loader
             /** @noinspection PhpIncludeInspection */
             include_once($file);
             $class = 'Model' . preg_replace('/[^a-zA-Z0-9]/', '', $name);
-            $registry = Registry::app();
+            $registry = BaseRegistry::app();
             $model = new $class($registry);
             $registry->set($key, $model);
         } else {
@@ -99,11 +107,11 @@ class Loader
      *
      * @param string $file относительный файл темплейа
      * @param array $data данные для темплейта
-     * @return \dicr\oclib\Template|string
+     * @return \dicr\oclib\BaseTemplate|string
      */
     public function view(string $file, array $data = [])
     {
-        return (string)(new Template($file, $data));
+        return (string)(new BaseTemplate($file, $data));
     }
 
     public function helper($helper)
@@ -122,11 +130,11 @@ class Loader
 
     public function config($config)
     {
-        Registry::app()->get('config')->load($config);
+        BaseRegistry::app()->get('config')->load($config);
     }
 
     public function language($language)
     {
-        return Registry::app()->get('language')->load($language);
+        return BaseRegistry::app()->get('language')->load($language);
     }
 }

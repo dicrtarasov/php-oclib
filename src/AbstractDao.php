@@ -18,9 +18,9 @@ use function is_callable;
 /**
  * Модель базы данных.
  */
-class Dao extends Model
+abstract class AbstractDao extends AbstractModel
 {
-    /** @var \dicr\oclib\DB */
+    /** @var \dicr\oclib\BaseDB */
     private static $_db;
 
     /**
@@ -75,12 +75,12 @@ class Dao extends Model
     /**
      * возвращает базу данных.
      *
-     * @return DB
+     * @return BaseDB
      */
     public static function db()
     {
         if (! isset(self::$_db)) {
-            self::$_db = Registry::app()->get('db');
+            self::$_db = BaseRegistry::app()->get('db');
         }
 
         return self::$_db;

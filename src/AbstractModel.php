@@ -18,12 +18,9 @@ use function is_callable;
 use function is_string;
 
 /**
- * Базовая модель.
- *
- * @author Igor (Dicr) Tarasov <develop@dicr.org>
- * @version 2019
+ * Абстрактная базовая модель.
  */
-class Model extends ArrayObject
+abstract class AbstractModel extends AbstractObject
 {
     /** @var string */
     private static $_formName;

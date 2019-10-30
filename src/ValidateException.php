@@ -16,12 +16,12 @@ use function get_class;
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2019
  */
-class ValidateException extends Exception
+class ValidateException extends BaseException
 {
     /**
      * Консруктор.
      *
-     * @param \dicr\oclib\ArrayObject $obj
+     * @param \dicr\oclib\AbstractObject $obj
      * @param string $field
      * @param string $message
      */

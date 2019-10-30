@@ -13,7 +13,7 @@ use ArrayAccess;
 /**
  * Базовый объект.
  */
-class ArrayObject implements ArrayAccess
+abstract class AbstractObject implements ArrayAccess
 {
     /**
      * Консруктор.
@@ -43,7 +43,7 @@ class ArrayObject implements ArrayAccess
      */
     public function offsetExists($offset)
     {
-        return property_exists($this, $offset);
+        return isset($this->{$offset});
     }
 
     /**
