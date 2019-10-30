@@ -73,7 +73,7 @@ class BaseLoader extends AbstractObject
      * Загрузка модели.
      *
      * @param string $name
-     * @return object модель
+     * @return \dicr\oclib\BaseModel модель
      */
     public function model(string $name)
     {
@@ -107,11 +107,11 @@ class BaseLoader extends AbstractObject
      *
      * @param string $file относительный файл темплейа
      * @param array $data данные для темплейта
-     * @return \dicr\oclib\BaseTemplate|string
+     * @return \dicr\oclib\BaseTemplate
      */
     public function view(string $file, array $data = [])
     {
-        return (string)(new BaseTemplate($file, $data));
+        return new BaseTemplate($file, $data);
     }
 
     public function helper($helper)

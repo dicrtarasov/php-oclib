@@ -66,11 +66,7 @@ class BaseFileCache extends AbstractObject
      */
     protected function globFiles($key = null)
     {
-        if (empty($key)) {
-            $mask = '*';
-        } else {
-            $mask = self::cacheKey($key) . '.*';
-        }
+        $mask = empty($key) ? '*' : self::cacheKey($key) . '.*';
 
         /** @noinspection PhpUndefinedConstantInspection */
         $files = glob(DIR_CACHE . $mask, GLOB_NOSORT);
@@ -125,7 +121,7 @@ class BaseFileCache extends AbstractObject
      */
     protected function decode(string $data)
     {
-        return unserialize($data, null);
+        return unserialize($data, []);
     }
 
     /**
@@ -183,5 +179,35 @@ class BaseFileCache extends AbstractObject
         foreach ($this->globFiles() as $file) {
             unlink($file);
         }
+    }
+
+    /**
+     * @param string $key
+     * @return bool
+     * @throws \Exception
+     */
+    public function __isset(string $key)
+    {
+        return $this->get($key) !== false;
+    }
+
+    /**
+     * @param string $key
+     * @return false|mixed
+     * @throws \Exception
+     */
+    public function __get(string $key)
+    {
+        return $this->get($key);
+    }
+
+    /**
+     * @param string $key
+     * @param $value
+     * @throws \Exception
+     */
+    public function __set(string $key, $value)
+    {
+        $this->set($key, $value);
     }
 }

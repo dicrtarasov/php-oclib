@@ -92,8 +92,7 @@ class Pager extends AbstractModel
             throw new ValidateException($this, 'defaultOrder');
         }
 
-        $this->order = strtoupper($this->order);
-        if (! in_array($this->order, self::ORDERS, false)) {
+        if (empty($this->order) || ! in_array(strtoupper($this->order), self::ORDERS, false)) {
             $this->order = $this->defaultOrder ?: self::ORDER_ASC;
         }
 

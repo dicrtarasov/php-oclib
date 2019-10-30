@@ -79,7 +79,7 @@ class BaseUrl extends AbstractObject
      * @param array|string $args
      * @return string
      */
-    public function link(string $route, array $args = [])
+    public function link(string $route, $args = null)
     {
         $route = trim($route);
         if (empty($route)) {
