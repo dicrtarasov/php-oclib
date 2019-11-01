@@ -24,6 +24,23 @@ abstract class AbstractDao extends AbstractModel
     private static $_db;
 
     /**
+     * AbstractModel constructor.
+     *
+     * @param array $config
+     */
+    public function __construct(array $config = [])
+    {
+        parent::__construct($config);
+
+        // автоматическая валидация после создания для приведения к нужным типам данных
+        try {
+            $this->validate();
+        } catch (\Throwable $ex) {
+            user_error((string)$ex, \E_USER_WARNING);
+        }
+    }
+
+    /**
      * Возвращает запись с заданным id.
      *
      * @param $conds

@@ -142,7 +142,7 @@ abstract class AbstractModel extends AbstractObject
                         throw new ValidateException($this, $field);
                     }
 
-                    if (! in_array($this->{$field}, $vals, true)) {
+                    if (! in_array($this->{$field}, $vals, false)) {
                         throw new ValidateException($this, $field);
                     }
 

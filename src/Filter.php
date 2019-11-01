@@ -64,7 +64,7 @@ class Filter
 
         $val = (array)$val;
         foreach ($val as $i => $v) {
-            $val[$i] = trim($v);
+            $val[$i] = (string)$v;
             if ($val[$i] === '') {
                 unset($val[$i]);
             }
