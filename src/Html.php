@@ -44,9 +44,10 @@ class Html
      * @param string $html
      * @return string
      */
-    public static function toText(string $html)
+    public static function toText($html)
     {
-        $html = html_entity_decode($html, null, 'utf-8');
+        $html = (string)$html;
+        $html = html_entity_decode($html, \ENT_QUOTES, 'utf-8');
         $html = html_entity_decode($html);
         $html = strip_tags($html);
         $html = (string)preg_replace('~[[:cntrl:]]+~uim', '', $html);
@@ -195,7 +196,7 @@ class Html
      */
     public static function esc($val)
     {
-        return htmlspecialchars($val, ENT_QUOTES, 'utf-8');
+        return htmlspecialchars((string)$val, ENT_QUOTES, 'utf-8');
     }
 
     /**
@@ -522,8 +523,7 @@ class Html
      */
     public static function plugin(string $target, string $name, array $options = [])
     {
-        return '<!--suppress BadExpressionStatementJS, JSUnresolvedFunction --><script>$("' . $target . '").' . $name .
-               '(' . self::json($options) . ')</script>';
+        return '<script>$(function() {$("' . $target . '").' . $name . '(' . self::json($options) . ');})</script>';
     }
 
     /**

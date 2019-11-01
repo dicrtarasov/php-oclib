@@ -18,7 +18,7 @@ use RuntimeException;
 class BaseFileCache extends AbstractObject
 {
     /** @var int время TTL по-умолчанию */
-    public $ttl;
+    public $ttl = 86400;
 
     /** @var float вероятность очистки кэша */
     public $gcProbability = 0.3;
@@ -51,8 +51,10 @@ class BaseFileCache extends AbstractObject
         $files = $this->globFiles();
         foreach ($files as $file) {
             $matches = null;
-            if ($matches[1] < $time && preg_match('~^[^.]+\.(\d+)$~um', pathinfo($file, PATHINFO_BASENAME))) {
-                unlink($file);
+            if (preg_match('~^[^.]+\.(\d+)$~um', pathinfo($file, PATHINFO_BASENAME), $matches)) {
+                if ($matches[1] < $time) {
+                    unlink($file);
+                }
             }
         }
     }
@@ -135,9 +137,8 @@ class BaseFileCache extends AbstractObject
     public function set($key, $val, int $ttl = null)
     {
         /** @noinspection PhpUndefinedConstantInspection */
-        $filename = DIR_CACHE . sprintf('%s.%d', self::cacheKey($key), (time() + $ttl) ?: $this->ttl);
+        $filename = DIR_CACHE . sprintf('%s.%d', self::cacheKey($key), time() + ($ttl ?: $this->ttl));
         $val = $this->encode($val);
-
         if (file_put_contents($filename, $val, LOCK_EX) === false) {
             /** @noinspection PhpUndefinedConstantInspection */
             throw new RuntimeException('Ошибка сохранения файла в кеше: ' . DIR_CACHE);

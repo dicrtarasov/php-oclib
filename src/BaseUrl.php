@@ -54,12 +54,9 @@ class BaseUrl extends AbstractObject
      * @param string $route
      * @param array $args
      */
-    public function redirectToCanonical(string $route, array $args = [])
+    public function redirectToCanonical(string $url)
     {
-        $args = Filter::params($args);
-        ksort($args);
-
-        $urlInfo = parse_url($this->link($route, $args));
+        $urlInfo = parse_url($url);
 
         $canonical = $urlInfo['path'];
         if (! empty($urlInfo['query'])) {

@@ -81,7 +81,7 @@ abstract class Widget extends AbstractObject
             $ret = $this->render();
         } catch (Throwable $ex) {
             /** @noinspection PhpUndefinedConstantInspection */
-            trigger_error(DEBUG ? $ex : $ex->getMessage(), E_USER_NOTICE);
+            trigger_error(DEBUG ? (string)$ex : $ex->getMessage(), E_USER_ERROR);
         }
 
         return $ret;

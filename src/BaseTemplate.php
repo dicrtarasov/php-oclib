@@ -53,25 +53,6 @@ class BaseTemplate extends RegistryProxy
     }
 
     /**
-     * омпилирует в текст
-     *
-     * @return string
-     */
-    public function __toString()
-    {
-        $ret = '';
-
-        try {
-            $ret = $this->render();
-        } catch (Throwable $ex) {
-            /** @noinspection PhpUndefinedConstantInspection */
-            trigger_error(DEBUG ? $ex : $ex->getMessage(), E_USER_ERROR);
-        }
-
-        return $ret;
-    }
-
-    /**
      * Рендеринг темплейта в строку
      *
      * @return string
@@ -127,5 +108,24 @@ class BaseTemplate extends RegistryProxy
         /** @noinspection ForgottenDebugOutputInspection */
         var_dump($this->_data[$var] ?? null);
         exit;
+    }
+
+    /**
+     * омпилирует в текст
+     *
+     * @return string
+     */
+    public function __toString()
+    {
+        $ret = '';
+
+        try {
+            $ret = $this->render();
+        } catch (Throwable $ex) {
+            /** @noinspection PhpUndefinedConstantInspection */
+            trigger_error(DEBUG ? (string)$ex : $ex->getMessage(), E_USER_ERROR);
+        }
+
+        return $ret;
     }
 }

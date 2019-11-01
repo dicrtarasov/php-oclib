@@ -10,6 +10,8 @@
 declare(strict_types = 1);
 namespace dicr\oclib;
 
+use LogicException;
+use Url;
 use function in_array;
 
 /**
@@ -40,10 +42,10 @@ class Pager extends AbstractModel
     public $defaultOrder;
 
     /** @var int общее кол-во элементов */
-    public $total = 0;
+    public $total;
 
     /** @var int сраница 1... */
-    public $page = 1;
+    public $page;
 
     /** @var int кол-во на странице */
     public $limit;
@@ -92,8 +94,12 @@ class Pager extends AbstractModel
             throw new ValidateException($this, 'defaultOrder');
         }
 
-        if (empty($this->order) || ! in_array(strtoupper($this->order), self::ORDERS, false)) {
-            $this->order = $this->defaultOrder ?: self::ORDER_ASC;
+        if (empty($this->order)) {
+            if (! empty($this->defaultOrder)) {
+                $this->order = $this->defaultOrder;
+            }
+        } elseif (! in_array($this->order, self::ORDERS)) {
+            $this->order = null;
         }
 
         $this->page = (int)$this->page;
@@ -108,50 +114,35 @@ class Pager extends AbstractModel
 
         $this->limit = (int)$this->limit;
         if ($this->limit < 1) {
-            if (! empty($this->defaultLimit)) {
-                $this->limit = $this->defaultLimit;
-            } else {
-                throw new ValidateException($this, 'limit');
+            $this->limit = $this->defaultLimit ?: null;
+        }
+
+        if (isset($this->total)) {
+            $this->total = (int)$this->total;
+            if ($this->total < 0) {
+                throw new ValidateException($this, 'total');
             }
         }
 
-        $this->total = (int)$this->total;
-        if ($this->total < 0) {
-            throw new ValidateException($this, 'total');
-        }
-
-        $this->params = $this->params ?: [];
+        $this->params = (array)($this->params ?: []);
     }
 
     /**
-     * Ссылка на предыдущую страницу.
+     * Возвращает количество сраниц.
      *
-     * @return string
-     * @throws \dicr\oclib\ValidateException
+     * @return int
      */
-    public function prev()
+    public function pagesCount()
     {
-        return $this->link(['page' => $this->page > 1 ? $this->page - 1 : 1]);
-    }
-
-    /**
-     * Сроит ссылку с данными пейджера и дополнительными параметрами.
-     *
-     * @param array $params
-     * @return string
-     * @throws \dicr\oclib\ValidateException
-     */
-    public function link(array $params = [])
-    {
-        // парамеры URL
-        $params = $this->buildParams($params);
-
-        if (empty($this->route)) {
-            throw new ValidateException($this, 'route');
+        if (! isset($this->total)) {
+            throw new LogicException('total not set');
         }
 
-        /** @noinspection PhpUndefinedMethodInspection */
-        return BaseRegistry::app()->url->link($this->route, $params);
+        if (empty($this->limit)) {
+            throw new LogicException('empty limit');
+        }
+
+        return (int)ceil($this->total / $this->limit);
     }
 
     /**
@@ -179,7 +170,7 @@ class Pager extends AbstractModel
             unset($params['order']);
         }
 
-        if (empty($params['page']) || $params['page'] < 2) {
+        if (empty($params['page']) || ($params['page'] !== '{page}' && $params['page'] < 2)) {
             unset($params['page']);
         }
 
@@ -187,7 +178,38 @@ class Pager extends AbstractModel
             unset($params['limit']);
         }
 
-        return $params;
+        return Filter::params($params);
+    }
+
+    /**
+     * Сроит ссылку с данными пейджера и дополнительными параметрами.
+     *
+     * @param array $params
+     * @return string
+     * @throws \dicr\oclib\ValidateException
+     */
+    public function link(array $params = [])
+    {
+        // парамеры URL
+        $params = $this->buildParams($params);
+
+        if (empty($this->route)) {
+            throw new ValidateException($this, 'route');
+        }
+
+        /** @noinspection PhpUndefinedMethodInspection */
+        return BaseRegistry::app()->url->link($this->route, $params);
+    }
+
+    /**
+     * Ссылка на предыдущую страницу.
+     *
+     * @return string
+     * @throws \dicr\oclib\ValidateException
+     */
+    public function prev()
+    {
+        return $this->link(['page' => $this->page > 1 ? $this->page - 1 : 1]);
     }
 
     /**
@@ -199,17 +221,6 @@ class Pager extends AbstractModel
     public function next()
     {
         return $this->link(['page' => $this->page < $this->pagesCount() ? $this->page + 1 : $this->pagesCount()]);
-    }
-
-    /**
-     * Возвращает количество сраниц.
-     *
-     * @return number
-     * @throws \InvalidArgumentException
-     */
-    public function pagesCount()
-    {
-        return ! empty($this->limit) ? (int)ceil($this->total / $this->limit) : 0;
     }
 
     /**
