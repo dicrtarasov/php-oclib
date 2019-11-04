@@ -17,6 +17,7 @@ namespace dicr\oclib;
  * @property-read \dicr\oclib\BaseUrl $url
  * @property-read \Request $request
  * @property-read \Response $response
+ * @property-read \Document $document
  *
  */
 abstract class RegistryProxy extends AbstractObject

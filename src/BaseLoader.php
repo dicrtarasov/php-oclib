@@ -26,7 +26,14 @@ class BaseLoader extends AbstractObject
         parent::__construct([]);
     }
 
-    public function controller(string $route, array $data = [])
+    /**
+     * Вызов контроллера.
+     *
+     * @param string $route
+     * @param mixed $args аргументы контроллера
+     * @return bool|string|null
+     */
+    public function controller(string $route, $args = null)
     {
         $output = null;
 
@@ -48,7 +55,7 @@ class BaseLoader extends AbstractObject
         }
 
         if ($class !== null) {
-            $controller = new $class(BaseRegistry::app());
+            $controller = new $class();
 
             if (! isset($method)) {
                 $method = 'index';
@@ -62,7 +69,7 @@ class BaseLoader extends AbstractObject
             $output = '';
 
             if (is_callable([$controller, $method])) {
-                $output = $controller->$method($data);
+                $output = $controller->$method($args);
             }
         }
 
