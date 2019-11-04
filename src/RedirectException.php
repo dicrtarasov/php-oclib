@@ -18,7 +18,7 @@ use Throwable;
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2019
  */
-class RedirectException extends BaseException
+class RedirectException extends OcException
 {
     /**
      * Конструктор.

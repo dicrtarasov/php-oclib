@@ -9,19 +9,22 @@ declare(strict_types = 1);
 namespace dicr\oclib;
 
 use InvalidArgumentException;
+use yii\base\BaseObject;
 use function in_array;
 use function is_string;
 
 /**
- * URL.
+ * URL для OpenCart.
  *
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2019
  */
-class BaseUrl extends AbstractObject
+class Url extends BaseObject
 {
+    /** @var string */
     private $url;
 
+    /** @var array  */
     private $rewrite = [];
 
     /**

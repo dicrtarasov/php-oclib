@@ -10,19 +10,22 @@
 declare(strict_types = 1);
 namespace dicr\oclib;
 
+use yii\base\BaseObject;
+
 /**
  * Реестр.
  *
- * @property-read \dicr\oclib\BaseDB $db
- * @property-read \dicr\oclib\BaseLoader $load
+ * @property-read \dicr\oclib\Cache $cache
+ * @property-read \dicr\oclib\DB $db
+ * @property-read \dicr\oclib\Loader $load
+ * @property-read \dicr\oclib\Url $url
  * @property-read \Config $config
- * @property-read \dicr\oclib\BaseUrl $url
  * @property-read \Request $request
  * @property-read \Response $response
- * @property-read \Cache $cache
+ * @property string $
  * @property-read \Session $session
  */
-class BaseRegistry extends AbstractObject
+class Registry extends BaseObject
 {
     /** @var self */
     private static $_instance;
@@ -60,28 +63,6 @@ class BaseRegistry extends AbstractObject
      * @param string $key
      * @return mixed
      */
-    public function __get(string $key)
-    {
-        return $this->get($key);
-    }
-
-    /**
-     * Установить значение.
-     *
-     * @param string $key
-     * @param mixed $value
-     */
-    public function __set(string $key, $value)
-    {
-        $this->set($key, $value);
-    }
-
-    /**
-     * Получить значение.
-     *
-     * @param string $key
-     * @return mixed
-     */
     public function get($key)
     {
         return $this->data[$key] ?? null;
@@ -104,21 +85,43 @@ class BaseRegistry extends AbstractObject
      * Проверить наличие.
      *
      * @param string $key
-     * @return boolean
+     * @return bool
      */
-    public function __isset(string $key)
+    public function has($key)
     {
-        return $this->has($key);
+        return isset($this->data[$key]);
+    }
+
+    /**
+     * Получить значение.
+     *
+     * @param string $key
+     * @return mixed
+     */
+    public function __get($key)
+    {
+        return $this->get($key);
+    }
+
+    /**
+     * Установить значение.
+     *
+     * @param string $key
+     * @param mixed $value
+     */
+    public function __set($key, $value)
+    {
+        $this->set($key, $value);
     }
 
     /**
      * Проверить наличие.
      *
      * @param string $key
-     * @return bool
+     * @return boolean
      */
-    public function has($key)
+    public function __isset($key)
     {
-        return isset($this->data[$key]);
+        return $this->has($key);
     }
 }

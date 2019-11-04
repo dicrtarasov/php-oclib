@@ -12,9 +12,11 @@ use InvalidArgumentException;
 use Throwable;
 
 /**
- * Темплейт.
+ * Темплейт для OpenCart.
+ *
+ * @property string $filePath
  */
-class BaseTemplate extends RegistryProxy
+class Template extends RegistryProxy
 {
     /** @var string файл */
     private $_file;
@@ -25,7 +27,7 @@ class BaseTemplate extends RegistryProxy
     /**
      * Конструктор.
      *
-     * @param string $file
+     * @param string $file файл или route
      * @param array $data
      */
     public function __construct(string $file, array $data = [])
@@ -47,7 +49,7 @@ class BaseTemplate extends RegistryProxy
      * @param string $key
      * @param mixed $value
      */
-    public function __set(string $key, $value)
+    public function __set($key, $value)
     {
         $this->_data[$key] = $value;
     }
@@ -78,6 +80,17 @@ class BaseTemplate extends RegistryProxy
     {
         $path = $this->_file;
 
+        // добавляем расширение
+        $ext = pathinfo($path, PATHINFO_EXTENSION);
+        if (empty($ext)) {
+            $path .= '.tpl';
+        }
+
+        // проверяем путь на полный файл
+        if (is_file($path)) {
+            return $path;
+        }
+
         // удаляем тему вначале
         $matches = null;
         if (preg_match('~^.+?/template/([^/]+/.+)$~uism', $path, $matches)) {
@@ -86,15 +99,7 @@ class BaseTemplate extends RegistryProxy
 
         // полный путь
         /** @noinspection PhpUndefinedConstantInspection */
-        $path = rtrim(DIR_TEMPLATE, '/') . '/' . ltrim($path, '/');
-
-        // добавляем расширение
-        $ext = pathinfo($path, PATHINFO_EXTENSION);
-        if (empty($ext)) {
-            $path .= '.tpl';
-        }
-
-        return $path;
+        return rtrim(DIR_TEMPLATE, '/') . '/' . ltrim($path, '/');
     }
 
     /**

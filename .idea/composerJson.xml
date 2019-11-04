@@ -6,7 +6,9 @@
         <pattern pattern="roave/security-advisories" />
       </excludedPackages>
     </unboundedVersionInspectionSettings>
-    <customRepositories />
+    <customRepositories>
+      <file path="$PROJECT_DIR$/composer.json" enabled="true" />
+    </customRepositories>
     <composerUpdateOptions />
   </component>
 </project>

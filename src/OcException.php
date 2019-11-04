@@ -14,7 +14,7 @@ use Throwable;
 /**
  * Базовый Exception.
  */
-class BaseException extends Exception
+class OcException extends Exception
 {
     /**
      * Консруктор.

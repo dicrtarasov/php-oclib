@@ -11,6 +11,7 @@ declare(strict_types = 1);
 namespace dicr\oclib;
 
 use Throwable;
+use yii\base\BaseObject;
 
 /**
  * Виджет.
@@ -18,7 +19,7 @@ use Throwable;
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2019
  */
-abstract class Widget extends AbstractObject
+abstract class Widget extends BaseObject
 {
     /** @var string id */
     public $id;
@@ -30,14 +31,10 @@ abstract class Widget extends AbstractObject
     public $pluginOptions = [];
 
     /**
-     * Конструктор.
-     *
-     * @param array $config
+     * Инициализация.
      */
-    public function __construct(array $config = [])
+    public function init()
     {
-        parent::__construct($config);
-
         if (empty($this->id)) {
             $this->id = self::generateId();
         }

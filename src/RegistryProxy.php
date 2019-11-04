@@ -8,29 +8,35 @@
 declare(strict_types = 1);
 namespace dicr\oclib;
 
+use yii\base\ArrayAccessTrait;
+use yii\base\BaseObject;
+
 /**
- * Объект, проксирующий обращение к свойсвам на Registry.
+ * Прокси обращений объека к OpenCart Registry
  *
  * @package dicr\oclib
- * @property-read \dicr\oclib\BaseDB $db
- * @property-read \dicr\oclib\BaseLoader $load
- * @property-read \dicr\oclib\BaseUrl $url
+ * @property-read \dicr\oclib\Cache $cache
+ * @property-read \dicr\oclib\DB $db
+ * @property-read \dicr\oclib\Loader $load
+ * @property-read \dicr\oclib\Url $url
  * @property-read \Request $request
  * @property-read \Response $response
  * @property-read \Document $document
  *
  */
-abstract class RegistryProxy extends AbstractObject
+abstract class RegistryProxy extends BaseObject
 {
+    use ArrayAccessTrait;
+
     /**
      * Проверка наличия свойства в Registry.
      *
      * @param string $name
      * @return bool
      */
-    public function __isset(string $name)
+    public function __isset($name)
     {
-        return BaseRegistry::app()->has($name);
+        return Registry::app()->has($name);
     }
 
     /**
@@ -39,9 +45,9 @@ abstract class RegistryProxy extends AbstractObject
      * @param string $name
      * @return mixed
      */
-    public function __get(string $name)
+    public function __get($name)
     {
-        return BaseRegistry::app()->get($name);
+        return Registry::app()->get($name);
     }
 
     /**
@@ -50,8 +56,8 @@ abstract class RegistryProxy extends AbstractObject
      * @param string $name
      * @param mixed $value
      */
-    public function __set(string $name, $value)
+    public function __set($name, $value)
     {
-        BaseRegistry::app()->set($name, $value);
+        Registry::app()->set($name, $value);
     }
 }

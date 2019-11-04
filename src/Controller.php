@@ -13,14 +13,14 @@ namespace dicr\oclib;
 /** @noinspection PhpUndefinedClassInspection */
 
 /**
- * Конроллер.
+ * Конроллер OpenCart.
  */
-abstract class BaseController extends RegistryProxy
+abstract class Controller extends RegistryProxy
 {
     /**
      * BaseController constructor.
      */
-    public function __construct()
+    public function __construct($registry = null)
     {
         parent::__construct([]);
     }
@@ -30,7 +30,7 @@ abstract class BaseController extends RegistryProxy
      *
      * @return boolean
      */
-    public static function isPost()
+    public function isPost()
     {
         return (strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST');
     }

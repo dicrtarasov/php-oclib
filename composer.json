@@ -1,7 +1,8 @@
 {
-    "name": "dicr/php-oclib",
-    "description": "Улучшенная библиотека OpenCart",
     "type": "library",
+    "name": "dicr/php-oclib",
+    "license": "Apache-2.0",
+    "description": "Улучшенная библиотека OpenCart",
     "homepage": "https://gitlab.com/dicr/php-oclib",
     "authors": [
         {
@@ -11,10 +12,15 @@
             "role": "developer"
         }
     ],
+    "support": {
+        "source": "https://gitlab.com/dicr/php-oclib.git"
+    },
+    "minimum-stability": "stable",
     "require": {
         "php": ">=7.1",
         "ext-mysqli": "*",
-        "ext-json": "*"
+        "ext-json": "*",
+        "yiisoft/yii2": "2.0.29", "ext-pdo": "*"
     },
     "repositories": [
         {
@@ -29,10 +35,5 @@
         "psr-4": {
             "dicr\\oclib\\": "src/"
         }
-    },
-    "support": {
-        "source": "https://gitlab.com/dicr/php-oclib.git"
-    },
-    "license": "Apache-2.0",
-    "minimum-stability": "stable"
+    }
 }
