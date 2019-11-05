@@ -22,7 +22,6 @@ use yii\base\BaseObject;
  * @property-read \Config $config
  * @property-read \Request $request
  * @property-read \Response $response
- * @property string $
  * @property-read \Session $session
  */
 class Registry extends BaseObject

@@ -54,10 +54,9 @@ class Url extends BaseObject
     /**
      * Редиректит на канонический адрес.
      *
-     * @param string $route
-     * @param array $args
+     * @param string $url
      */
-    public function redirectToCanonical(string $url)
+    public static function redirectToCanonical(string $url)
     {
         $urlInfo = parse_url($url);
 

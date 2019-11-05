@@ -5,8 +5,8 @@
  * @author Igor (Dicr) Tarasov, develop@dicr.org
  */
 
+/** @noinspection PhpUnusedParameterInspection */
 declare(strict_types = 1);
-
 namespace dicr\oclib;
 
 use yii\base\BaseObject;
@@ -16,6 +16,7 @@ use yii\di\Instance;
 /**
  * Кэш Yii для OpenCart.
  *
+ * @property mixed $
  * @property mixed $
  */
 class Cache extends BaseObject

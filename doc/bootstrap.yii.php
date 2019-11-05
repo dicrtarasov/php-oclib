@@ -5,19 +5,22 @@
  * @author Igor (Dicr) Tarasov, develop@dicr.org
  */
 
-use yii\log\Dispatcher;
-use yii\log\FileTarget;
-use yii\log\Logger;
-
 /** @noinspection PhpUnhandledExceptionInspection */
+
+declare(strict_types = 1);
+use yii\log\FileTarget;
 
 defined('YII_ENV') or define('YII_ENV', 'dev');
 
-defined('YII_DEBUG') or define('YII_DEBUG', DEBUG);
 
+defined('YII_DEBUG') or /** @noinspection PhpUndefinedConstantInspection */ define('YII_DEBUG', DEBUG);
+
+/** @noinspection PhpIncludeInspection */
 require(__DIR__ . '/vendor/autoload.php');
+/** @noinspection PhpIncludeInspection */
 require(__DIR__ . '/vendor/yiisoft/yii2/Yii.php');
 
+/** @noinspection PhpUndefinedConstantInspection */
 $config = [
     'id' => 'rtk-nt',
     'basePath' => __DIR__,

@@ -16,6 +16,8 @@
       <path value="$PROJECT_DIR$/vendor/bower-asset/punycode" />
       <path value="$PROJECT_DIR$/vendor/bower-asset/inputmask" />
       <path value="$PROJECT_DIR$/vendor/ezyang/htmlpurifier" />
+      <path value="$PROJECT_DIR$/vendor/dicr/yii2-helper" />
+      <path value="$PROJECT_DIR$/vendor/dicr/yii2-validate" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="7.1" />

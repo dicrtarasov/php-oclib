@@ -12,6 +12,9 @@
             "role": "developer"
         }
     ],
+    "keywords": [
+        "dicr opencart library"
+    ],
     "support": {
         "source": "https://gitlab.com/dicr/php-oclib.git"
     },
@@ -20,16 +23,23 @@
         "php": ">=7.1",
         "ext-mysqli": "*",
         "ext-json": "*",
-        "yiisoft/yii2": "2.0.29", "ext-pdo": "*"
+        "yiisoft/yii2": "2.0.29", "ext-pdo": "*",
+        "dicr/yii2-helper": "2.1.0",
+        "dicr/yii2-validate": "1.5.4"
     },
     "repositories": [
         {
             "type": "composer",
             "url": "https://asset-packagist.org"
+        },
+        {
+            "type":"git",
+            "url":"https://gitlab.com/dicr/yii2-helper.git"
+        },
+        {
+            "type":"git",
+            "url":"https://gitlab.com/dicr/yii2-validate.git"
         }
-    ],
-    "keywords": [
-        "dicr opencart library"
     ],
     "autoload": {
         "psr-4": {

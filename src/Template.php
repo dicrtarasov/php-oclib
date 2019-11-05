@@ -8,67 +8,40 @@
 declare(strict_types = 1);
 namespace dicr\oclib;
 
-use InvalidArgumentException;
 use Throwable;
+use yii\base\BaseObject;
+use yii\base\InvalidConfigException;
 
 /**
  * Темплейт для OpenCart.
- *
- * @property string $filePath
  */
-class Template extends RegistryProxy
+class Template extends BaseObject
 {
-    /** @var string файл */
-    private $_file;
+    /** все обращения к $this в темплейте перенаправляются к Registry */
+    use RegistryProxy;
+
+    /** @var string роут или полный путь файла */
+    public $route;
 
     /** @var array переменные */
-    private $_data;
+    public $vars = [];
+
+    /** @var string расширение по-умолчанию */
+    public $extDefault = '.tpl';
 
     /**
      * Конструктор.
      *
-     * @param string $file файл или route
-     * @param array $data
+     * @throws \yii\base\InvalidConfigException
      */
-    public function __construct(string $file, array $data = [])
+    public function init()
     {
-        parent::__construct([]);
+        parent::init();
 
-        // проверяем аргумент
-        if (empty($file)) {
-            throw new InvalidArgumentException('file');
+        // проверка файла
+        if (empty($this->route)) {
+            throw new InvalidConfigException('route');
         }
-
-        $this->_file = $file;
-        $this->_data = $data;
-    }
-
-    /**
-     * Устанавливает значение переменной.
-     *
-     * @param string $key
-     * @param mixed $value
-     */
-    public function __set($key, $value)
-    {
-        $this->_data[$key] = $value;
-    }
-
-    /**
-     * Рендеринг темплейта в строку
-     *
-     * @return string
-     */
-    public function render()
-    {
-        // распаковываем данные
-        extract($this->_data, EXTR_REFS | EXTR_SKIP);
-
-        // выполняем файл
-        ob_start();
-        /** @noinspection PhpIncludeInspection */
-        require($this->getFilePath());
-        return ob_get_clean();
     }
 
     /**
@@ -76,14 +49,14 @@ class Template extends RegistryProxy
      *
      * @return string полный путь файла для выполнения
      */
-    protected function getFilePath()
+    public function getFilePath()
     {
-        $path = $this->_file;
+        $path = $this->route;
 
         // добавляем расширение
         $ext = pathinfo($path, PATHINFO_EXTENSION);
         if (empty($ext)) {
-            $path .= '.tpl';
+            $path = rtrim($path, '/') . $this->extDefault;
         }
 
         // проверяем путь на полный файл
@@ -103,16 +76,26 @@ class Template extends RegistryProxy
     }
 
     /**
-     * Делает дамп данных
+     * Рендеринг темплейта в строку
      *
-     * @param null $var
+     * @return string
      */
-    public function dump($var = null)
+    public function render()
     {
-        echo '<!--suppress HtmlDeprecatedTag --><xmp>';
-        /** @noinspection ForgottenDebugOutputInspection */
-        var_dump($this->_data[$var] ?? null);
-        exit;
+        // распаковываем данные
+        extract($this->vars, EXTR_REFS | EXTR_SKIP);
+
+        ob_start();
+        ob_implicit_flush(0);
+
+        try {
+            /** @noinspection PhpIncludeInspection */
+            require($this->getFilePath());
+        } finally {
+            $ret = ob_get_clean();
+        }
+
+        return $ret;
     }
 
     /**
@@ -122,15 +105,41 @@ class Template extends RegistryProxy
      */
     public function __toString()
     {
-        $ret = '';
-
         try {
-            $ret = $this->render();
+            return trim($this->render());
         } catch (Throwable $ex) {
             /** @noinspection PhpUndefinedConstantInspection */
             trigger_error(DEBUG ? (string)$ex : $ex->getMessage(), E_USER_ERROR);
         }
 
-        return $ret;
+        return '';
+    }
+
+    /**
+     * Рендерит темплейт.
+     *
+     * @param string $fileRoute маршрут или полный путь файла
+     * @param array $vars переменные
+     * @return string результат рендеринга
+     */
+    public static function run(string $fileRoute, array $vars = [])
+    {
+        return (string)(new static([
+            'route' => $fileRoute,
+            'vars' => $vars
+        ]));
+    }
+
+    /**
+     * Делает дамп данных
+     *
+     * @param string $var переменная
+     */
+    public function dump(string $var = null)
+    {
+        echo '<!--suppress HtmlDeprecatedTag --><xmp>';
+        /** @noinspection ForgottenDebugOutputInspection */
+        var_dump(isset($var) ? ($this->vars[$var] ?? null) : $this->vars);
+        exit;
     }
 }

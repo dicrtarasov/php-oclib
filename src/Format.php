@@ -9,6 +9,8 @@ declare(strict_types = 1);
 
 namespace dicr\oclib;
 
+use function strlen;
+
 /**
  * Конвертор форматов.
  *

@@ -8,11 +8,8 @@
 declare(strict_types = 1);
 namespace dicr\oclib;
 
-use yii\base\ArrayAccessTrait;
-use yii\base\BaseObject;
-
 /**
- * Прокси обращений объека к OpenCart Registry
+ * Прокси обращений объекта к OpenCart Registry.
  *
  * @package dicr\oclib
  * @property-read \dicr\oclib\Cache $cache
@@ -24,10 +21,8 @@ use yii\base\BaseObject;
  * @property-read \Document $document
  *
  */
-abstract class RegistryProxy extends BaseObject
+trait RegistryProxy
 {
-    use ArrayAccessTrait;
-
     /**
      * Проверка наличия свойства в Registry.
      *

@@ -8,8 +8,8 @@
 declare(strict_types = 1);
 namespace dicr\oclib;
 
-use Exception;
 use Throwable;
+use yii\base\Exception;
 
 /**
  * Базовый Exception.

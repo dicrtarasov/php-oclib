@@ -35,35 +35,23 @@ abstract class Widget extends BaseObject
      */
     public function init()
     {
-        if (empty($this->id)) {
-            $this->id = self::generateId();
+        parent::init();
+
+        if (! isset($this->id)) {
+            $this->id = str_replace('\\', '-', strtolower(static::class)) . '-' . mt_rand();
         }
 
-        if (! isset($this->options['id'])) {
+        if (! isset($this->options['id']) && !empty($this->id)) {
             $this->options['id'] = $this->id;
         }
     }
 
     /**
-     * Генерирует id для виджета.
+     * Рендерит плагин.
      *
-     * @return string
+     * Функция должна выводить методом echo или возвращать string.
      */
-    protected static function generateId()
-    {
-        return str_replace('\\', '-', strtolower(static::class)) . '-' . mt_rand();
-    }
-
-    /**
-     * Выводит виджет. Для удобства в коде вместо new.
-     *
-     * @param array $config
-     * @return static
-     */
-    public static function widget(array $config)
-    {
-        return new static($config);
-    }
+    abstract public function run();
 
     /**
      * Конверирует в строку.
@@ -72,27 +60,30 @@ abstract class Widget extends BaseObject
      */
     public function __toString()
     {
-        $ret = '';
+        ob_start();
+        ob_implicit_flush(0);
 
         try {
-            $ret = $this->render();
+            echo $this->run();
         } catch (Throwable $ex) {
             /** @noinspection PhpUndefinedConstantInspection */
             trigger_error(DEBUG ? (string)$ex : $ex->getMessage(), E_USER_ERROR);
+        } finally {
+            $ret = ob_get_clean();
         }
 
-        return $ret;
+        return trim($ret);
     }
 
     /**
-     * Рендерит плагин.
+     * Выводит виджет. Для удобства в коде вместо new.
      *
+     * @param array $config
      * @return string
      */
-    public function render()
+    public static function widget(array $config)
     {
-        // генерируем html
-        return '';
+        return (string)(new static($config));
     }
 
     /**
@@ -101,7 +92,7 @@ abstract class Widget extends BaseObject
      * @param string $name название плагина.
      * @return string
      */
-    protected function plugin(string $name)
+    public function plugin(string $name)
     {
         return Html::plugin('#' . $this->id, $name, $this->pluginOptions);
     }

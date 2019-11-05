@@ -5,8 +5,10 @@
  * @author Igor (Dicr) Tarasov, develop@dicr.org
  */
 
-declare(strict_types = 1);
+/** @noinspection PhpMethodMayBeStaticInspection */
+/** @noinspection PhpUnusedParameterInspection */
 
+declare(strict_types = 1);
 namespace dicr\oclib;
 
 use PDO;
@@ -14,6 +16,8 @@ use stdClass;
 use yii\base\BaseObject;
 use yii\db\Connection;
 use yii\di\Instance;
+use function count;
+use function is_string;
 
 /**
  * База данных Yii для OpeCart.
@@ -38,7 +42,13 @@ class DB extends BaseObject
      * @param string $database
      * @param int $port
      */
-    public function __construct($adaptor = null, $hostname = null, $username = null, $password = null, $database = null, $port = null)
+    public function __construct(
+        $adaptor = null,
+        $hostname = null,
+        $username = null,
+        $password = null,
+        $database = null,
+        $port = null)
     {
         parent::__construct();
     }
@@ -66,7 +76,7 @@ class DB extends BaseObject
     {
         $cmd = $this->db->createCommand($sql);
 
-        if (! preg_match('~^\s*select\s+~uim', $sql)) {
+        if (! preg_match('~^\s*(select|show)\s+~uim', $sql)) {
             return $this->affectedRows = $cmd->execute();
         }
 

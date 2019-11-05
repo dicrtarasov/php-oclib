@@ -5,20 +5,25 @@
  * @author Igor (Dicr) Tarasov, develop@dicr.org
  */
 
-/** @noinspection PhpUnused */
+/** @noinspection PhpUnusedParameterInspection */
 
 declare(strict_types = 1);
 namespace dicr\oclib;
 
-/** @noinspection PhpUndefinedClassInspection */
+use yii\base\BaseObject;
 
 /**
  * Конроллер OpenCart.
  */
-abstract class Controller extends RegistryProxy
+abstract class Controller extends BaseObject
 {
+    /** все обращения к $this в конроллере перенаправляюся к Registry */
+    use RegistryProxy;
+
     /**
      * BaseController constructor.
+     *
+     * @param null $registry
      */
     public function __construct($registry = null)
     {
@@ -30,9 +35,9 @@ abstract class Controller extends RegistryProxy
      *
      * @return boolean
      */
-    public function isPost()
+    public static function isPost()
     {
-        return (strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST');
+        return (strtoupper($_SERVER['REQUEST_METHOD'] ?? null) === 'POST');
     }
 
     /**
@@ -44,8 +49,8 @@ abstract class Controller extends RegistryProxy
     public function asJson($data)
     {
         /** @noinspection PhpUndefinedMethodInspection */
-        $this->response->setOutput(Html::json($data));
         header('Content-Type: application/json; charset=UTF-8', true);
+        $this->response->setOutput(Html::json($data));
         exit;
     }
 }
