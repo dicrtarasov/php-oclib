@@ -12,14 +12,6 @@ namespace dicr\oclib;
  * Прокси обращений объекта к OpenCart Registry.
  *
  * @package dicr\oclib
- * @property-read \dicr\oclib\Cache $cache
- * @property-read \dicr\oclib\DB $db
- * @property-read \dicr\oclib\Loader $load
- * @property-read \dicr\oclib\Url $url
- * @property-read \Request $request
- * @property-read \Response $response
- * @property-read \Document $document
- *
  */
 trait RegistryProxy
 {

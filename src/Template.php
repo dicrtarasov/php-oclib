@@ -15,7 +15,7 @@ use yii\base\InvalidConfigException;
 /**
  * Темплейт для OpenCart.
  */
-class Template extends BaseObject
+class Template extends BaseObject implements RegistryProps
 {
     /** все обращения к $this в темплейте перенаправляются к Registry */
     use RegistryProxy;

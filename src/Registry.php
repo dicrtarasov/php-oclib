@@ -14,17 +14,8 @@ use yii\base\BaseObject;
 
 /**
  * Реестр.
- *
- * @property-read \dicr\oclib\Cache $cache
- * @property-read \dicr\oclib\DB $db
- * @property-read \dicr\oclib\Loader $load
- * @property-read \dicr\oclib\Url $url
- * @property-read \Config $config
- * @property-read \Request $request
- * @property-read \Response $response
- * @property-read \Session $session
  */
-class Registry extends BaseObject
+class Registry extends BaseObject implements RegistryProps
 {
     /** @var self */
     private static $_instance;

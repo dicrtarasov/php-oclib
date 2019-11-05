@@ -11,12 +11,11 @@ declare(strict_types = 1);
 namespace dicr\oclib;
 
 use yii\base\BaseObject;
-use yii\helpers\Json;
 
 /**
  * Конроллер OpenCart.
  */
-abstract class Controller extends BaseObject
+abstract class Controller extends BaseObject implements RegistryProps
 {
     /** все обращения к $this в конроллере перенаправляюся к Registry */
     use RegistryProxy;
@@ -51,7 +50,7 @@ abstract class Controller extends BaseObject
     {
         /** @noinspection PhpUndefinedMethodInspection */
         header('Content-Type: application/json; charset=UTF-8', true);
-        $this->response->setOutput(Json::encode($data));
+        $this->response->setOutput(Html::json($data));
         exit;
     }
 }
