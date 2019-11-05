@@ -23,9 +23,9 @@
         "php": ">=7.1",
         "ext-mysqli": "*",
         "ext-json": "*",
-        "yiisoft/yii2": "2.0.29", "ext-pdo": "*",
-        "dicr/yii2-helper": "2.1.0",
-        "dicr/yii2-validate": "1.5.4"
+        "yiisoft/yii2": "~2.0.29", "ext-pdo": "*",
+        "dicr/yii2-helper": "~2.1.0",
+        "dicr/yii2-validate": "~1.5.4"
     },
     "repositories": [
         {
