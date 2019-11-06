@@ -52,26 +52,6 @@ class Url extends BaseObject
     }
 
     /**
-     * Редиректит на канонический адрес.
-     *
-     * @param string $url
-     */
-    public static function redirectToCanonical(string $url)
-    {
-        $urlInfo = parse_url($url);
-
-        $canonical = $urlInfo['path'];
-        if (! empty($urlInfo['query'])) {
-            $canonical .= '?' . $urlInfo['query'];
-        }
-
-        if ($_SERVER['REQUEST_URI'] !== $canonical) {
-            header('Location: ' . $canonical, true, 303);
-            exit;
-        }
-    }
-
-    /**
      * Строит ссылку.
      *
      * @param string $route
@@ -80,9 +60,24 @@ class Url extends BaseObject
      */
     public function link(string $route, $args = null)
     {
+        if (!isset($args)) {
+            $args = [];
+        }
+
         $route = trim($route);
         if (empty($route)) {
-            throw new InvalidArgumentException('empty route');
+            if (is_array($args)) {
+                $route = $args['route'] ?? '';
+            }
+
+            if (empty($route)) {
+                throw new InvalidArgumentException('empty route');
+            }
+        }
+
+        // удаляем служебные параметры
+        if (is_array($args)) {
+            unset($args['route'], $args['_route_']);
         }
 
         // сроим ссылку
@@ -108,5 +103,65 @@ class Url extends BaseObject
         }
 
         return $url;
+    }
+
+    /**
+     * Фильтрует аргументы запроса рекурсивно, удаляя пустые параметры
+     *
+     * @param array $args
+     * @return array
+     */
+    public static function filterParams(array $args)
+    {
+        foreach ($args as $i => $v) {
+            if (is_array($v)) {
+                $args[$i] = static::filterParams($v);
+                if (empty($args[$i])) {
+                    unset($args[$i]);
+                }
+            } elseif ($v === null || $v === '' || $v === []) {
+                unset($args[$i]);
+            }
+        }
+
+        if (isset($args['page']) && (int)$args['page'] < 2) {
+            unset($args['page']);
+        }
+
+        ksort($args);
+
+        return $args;
+    }
+
+    /**
+     * Ссылка с фильтрованными парамерами.
+     *
+     * @param string $route
+     * @param array $params
+     * @return string
+     */
+    public function canonical(string $route, array $params = [])
+    {
+        return $this->link($route, self::filterParams($params));
+    }
+
+    /**
+     * Редиректит на канонический адрес если екущий оличается.
+     *
+     * @param string $url
+     */
+    public static function redirectToCanonical(string $url)
+    {
+        $urlInfo = parse_url($url);
+
+        $canonical = $urlInfo['path'];
+        if (! empty($urlInfo['query'])) {
+            $canonical .= '?' . $urlInfo['query'];
+        }
+
+        if ($_SERVER['REQUEST_URI'] !== $canonical) {
+            header('Location: ' . $canonical, true, 303);
+            exit;
+        }
     }
 }

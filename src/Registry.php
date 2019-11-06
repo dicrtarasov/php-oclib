@@ -11,6 +11,7 @@ declare(strict_types = 1);
 namespace dicr\oclib;
 
 use yii\base\BaseObject;
+use yii\base\Model;
 
 /**
  * Реестр.
