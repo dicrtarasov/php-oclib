@@ -1,6 +1,8 @@
 <?php
 namespace dicr\oclib;
 
+use yii\base\Application;
+use yii\base\ExitException;
 use yii\db\Exception;
 
 class Response extends \yii\web\Response
@@ -32,8 +34,7 @@ class Response extends \yii\web\Response
     public function redirect($url, $status = 302, $checkAjax = true)
     {
         $url = str_replace(['&amp;', "\n", "\r"], ['&', '', ''], $url);
-        parent::redirect($url, $status)->send();
-        \Yii::$app->end();
+        \Yii::$app->end(0, parent::redirect($url, $status));
     }
 
     /**
