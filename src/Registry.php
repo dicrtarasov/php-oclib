@@ -10,13 +10,10 @@
 declare(strict_types = 1);
 namespace dicr\oclib;
 
-use yii\base\BaseObject;
-use yii\base\Model;
-
 /**
  * Реестр.
  */
-class Registry extends BaseObject implements RegistryProps
+class Registry implements RegistryProps
 {
     /** @var self */
     private static $_instance;
@@ -27,12 +24,9 @@ class Registry extends BaseObject implements RegistryProps
     /**
      * Конструктор.
      *
-     * @param array $config
      */
-    public function __construct(array $config = [])
+    public function __construct()
     {
-        parent::__construct($config);
-
         self::$_instance = $this;
     }
 

@@ -9,39 +9,42 @@ declare(strict_types = 1);
 namespace dicr\oclib;
 
 use Throwable;
-use yii\base\BaseObject;
 use yii\base\InvalidConfigException;
 
 /**
- * Темплейт для OpenCart.
+ * Темплейт для OpenCart с проксированием к Registry.
  */
-class Template extends BaseObject implements RegistryProps
+class Template implements RegistryProps
 {
+    /** @var string расширение по-умолчанию */
+    public const EXT_DEFAULT = '.tpl';
+
     /** все обращения к $this в темплейте перенаправляются к Registry */
     use RegistryProxy;
 
     /** @var string роут или полный путь файла */
-    public $route;
+    private $pathRoute;
 
     /** @var array переменные */
-    public $vars = [];
-
-    /** @var string расширение по-умолчанию */
-    public $extDefault = '.tpl';
+    private $vars;
 
     /**
      * Конструктор.
      *
+     * @param string $pathRoute маршрут или полный путь файла
+     * @param array $vars переменные шаблона
      * @throws \yii\base\InvalidConfigException
      */
-    public function init()
+    public function __construct(string $pathRoute, array $vars = [])
     {
-        parent::init();
-
         // проверка файла
-        if (empty($this->route)) {
-            throw new InvalidConfigException('route');
+        if (empty($pathRoute)) {
+            throw new InvalidConfigException('routeFile');
         }
+
+        $this->pathRoute = $pathRoute;
+
+        $this->vars = $vars;
     }
 
     /**
@@ -51,12 +54,12 @@ class Template extends BaseObject implements RegistryProps
      */
     public function getFilePath()
     {
-        $path = $this->route;
+        $path = $this->pathRoute;
 
         // добавляем расширение
         $ext = pathinfo($path, PATHINFO_EXTENSION);
         if (empty($ext)) {
-            $path = rtrim($path, '/') . $this->extDefault;
+            $path = rtrim($path, '/') . self::EXT_DEFAULT;
         }
 
         // проверяем путь на полный файл
@@ -80,7 +83,7 @@ class Template extends BaseObject implements RegistryProps
      *
      * @return string
      */
-    public function render()
+    public function run()
     {
         // распаковываем данные
         extract($this->vars, EXTR_REFS | EXTR_SKIP);
@@ -106,7 +109,7 @@ class Template extends BaseObject implements RegistryProps
     public function __toString()
     {
         try {
-            return trim($this->render());
+            return trim($this->run());
         } catch (Throwable $ex) {
             /** @noinspection PhpUndefinedConstantInspection */
             trigger_error(DEBUG ? (string)$ex : $ex->getMessage(), E_USER_ERROR);
@@ -118,16 +121,14 @@ class Template extends BaseObject implements RegistryProps
     /**
      * Рендерит темплейт.
      *
-     * @param string $fileRoute маршрут или полный путь файла
+     * @param string $pathRoute маршрут или полный путь файла
      * @param array $vars переменные
      * @return string результат рендеринга
+     * @throws \yii\base\InvalidConfigException
      */
-    public static function run(string $fileRoute, array $vars = [])
+    public static function render(string $pathRoute, array $vars = [])
     {
-        return (string)(new static([
-            'route' => $fileRoute,
-            'vars' => $vars
-        ]));
+        return (string)(new static($pathRoute, $vars));
     }
 
     /**

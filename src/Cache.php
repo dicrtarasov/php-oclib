@@ -6,20 +6,20 @@
  */
 
 /** @noinspection PhpUnusedParameterInspection */
+
 declare(strict_types = 1);
 namespace dicr\oclib;
 
-use yii\base\BaseObject;
 use yii\caching\CacheInterface;
 use yii\di\Instance;
 
 /**
- * Кэш Yii для OpenCart.
+ * Прокси кэша OpenCart на Yii.
  *
  * @property mixed $
  * @property mixed $
  */
-class Cache extends BaseObject
+class Cache
 {
     /** @var \yii\caching\CacheInterface */
     public $cache = 'cache';
@@ -29,21 +29,10 @@ class Cache extends BaseObject
      *
      * @param string $adaptor The type of storage for the cache.
      * @param int $expire Optional parameters
+     * @throws \yii\base\InvalidConfigException
      */
     public function __construct($adaptor = null, $expire = null)
     {
-        parent::__construct([]);
-    }
-
-    /**
-     * Инициализация.
-     *
-     * @throws \yii\base\InvalidConfigException
-     */
-    public function init()
-    {
-        parent::init();
-
         $this->cache = Instance::ensure($this->cache, CacheInterface::class);
     }
 

@@ -9,8 +9,8 @@ declare(strict_types = 1);
 namespace dicr\oclib;
 
 use InvalidArgumentException;
-use yii\base\BaseObject;
 use function in_array;
+use function is_array;
 use function is_string;
 
 /**
@@ -19,12 +19,12 @@ use function is_string;
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2019
  */
-class Url extends BaseObject
+class Url
 {
     /** @var string */
     private $url;
 
-    /** @var array  */
+    /** @var array */
     private $rewrite = [];
 
     /**
@@ -34,9 +34,59 @@ class Url extends BaseObject
      */
     public function __construct(string $url)
     {
-        parent::__construct([]);
-
         $this->url = $url;
+    }
+
+    /**
+     * Фильтрует аргументы запроса рекурсивно, удаляя пустые параметры
+     *
+     * @param array $params
+     * @return array
+     */
+    public static function filterParams(array $params)
+    {
+        foreach ($params as $i => &$v) {
+            if (is_array($v)) {
+                $v = static::filterParams($v);
+                if (empty($v)) {
+                    unset($params[$i]);
+                }
+            } elseif ($v === null || $v === '' || $v === []) {
+                unset($params[$i]);
+            }
+        }
+
+        unset($v);
+
+        if (isset($params['page']) && (int)$params['page'] < 2) {
+            unset($params['page']);
+        }
+
+        unset($params['_route_']);
+
+        ksort($params);
+
+        return $params;
+    }
+
+    /**
+     * Редиректит на канонический адрес если екущий оличается.
+     *
+     * @param string $url
+     */
+    public static function redirectToCanonical(string $url)
+    {
+        $urlInfo = parse_url($url);
+
+        $canonical = $urlInfo['path'];
+        if (! empty($urlInfo['query'])) {
+            $canonical .= '?' . $urlInfo['query'];
+        }
+
+        if ($_SERVER['REQUEST_URI'] !== $canonical) {
+            header('Location: ' . $canonical, true, 303);
+            exit;
+        }
     }
 
     /**
@@ -60,7 +110,7 @@ class Url extends BaseObject
      */
     public function link(string $route, $args = null)
     {
-        if (!isset($args)) {
+        if (! isset($args)) {
             $args = [];
         }
 
@@ -82,6 +132,7 @@ class Url extends BaseObject
 
         // сроим ссылку
         $url = rtrim($this->url, '/') . '/index.php';
+
         if (empty($args)) {
             $url .= '?route=' . $route;
         } elseif (is_string($args)) {
@@ -106,34 +157,6 @@ class Url extends BaseObject
     }
 
     /**
-     * Фильтрует аргументы запроса рекурсивно, удаляя пустые параметры
-     *
-     * @param array $args
-     * @return array
-     */
-    public static function filterParams(array $args)
-    {
-        foreach ($args as $i => $v) {
-            if (is_array($v)) {
-                $args[$i] = static::filterParams($v);
-                if (empty($args[$i])) {
-                    unset($args[$i]);
-                }
-            } elseif ($v === null || $v === '' || $v === []) {
-                unset($args[$i]);
-            }
-        }
-
-        if (isset($args['page']) && (int)$args['page'] < 2) {
-            unset($args['page']);
-        }
-
-        ksort($args);
-
-        return $args;
-    }
-
-    /**
      * Ссылка с фильтрованными парамерами.
      *
      * @param string $route
@@ -143,25 +166,5 @@ class Url extends BaseObject
     public function canonical(string $route, array $params = [])
     {
         return $this->link($route, self::filterParams($params));
-    }
-
-    /**
-     * Редиректит на канонический адрес если екущий оличается.
-     *
-     * @param string $url
-     */
-    public static function redirectToCanonical(string $url)
-    {
-        $urlInfo = parse_url($url);
-
-        $canonical = $urlInfo['path'];
-        if (! empty($urlInfo['query'])) {
-            $canonical .= '?' . $urlInfo['query'];
-        }
-
-        if ($_SERVER['REQUEST_URI'] !== $canonical) {
-            header('Location: ' . $canonical, true, 303);
-            exit;
-        }
     }
 }

@@ -1,11 +1,28 @@
 <?php
+/**
+ * Copyright (c) 2019.
+ *
+ * @author Igor (Dicr) Tarasov, develop@dicr.org
+ */
+
+/** @noinspection PhpUnusedParameterInspection */
+
+declare(strict_types = 1);
 namespace dicr\oclib;
 
-/** @noinspection SenselessProxyMethodInspection */
+use yii\di\Instance;
 
-class Session extends \yii\web\Session
+/**
+ * Прокси сессии OpeCart на Yii.
+ *
+ * @package dicr\oclib
+ */
+class Session
 {
-    /** @var array  */
+    /** @var \yii\web\Session компонент Yii */
+    public $session = 'session';
+
+    /** @var array */
     public $data = [];
 
     /**
@@ -13,20 +30,13 @@ class Session extends \yii\web\Session
      *
      * @param string $session_id
      * @param string $key
+     * @throws \yii\base\InvalidConfigException
      */
     public function __construct($session_id = '', $key = 'default')
     {
-        parent::__construct();
-    }
+        $this->session = Instance::ensure($this->session, \yii\web\Session::class);
 
-    /**
-     * Инициализация.
-     */
-    public function init()
-    {
-        parent::init();
-
-        $this->open();
+        $this->start();
 
         $this->data = &$_SESSION;
     }
@@ -34,25 +44,39 @@ class Session extends \yii\web\Session
     /**
      * Запуск сессии.
      *
-     * @return true
+     * @return string ID сессии
      */
     public function start()
     {
-        $this->open();
+        $this->session->open();
 
-        return true;
+        return $this->getId();
+    }
+
+    /**
+     * Возвращает ID сессии.
+     *
+     * @return string
+     */
+    public function getId()
+    {
+        return $this->session->id;
+    }
+
+    /**
+     * Закрытие сессии.
+     */
+    public function close()
+    {
+        $this->session->close();
     }
 
     /**
      * Удаление сессии.
-     *
-     * @return true
      */
     public function destroy()
     {
-        parent::destroy();
-
-        return true;
+        $this->session->destroy();
     }
 }
 

@@ -33,12 +33,12 @@
             "url": "https://asset-packagist.org"
         },
         {
-            "type":"git",
-            "url":"https://gitlab.com/dicr/yii2-helper.git"
+            "type": "git",
+            "url": "https://gitlab.com/dicr/yii2-helper.git"
         },
         {
-            "type":"git",
-            "url":"https://gitlab.com/dicr/yii2-validate.git"
+            "type": "git",
+            "url": "https://gitlab.com/dicr/yii2-validate.git"
         }
     ],
     "autoload": {

@@ -1,12 +1,37 @@
 <?php
+/**
+ * Copyright (c) 2019.
+ *
+ * @author Igor (Dicr) Tarasov, develop@dicr.org
+ */
+
+declare(strict_types = 1);
 namespace dicr\oclib;
 
-use yii\base\Application;
-use yii\base\ExitException;
+use Yii;
 use yii\db\Exception;
+use yii\di\Instance;
 
-class Response extends \yii\web\Response
+/**
+ * Class Response
+ *
+ * @package dicr\oclib
+ */
+class Response
 {
+    /** @var \yii\web\Response компонент Yii */
+    public $response = 'response';
+
+    /**
+     * Конструктор.
+     *
+     * @throws \yii\base\InvalidConfigException
+     */
+    public function __construct()
+    {
+        $this->response = Instance::ensure($this->response, \yii\web\Response::class);
+    }
+
     /**
      * Добавление заголовка.
      *
@@ -16,11 +41,11 @@ class Response extends \yii\web\Response
     public function addHeader($header)
     {
         $matches = null;
-        if (!preg_match('~^\s*([^\:]+)\s*\:\s*(.+)\s*$~uism', $header, $matches)) {
+        if (! preg_match('~^\s*([^:]+)\s*:\s*(.+)\s*$~usm', $header, $matches)) {
             throw new Exception('Некорректный заголовок: ' . $header);
         }
 
-        $this->headers->add(trim($matches[1]), trim($matches[2]));
+        $this->response->headers->add(trim($matches[1]), trim($matches[2]));
     }
 
     /**
@@ -31,11 +56,13 @@ class Response extends \yii\web\Response
      * @return void|\yii\web\Response
      * @throws \yii\base\ExitException
      */
-    public function redirect($url, $status = 302, $checkAjax = true)
+    public function redirect($url, $status = 302)
     {
         $url = str_replace(['&amp;', "\n", "\r"], ['&', '', ''], $url);
-        \Yii::$app->end(0, parent::redirect($url, $status));
+        Yii::$app->end(0, $this->response->redirect($url, $status));
     }
+
+    /** @noinspection PhpMethodMayBeStaticInspection */
 
     /**
      * Усановить уровнь компрессии.
@@ -51,12 +78,10 @@ class Response extends \yii\web\Response
      * Возвращает выходные данные.
      *
      * @return string
-     * @throws \yii\base\InvalidConfigException
      */
     public function getOutput()
     {
-        $this->prepare();
-        return $this->content;
+        return $this->response->content;
     }
 
     /**
@@ -66,7 +91,7 @@ class Response extends \yii\web\Response
      */
     public function setOutput($output)
     {
-        $this->content = $output;
+        $this->response->content = $output;
     }
 
     /**
@@ -74,49 +99,6 @@ class Response extends \yii\web\Response
      */
     public function output()
     {
-        if (! defined('HTTP_CATALOG')) {
-            $this->content = str_replace('index.php?route=common/home', '', $this->content);
-        }
-
-        $this->send();
-    }
-
-    /**
-     * Сжатие конента ответа.
-     *
-     * @param $data
-     * @param int $level
-     * @return false|string
-     * @throws \yii\db\Exception
-     */
-    private function compress($data, $level = 0)
-    {
-        if (isset($_SERVER['HTTP_ACCEPT_ENCODING']) && (strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== false)) {
-            $encoding = 'gzip';
-        }
-
-        if (isset($_SERVER['HTTP_ACCEPT_ENCODING']) && (strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'x-gzip') !== false)) {
-            $encoding = 'x-gzip';
-        }
-
-        if (! isset($encoding) || ($level < - 1 || $level > 9)) {
-            return $data;
-        }
-
-        if (! extension_loaded('zlib') || ini_get('zlib.output_compression')) {
-            return $data;
-        }
-
-        if (headers_sent()) {
-            return $data;
-        }
-
-        if (connection_status()) {
-            return $data;
-        }
-
-        $this->addHeader('Content-Encoding: ' . $encoding);
-
-        return gzencode($data, (int)$level);
+        $this->response->send();
     }
 }

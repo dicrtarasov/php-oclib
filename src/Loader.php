@@ -129,10 +129,11 @@ class Loader extends BaseObject
      * @param array $data данные для темплейта
      * @param string $path
      * @return string
+     * @throws \yii\base\InvalidConfigException
      */
     public function view(string $route, array $data = [], string $path = '')
     {
-        return Template::run($route, $data);
+        return Template::render($route, $data);
     }
 
     /**

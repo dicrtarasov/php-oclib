@@ -41,7 +41,7 @@ abstract class Widget extends BaseObject
             $this->id = str_replace('\\', '-', strtolower(static::class)) . '-' . mt_rand();
         }
 
-        if (! isset($this->options['id']) && !empty($this->id)) {
+        if (! isset($this->options['id']) && ! empty($this->id)) {
             $this->options['id'] = $this->id;
         }
     }

@@ -10,6 +10,7 @@
 declare(strict_types = 1);
 namespace dicr\oclib;
 
+use Yii;
 use yii\base\BaseObject;
 
 /**
@@ -37,7 +38,7 @@ abstract class Controller extends BaseObject implements RegistryProps
      */
     public static function isPost()
     {
-        return (strtoupper($_SERVER['REQUEST_METHOD'] ?? null) === 'POST');
+        return Yii::$app->request->isPost;
     }
 
     /**
@@ -45,12 +46,14 @@ abstract class Controller extends BaseObject implements RegistryProps
      *
      * @param mixed $data
      * @return void
+     * @throws \yii\base\ExitException
      */
-    public function asJson($data)
+    public static function asJson($data)
     {
-        /** @noinspection PhpUndefinedMethodInspection */
-        header('Content-Type: application/json; charset=UTF-8', true);
-        $this->response->setOutput(Html::json($data));
-        exit;
+        $response = Yii::$app->response;
+        $response->format = \yii\web\Response::FORMAT_JSON;
+        $response->data = $data;
+
+        Yii::$app->end(0, $response);
     }
 }

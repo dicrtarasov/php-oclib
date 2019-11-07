@@ -32,15 +32,16 @@ class Filter
         }
 
         $val = (array)$val;
-        foreach ($val as $i => $id) {
-            /** @noinspection OffsetOperationsInspection */
-            $val[$i] = (int)$id;
-            /** @noinspection OffsetOperationsInspection */
-            if ($val[$i] < 1) {
+
+        foreach ($val as $i => &$id) {
+            $id = (int)$id;
+            if ($id < 1) {
                 /** @noinspection OffsetOperationsInspection */
                 unset($val[$i]);
             }
         }
+
+        unset($id);
 
         if (! empty($val)) {
             $val = array_unique($val);
@@ -63,12 +64,14 @@ class Filter
         }
 
         $val = (array)$val;
-        foreach ($val as $i => $v) {
-            $val[$i] = (string)$v;
-            if ($val[$i] === '') {
+        foreach ($val as $i => &$v) {
+            $v = (string)$v;
+            if ($v === '') {
                 unset($val[$i]);
             }
         }
+
+        unset($v);
 
         if (! empty($val)) {
             $val = array_unique($val);
@@ -86,10 +89,10 @@ class Filter
      */
     public static function params(array $args)
     {
-        foreach ($args as $i => $v) {
+        foreach ($args as $i => &$v) {
             if (is_array($v)) {
-                $args[$i] = static::params($v);
-                if (empty($args[$i])) {
+                $v = static::params($v);
+                if (empty($v)) {
                     unset($args[$i]);
                 }
             } elseif ($v === null || $v === '') {

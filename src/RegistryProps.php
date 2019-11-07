@@ -1,4 +1,13 @@
 <?php
+/**
+ * Copyright (c) 2019.
+ *
+ * @author Igor (Dicr) Tarasov, develop@dicr.org
+ */
+
+/** @noinspection PhpUndefinedClassInspection */
+
+declare(strict_types = 1);
 namespace dicr\oclib;
 
 /**

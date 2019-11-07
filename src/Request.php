@@ -1,13 +1,21 @@
 <?php
+/**
+ * Copyright (c) 2019.
+ *
+ * @author Igor (Dicr) Tarasov, develop@dicr.org
+ */
 
+declare(strict_types = 1);
 namespace dicr\oclib;
+
+use function is_array;
 
 /**
  * Запрос.
  *
  * @package dicr\oclib
  */
-class Request extends \yii\web\Request
+class Request
 {
     public $get = [];
 
@@ -24,10 +32,8 @@ class Request extends \yii\web\Request
     /**
      * Инициализация.
      */
-    public function init()
+    public function __construct()
     {
-        parent::init();
-
         $this->get = &$_GET;
         $this->post = &$_POST;
         $this->request = &$_REQUEST;
@@ -36,10 +42,12 @@ class Request extends \yii\web\Request
         $this->server = &$_SERVER;
     }
 
+    /** @noinspection PhpMethodMayBeStaticInspection */
+
     /**
      * Экранирование парамеров.
      *
-     * @param $data
+     * @param $params
      * @return array|string
      */
     public function clean($params)
@@ -48,7 +56,7 @@ class Request extends \yii\web\Request
             foreach ($params as $key => $value) {
                 unset($params[$key]);
 
-                $params[$this->clean($key)] = $this->clean($value);
+                $params[(string)$this->clean($key)] = $this->clean($value);
             }
         } else {
             $params = htmlspecialchars($params, ENT_COMPAT, 'UTF-8');

@@ -13,18 +13,17 @@ namespace dicr\oclib;
 
 use PDO;
 use stdClass;
-use yii\base\BaseObject;
 use yii\db\Connection;
 use yii\di\Instance;
 use function count;
 use function is_string;
 
 /**
- * База данных Yii для OpeCart.
+ * Прокси базы данных Opencart на Yii.
  *
  * @property string $lastId
  */
-class DB extends BaseObject
+class DB
 {
     /** @var \yii\db\Connection */
     public $db = 'db';
@@ -41,6 +40,7 @@ class DB extends BaseObject
      * @param string $password
      * @param string $database
      * @param int $port
+     * @throws \yii\base\InvalidConfigException
      */
     public function __construct(
         $adaptor = null,
@@ -50,18 +50,6 @@ class DB extends BaseObject
         $database = null,
         $port = null)
     {
-        parent::__construct();
-    }
-
-    /**
-     * Инициализация.
-     *
-     * @throws \yii\base\InvalidConfigException
-     */
-    public function init()
-    {
-        parent::init();
-
         $this->db = Instance::ensure($this->db, Connection::class);
     }
 
