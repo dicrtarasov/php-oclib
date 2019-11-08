@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "768489bdcce487fc4783207e8fc26ba3",
+    "content-hash": "57d0ea755c7df519d7989ba02b3a16a8",
     "packages": [
         {
             "name": "bower-asset/inputmask",
@@ -143,11 +143,11 @@
         },
         {
             "name": "dicr/yii2-helper",
-            "version": "2.1.0",
+            "version": "2.1.1",
             "source": {
                 "type": "git",
                 "url": "https://gitlab.com/dicr/yii2-helper.git",
-                "reference": "2502d3a5b410e8377a23f65fdbc68d3adb9b5f13"
+                "reference": "7e53b0e295c806515dec80aa103819e25c9b3c3b"
             },
             "require": {
                 "ext-intl": "*",
@@ -184,22 +184,23 @@
             "support": {
                 "source": "https://gitlab.com/dicr/yii2-helper.git"
             },
-            "time": "2019-11-05T00:59:18+00:00"
+            "time": "2019-11-08T14:13:51+00:00"
         },
         {
             "name": "dicr/yii2-validate",
-            "version": "1.5.4",
+            "version": "1.5.5",
             "source": {
                 "type": "git",
                 "url": "https://gitlab.com/dicr/yii2-validate.git",
-                "reference": "92ead8e671ef4091c171324bb768ba9310c80dac"
+                "reference": "51d7bd686e7367df07f6ded3afaf72b2f0f7a549"
             },
             "require": {
                 "php": ">=7.0",
                 "yiisoft/yii2": "~2.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "~8.2"
+                "phpunit/phpunit": "~8.2",
+                "roave/security-advisories": "dev-master"
             },
             "type": "yii2-extension",
             "autoload": {
@@ -207,6 +208,9 @@
                     "dicr\\validate\\": "src"
                 }
             },
+            "license": [
+                "Apache-2.0"
+            ],
             "authors": [
                 {
                     "name": "Igor Tarasov",
@@ -223,7 +227,7 @@
             "support": {
                 "source": "https://gitlab.com/dicr/yii2-validate.git"
             },
-            "time": "2019-10-24T12:45:19+00:00"
+            "time": "2019-11-06T04:02:39+00:00"
         },
         {
             "name": "ezyang/htmlpurifier",

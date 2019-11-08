@@ -38,38 +38,6 @@ class Url
     }
 
     /**
-     * Фильтрует аргументы запроса рекурсивно, удаляя пустые параметры
-     *
-     * @param array $params
-     * @return array
-     */
-    public static function filterParams(array $params)
-    {
-        foreach ($params as $i => &$v) {
-            if (is_array($v)) {
-                $v = static::filterParams($v);
-                if (empty($v)) {
-                    unset($params[$i]);
-                }
-            } elseif ($v === null || $v === '' || $v === []) {
-                unset($params[$i]);
-            }
-        }
-
-        unset($v);
-
-        if (isset($params['page']) && (int)$params['page'] < 2) {
-            unset($params['page']);
-        }
-
-        unset($params['_route_']);
-
-        ksort($params);
-
-        return $params;
-    }
-
-    /**
      * Редиректит на канонический адрес если екущий оличается.
      *
      * @param string $url
@@ -99,6 +67,18 @@ class Url
         if ($rewrite !== null && ! in_array($rewrite, $this->rewrite, false)) {
             $this->rewrite[] = $rewrite;
         }
+    }
+
+    /**
+     * Ссылка с фильтрованными парамерами.
+     *
+     * @param string $route
+     * @param array $params
+     * @return string
+     */
+    public function canonical(string $route, array $params = [])
+    {
+        return $this->link($route, self::filterParams($params));
     }
 
     /**
@@ -157,14 +137,21 @@ class Url
     }
 
     /**
-     * Ссылка с фильтрованными парамерами.
+     * Фильтрует аргументы запроса рекурсивно, удаляя пустые параметры
      *
-     * @param string $route
      * @param array $params
-     * @return string
+     * @return array
      */
-    public function canonical(string $route, array $params = [])
+    public static function filterParams(array $params)
     {
-        return $this->link($route, self::filterParams($params));
+        $params = \dicr\helper\Url::filterQuery($params);
+
+        if (isset($params['page']) && (int)$params['page'] < 2) {
+            unset($params['page']);
+        }
+
+        unset($params['_route_']);
+
+        return \dicr\helper\Url::normalizeQuery($params);
     }
 }
