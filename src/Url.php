@@ -9,6 +9,7 @@ declare(strict_types = 1);
 namespace dicr\oclib;
 
 use InvalidArgumentException;
+use Yii;
 use function in_array;
 use function is_array;
 use function is_string;
@@ -21,12 +22,6 @@ use function is_string;
  */
 class Url
 {
-    /** @var string */
-    private $url;
-
-    /** @var array */
-    private $rewrite = [];
-
     /**
      * Конструктор.
      *
@@ -34,7 +29,6 @@ class Url
      */
     public function __construct(string $url)
     {
-        $this->url = $url;
     }
 
     /**
@@ -64,9 +58,6 @@ class Url
      */
     public function addRewrite($rewrite)
     {
-        if ($rewrite !== null && ! in_array($rewrite, $this->rewrite, false)) {
-            $this->rewrite[] = $rewrite;
-        }
     }
 
     /**
@@ -88,52 +79,21 @@ class Url
      * @param array|string $args
      * @return string
      */
-    public function link(string $route, $args = null)
+    public function link(string $route, $args = [])
     {
-        if (! isset($args)) {
-            $args = [];
+        if (empty($route)) {
+            throw new \yii\base\InvalidArgumentException('route');
         }
 
-        $route = trim($route);
-        if (empty($route)) {
-            if (is_array($args)) {
-                $route = $args['route'] ?? '';
-            }
-
-            if (empty($route)) {
-                throw new InvalidArgumentException('empty route');
-            }
+        if (is_string($args)) {
+            $args = \dicr\helper\Url::parseQuery($args);
         }
 
         // удаляем служебные параметры
-        if (is_array($args)) {
-            unset($args['route'], $args['_route_']);
-        }
+        unset($args['route']);
+        $args[0] = $route;
 
-        // сроим ссылку
-        $url = rtrim($this->url, '/') . '/index.php';
-
-        if (empty($args)) {
-            $url .= '?route=' . $route;
-        } elseif (is_string($args)) {
-            $url .= '?route=' . $route . '&' . $args;
-        } else {
-            // добавляем маршрут
-            $args['route'] = $route;
-
-            // сортируем
-            ksort($args);
-
-            // сроим ссылку
-            $url .= '?' . http_build_query($args);
-        }
-
-        // формируем чпу
-        foreach ($this->rewrite as $rewrite) {
-            $url = $rewrite->rewrite($url);
-        }
-
-        return $url;
+        return Yii::$app->urlManager->createAbsoluteUrl($args);
     }
 
     /**

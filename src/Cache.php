@@ -24,6 +24,9 @@ class Cache
     /** @var \yii\caching\CacheInterface */
     public $cache = 'cache';
 
+    /** @var int ttl */
+    protected $expire;
+
     /**
      * Constructor
      *
@@ -33,6 +36,8 @@ class Cache
      */
     public function __construct($adaptor = null, $expire = null)
     {
+        $this->expire = $expire;
+
         $this->cache = Instance::ensure($this->cache, CacheInterface::class);
     }
 
@@ -57,7 +62,7 @@ class Cache
      */
     public function set($key, $val, int $ttl = null)
     {
-        return $this->cache->set($key, $val, $ttl);
+        return $this->cache->set($key, $val, $ttl ?: $this->expire);
     }
 
     /**
