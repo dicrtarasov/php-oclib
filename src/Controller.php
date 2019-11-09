@@ -54,6 +54,6 @@ abstract class Controller extends BaseObject implements RegistryProps
         $response->format = \yii\web\Response::FORMAT_JSON;
         $response->data = $data;
 
-        Yii::$app->end(0, $response);
+        return Yii::$app->end(0, $response);
     }
 }
