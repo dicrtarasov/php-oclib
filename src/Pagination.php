@@ -1,96 +1,168 @@
 <?php
 namespace dicr\oclib;
 
+use yii\base\InvalidArgumentException;
+use yii\base\InvalidConfigException;
 use yii\data\DataProviderInterface;
 
-class Pagination
+/**
+ * Виджет паринации Opecart.
+ *
+ * @property-read int $numPages кол-во сраниц
+ *
+ * @package dicr\oclib
+ */
+class Pagination extends Widget
 {
-    public $total = 0;
+    /** @var int общее количество записей */
+    public $total;
 
-    public $page = 1;
+    /** @var int номер страницы, начиная с 1 */
+    public $page;
 
-    public $limit = 20;
+    /** @var int лимит записей на сраницу */
+    public $limit;
 
-    public $num_links = 8;
+    /** @var int количество ссылок на страницы */
+    public $num_links;
 
+    /** @var string шаблон URL сраницы, где номер сраницы помечен как "{page}" */
     public $url = '';
 
+    /** @var string|false символ первой сраницы */
     public $text_first = '|&lt;';
 
+    /** @var string|false символ последней сраницы */
     public $text_last = '&gt;|';
 
+    /** @var string|false символ следующей страницы */
     public $text_next = '&gt;';
 
+    /** @var string|false символ предыдущей страницы */
     public $text_prev = '&lt;';
 
-    public function __construct(DataProviderInterface $provider = null)
+    /**
+     * @var \yii\data\Pagination|null пейджер
+     * Внимание ! Если пагинация берется у DataProvider, то для начала нужно инициировать его пейджер
+     * методом вызова $provider->totalCount, иначе у пейджера будет total = 0
+     */
+    public $pager;
+
+    /**
+     * @var \yii\data\DataProviderInterface|null провайдер данных у которого возьмется пейджер и totalCount
+     */
+    public $provider;
+
+    /**
+     * Конструктор.
+     *
+     * @param array|\yii\data\Pagination|\yii\data\DataProviderInterface|null $params
+     */
+    public function __construct($params = null)
     {
-        if (!empty($provider)) {
-            $pagination = $provider->getPagination();
-            if (! empty($pagination)) {
-                $pagination->validatePage = false;
-                $pagination->pageSizeParam = 'limit';
-
-                $this->total = $provider->getTotalCount();
-                $this->page = $pagination->getPage() + 1;
-                $this->limit = $pagination->getPageSize();
-
-                // в качсве шаблона номера сраницы берем число на 1 меньше чем то которое заменяем на {page},
-                // потому что номер сраницы с 0, а ссылка идет на сраницу с 1
-                $this->url = str_replace(999999999, '{page}', $pagination->createUrl(999999998));
-            }
+        if (empty($params)) {
+            $params = [];
+        } elseif ($params instanceof DataProviderInterface) {
+            $params = ['provider' => $params];
+        } elseif ($params instanceof \yii\data\Pagination) {
+            $params = ['pager' => $params];
+        } elseif (! is_array($params)) {
+            throw new InvalidArgumentException('params');
         }
+
+        parent::__construct($params);
     }
 
-    public function render()
+    /**
+     * Инициализация.
+     */
+    public function init()
     {
-        $total = $this->total;
+        parent::init();
 
-        if ($this->page < 1) {
-            $page = 1;
-        } else {
-            $page = $this->page;
+        if (! empty($this->provider)) {
+            if (! ($this->provider instanceof DataProviderInterface)) {
+                throw new InvalidConfigException('provider');
+            }
+
+            if (empty($this->pager)) {
+                $this->pager = $this->provider->getPagination();
+            }
+
+            if (empty($this->pager->totalCount)) {
+                $this->pager->totalCount = (int)$this->provider->getTotalCount();
+            }
         }
 
-        if (! (int)$this->limit) {
-            $limit = 10;
-        } else {
-            $limit = $this->limit;
+        if (! empty($this->pager)) {
+            if (! ($this->pager instanceof \yii\data\Pagination)) {
+                throw new InvalidConfigException('pager');
+            }
+
+            $this->pager->pageParam = 'page';
+            $this->pager->pageSizeParam = 'limit';
+            if (empty($this->pager->route)) {
+                $this->pager->route = \Yii::$app->requestedRoute;
+            }
+
+            if (empty($this->page)) {
+                $this->page = $this->pager->page + 1;
+            }
+
+            if (empty($this->limit)) {
+                $this->limit = $this->pager->pageSize;
+            }
+
+            if (! isset($this->total)) {
+                $this->total = $this->pager->totalCount;
+            }
+
+            if (empty($this->url)) {
+                $this->url = str_replace('999999999', '{page}', $this->pager->createUrl(999999998));
+            }
         }
 
-        $num_links = $this->num_links;
-        $num_pages = ceil($total / $limit);
+        Html::addCssClass($this->options, 'dicr-oclib-pagination pagination');
+    }
+
+    /**
+     * @inheritDoc
+     *
+     * @throws \yii\base\InvalidConfigException
+     */
+    public function run()
+    {
+        if (empty($this->url)) {
+            throw new InvalidConfigException('url');
+        }
+
+        $this->validate();
+
+        $num_pages = $this->getNumPages();
 
         if ($num_pages < 2) {
-            return '';
+            return;
         }
 
-        $this->url = str_replace('%7Bpage%7D', '{page}', $this->url);
+        echo Html::beginTag('ul', $this->options);
 
-        $output = '<ul class="pagination">';
+        if ($this->page > 1) {
+            if (! empty($this->text_first)) {
+                echo Html::tag('li', Html::a($this->text_first, $this->getUrl(1)));
+            }
 
-        if ($page > 1) {
-            $tmp_url = str_replace('&amp;', '&', $this->url);
-            $output .= '<li><a href="' .
-                       str_replace('&', '&amp;', rtrim(str_replace('page={page}', '', $tmp_url), '?&')) . '">' .
-                       $this->text_first . '</a></li>';
-            if ($page == 2) {
-                $output .= '<li><a href="' .
-                           str_replace('&', '&amp;', rtrim(str_replace('page={page}', '', $tmp_url), '?&')) . '">' .
-                           $this->text_prev . '</a></li>';
-            } else {
-                $output .= '<li><a href="' . str_replace('{page}', $page - 1, $this->url) . '">' . $this->text_prev .
-                           '</a></li>';
+            if (! empty($this->text_prev)) {
+                echo Html::tag('li', Html::a($this->text_prev, $this->getUrl($this->page - 1)));
             }
         }
 
         if ($num_pages > 1) {
-            if ($num_pages <= $num_links) {
+            if ($num_pages <= $this->num_links) {
                 $start = 1;
                 $end = $num_pages;
             } else {
-                $start = $page - floor($num_links / 2);
-                $end = $page + floor($num_links / 2);
+                $start = $this->page - floor($this->num_links / 2);
+                $end = $this->page + floor($this->num_links / 2);
 
                 if ($start < 1) {
                     $end += abs($start) + 1;
@@ -104,29 +176,107 @@ class Pagination
             }
 
             for ($i = $start; $i <= $end; $i ++) {
-                if ($page == $i) {
-                    $output .= '<li class="active"><span>' . $i . '</span></li>';
+                if ($this->page == $i) {
+                    echo Html::tag('li', Html::tag('span', $i), ['class' => 'active']);
                 } else {
-                    if ($i == 1) {
-                        $output .= '<li><a href="' .
-                                   str_replace('&', '&amp;', rtrim(str_replace('page={page}', '', $tmp_url), '?&')) .
-                                   '">' . $i . '</a></li>';
-                    } else {
-                        $output .= '<li><a href="' . str_replace('{page}', $i, $this->url) . '">' . $i . '</a></li>';
-                    }
+                    echo Html::tag('li', Html::a($i, $this->getUrl($i)));
                 }
             }
         }
 
-        if ($page < $num_pages) {
-            $output .= '<li><a href="' . str_replace('{page}', $page + 1, $this->url) . '">' . $this->text_next .
-                       '</a></li>';
-            $output .= '<li><a href="' . str_replace('{page}', $num_pages, $this->url) . '">' . $this->text_last .
-                       '</a></li>';
+        if ($this->page < $num_pages) {
+            if (! empty($this->text_next)) {
+                echo Html::tag('li', Html::a($this->text_next, $this->getUrl($this->page + 1)));
+            }
+
+            if (! empty($this->text_last)) {
+                echo Html::tag('li', Html::a($this->text_last, $this->getUrl($num_pages)));
+            }
         }
 
-        $output .= '</ul>';
+        echo Html::endTag('li');
+    }
 
-        return $output;
+    /**
+     * Валидация параметров.
+     *
+     * @throws \yii\base\InvalidConfigException
+     */
+    protected function validate()
+    {
+        $this->page = (int)$this->page;
+        if ($this->page < 0) {
+            throw new InvalidConfigException('page');
+        }
+
+        if ($this->page < 1) {
+            $this->page = 1;
+        }
+
+        $this->limit = (int)$this->limit;
+        if ($this->limit < 0) {
+            throw new InvalidConfigException('limit');
+        }
+
+        if ($this->limit < 1) {
+            $this->limit = 20;
+        }
+
+        $this->total = (int)$this->total;
+        if ($this->total < 0) {
+            throw new InvalidConfigException('total');
+        }
+
+        $this->num_links = (int)$this->num_links;
+        if ($this->num_links < 0) {
+            throw new InvalidConfigException('num_links');
+        }
+
+        if ($this->num_links < 1) {
+            $this->num_links = 8;
+        }
+
+        if (! empty($this->url)) {
+            $this->url = str_replace('%7Bpage%7D', '{page}', $this->url);
+            $this->url = html_entity_decode($this->url, \ENT_QUOTES);
+        }
+    }
+
+    /**
+     * Возвращает кол-во сраниц.
+     *
+     * @return int
+     */
+    public function getNumPages()
+    {
+        return $this->limit > 0 ? (int)ceil($this->total / $this->limit) : 0;
+    }
+
+    /**
+     * Возвращает ссылку на заданную страницу.
+     *
+     * @param int|null $page номер страницы. Если пустая, то текущая.
+     */
+    public function getUrl(int $page = null)
+    {
+        if (empty($page)) {
+            $page = $this->page;
+        }
+
+        return rtrim($page > 1 ?
+            str_replace('{page}', $page, $this->url) :
+            str_replace('page={page}', '', $this->url),
+            '?&'
+        );
+    }
+
+    /**
+     * Рендер.
+     *
+     * @return string
+     */
+    public function render()
+    {
+        return (string)$this;
     }
 }
