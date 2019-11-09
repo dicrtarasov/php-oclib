@@ -12,14 +12,14 @@ declare(strict_types = 1);
  */
 
 // основной домен сайа
-const DOMAIN = 'site.ru';
+const DOMAIN = 'test.ru';
 
-const APP_NAME = 'My App';
+const APP_NAME = 'My Site';
 
 // DB
 const DB_HOSTNAME = 'localhost';
-const DB_USERNAME = 'username';
-const DB_PASSWORD = 'password';
+const DB_USERNAME = 'user';
+const DB_PASSWORD = 'pass';
 const DB_DATABASE = 'dbname';
 const DB_PREFIX = 'oc_';
 
