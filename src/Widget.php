@@ -81,7 +81,7 @@ abstract class Widget extends BaseObject
      * @param array $config
      * @return string
      */
-    public static function widget(array $config)
+    public static function widget(array $config = [])
     {
         return (string)(new static($config));
     }
