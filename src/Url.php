@@ -8,10 +8,7 @@
 declare(strict_types = 1);
 namespace dicr\oclib;
 
-use InvalidArgumentException;
 use Yii;
-use function in_array;
-use function is_array;
 use function is_string;
 
 /**
@@ -50,6 +47,8 @@ class Url
             exit;
         }
     }
+
+    /** @noinspection PhpMethodMayBeStaticInspection */
 
     /**
      * Добавляе обработчики ЧПУ.

@@ -86,7 +86,7 @@ return [
                 'brands' => 'product/manufacturer',
                 'services' => 'service/service',
                 [
-                    'class' => app\components\CatalogUrlRule::class
+                    'class' => app\components\UrlAliasRule::class
                 ]
             ]
         ]

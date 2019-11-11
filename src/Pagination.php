@@ -1,12 +1,22 @@
 <?php
+/**
+ * Copyright (c) 2019.
+ *
+ * @author Igor (Dicr) Tarasov, develop@dicr.org
+ */
+
+declare(strict_types = 1);
 namespace dicr\oclib;
 
+use Yii;
 use yii\base\InvalidArgumentException;
 use yii\base\InvalidConfigException;
 use yii\data\DataProviderInterface;
+use function is_array;
+use const ENT_QUOTES;
 
 /**
- * Виджет паринации Opecart.
+ * Виджет паринации Opencart.
  *
  * @property-read int $numPages кол-во сраниц
  *
@@ -28,6 +38,9 @@ class Pagination extends Widget
 
     /** @var string шаблон URL сраницы, где номер сраницы помечен как "{page}" */
     public $url = '';
+
+    /** @var string непонятно зачем */
+    public $text;
 
     /** @var string|false символ первой сраницы */
     public $text_first = '|&lt;';
@@ -75,6 +88,9 @@ class Pagination extends Widget
 
     /**
      * Инициализация.
+     *
+     * @throws \yii\base\InvalidConfigException
+     * @throws \yii\base\InvalidConfigException
      */
     public function init()
     {
@@ -102,7 +118,7 @@ class Pagination extends Widget
             $this->pager->pageParam = 'page';
             $this->pager->pageSizeParam = 'limit';
             if (empty($this->pager->route)) {
-                $this->pager->route = \Yii::$app->requestedRoute;
+                $this->pager->route = Yii::$app->requestedRoute;
             }
 
             if (empty($this->page)) {
@@ -176,7 +192,7 @@ class Pagination extends Widget
             }
 
             for ($i = $start; $i <= $end; $i ++) {
-                if ($this->page == $i) {
+                if ($this->page === $i) {
                     echo Html::tag('li', Html::tag('span', $i), ['class' => 'active']);
                 } else {
                     echo Html::tag('li', Html::a($i, $this->getUrl($i)));
@@ -238,7 +254,7 @@ class Pagination extends Widget
 
         if (! empty($this->url)) {
             $this->url = str_replace('%7Bpage%7D', '{page}', $this->url);
-            $this->url = html_entity_decode($this->url, \ENT_QUOTES);
+            $this->url = html_entity_decode($this->url, ENT_QUOTES);
         }
     }
 
@@ -256,6 +272,7 @@ class Pagination extends Widget
      * Возвращает ссылку на заданную страницу.
      *
      * @param int|null $page номер страницы. Если пустая, то текущая.
+     * @return string
      */
     public function getUrl(int $page = null)
     {
@@ -263,11 +280,8 @@ class Pagination extends Widget
             $page = $this->page;
         }
 
-        return rtrim($page > 1 ?
-            str_replace('{page}', $page, $this->url) :
-            str_replace('page={page}', '', $this->url),
-            '?&'
-        );
+        return rtrim($page > 1 ? str_replace('{page}', $page, $this->url) : str_replace('page={page}', '', $this->url),
+            '?&');
     }
 
     /**

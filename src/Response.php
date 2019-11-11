@@ -43,7 +43,7 @@ class Response
         $matches = null;
         if (preg_match('~^\s*([^:]+)\s*:\s*(.+)\s*$~usm', $header, $matches)) {
             $this->response->headers->add(trim($matches[1]), trim($matches[2]));
-        } elseif (preg_match('~^HTTP\/[\d\.]+\s+(\d+)~um', $header, $matches)) {
+        } elseif (preg_match('~^HTTP/[\d.]+\s+(\d+)~um', $header, $matches)) {
             $this->response->statusCode = (int)$matches[1];
         } else {
             throw new Exception('Некорректный заголовок: ' . $header);

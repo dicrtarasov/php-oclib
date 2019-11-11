@@ -30,7 +30,7 @@ use const SORT_NATURAL;
  *
  * @package app\components
  */
-class CatalogUrlRule extends BaseObject implements UrlRuleInterface
+class UrlAliasRule extends BaseObject implements UrlRuleInterface
 {
     /** @var \yii\caching\CacheInterface */
     public $cache = 'cache';
@@ -64,7 +64,7 @@ class CatalogUrlRule extends BaseObject implements UrlRuleInterface
 
         return Yii::$app->cache->getOrSet([__METHOD__, $route, $params], function() use ($route, $params) {
             // если роут объекта, то получаем ЧПУ объекта, иначе ЧПУ для маршрута
-            $slug = in_array($route, UrlAlias::PARAM_ID_ROUTES, true) ? $this->createObjectSlug($route, $params) :
+            $slug = !empty(UrlAlias::paramByRoute($route)) ? $this->createObjectSlug($route, $params) :
                 $this->createRouteSlug($route);
 
             $url = null;
