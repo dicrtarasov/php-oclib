@@ -8,6 +8,7 @@
 declare(strict_types = 1);
 namespace app\models;
 
+use dicr\helper\ArrayHelper;
 use dicr\validate\ValidateException;
 use Filter;
 use yii\base\Model;
@@ -29,8 +30,11 @@ use const SORT_NUMERIC;
  * @property-read \yii\db\ActiveQuery $query
  * @property-read \yii\data\ActiveDataProvider $provider
  * @property-read \app\models\Manuf[] $categManufs производители категории
+ * @property-read \app\models\Manuf[] $selectedManufs выбранные в фильре производиели
  * @property-read \app\models\Attr[] $categAttrs характеристики товаров категории со значениями
+ * @property-read \app\models\Attr[] $selectedAttrs выбранные в фильтре характеристики
  * @property-read array $pageParams канонические параметры сраницы
+ * @property-read string $filterText текст выбранных параметров
  */
 class ProdFilter extends Model
 {
@@ -139,7 +143,7 @@ class ProdFilter extends Model
 
                             if (is_array($val) && (array_key_exists('min', $val) || array_key_exists('max', $val))) {
                                 foreach (['min', 'max'] as $key) {
-                                    if ($val[$key] === null || $val[$key] === '') {
+                                    if (! isset($val[$key]) || $val[$key] === '') {
                                         unset($val[$key]);
                                     }
 
@@ -176,7 +180,7 @@ class ProdFilter extends Model
     public function getQuery()
     {
         $query = Prod::find()->alias('p')->select('p.*')->innerJoin(Prod::tableCateg() . ' p2c',
-                'p2c.[[product_id]]=p.[[product_id]]');
+            'p2c.[[product_id]]=p.[[product_id]]');
 
         if (! $this->validate()) {
             return $query->where('1=0');
@@ -188,7 +192,7 @@ class ProdFilter extends Model
         // статус
         if (isset($this->status)) {
             $query->andWhere(['p.[[status]]' => (int)$this->status])->innerJoin(Categ::tableName() . ' c',
-                    'c.[[category_id]]=p2c.[[category_id]]')->andWhere(['c.[[status]]' => (int)$this->status]);
+                'c.[[category_id]]=p2c.[[category_id]]')->andWhere(['c.[[status]]' => (int)$this->status]);
         }
 
         // категория
@@ -221,25 +225,25 @@ class ProdFilter extends Model
                     continue;
                 }
 
-                $attrQuery = (new Query())->select('pa.[[text]]')->from(Prod::tableAttr() . ' pa')->where([
-                        'pa.[[product_id]]' => new Expression('p.[[product_id]]'),
-                        'pa.[[attribute_id]]' => $id
-                    ]);
+                $attrQuery = (new Query())->from(Prod::tableAttr() . ' pa')->where([
+                    'pa.[[product_id]]' => new Expression('p.[[product_id]]'),
+                    'pa.[[attribute_id]]' => $id
+                ]);
 
                 $valValid = false;
 
                 // проверяем тип
                 switch ($attr->type) {
                     case Attr::TYPE_FLAG:
-                        $attrQuery->select('cast(pa.[[text]] as decimal(10,3))');
+                        $attrQuery->select(new Expression('cast(pa.[[text]] as unsigned)'));
                         if ($val !== '') {
-                            $attrQuery->select('cast(pa.[[text]] as unsigned)');
+                            $query->andHaving(['attr' . $id => (int)(bool)$val]);
                             $valValid = true;
                         }
                         break;
 
                     case Attr::TYPE_NUMBER:
-                        $attrQuery->select('cast(pa.[[text]] as decimal(10,3))');
+                        $attrQuery->select(new Expression('cast(pa.[[text]] as decimal(10,3))'));
                         $min = isset($val['min']) && $val['min'] !== '' ? (float)$val['min'] : null;
                         $max = isset($val['max']) && $val['max'] !== '' ? (float)$val['max'] : null;
                         if (isset($min, $max)) {
@@ -256,6 +260,7 @@ class ProdFilter extends Model
                         break;
 
                     default:
+                        $attrQuery->select('pa.[[text]]');
                         $val = Filter::strings(array_keys((array)$val));
                         if (! empty($val)) {
                             $query->andHaving(['attr' . $id => $val]);
@@ -291,6 +296,7 @@ class ProdFilter extends Model
         return new ActiveDataProvider(array_merge([
             'query' => $this->query,
             'sort' => [
+                'route' => \Yii::$app->requestedRoute,
                 'attributes' => [
                     self::SORT_ORDER => [
                         'asc' => [
@@ -317,6 +323,9 @@ class ProdFilter extends Model
                     self::SORT_ORDER => SORT_ASC
                 ]
             ],
+            'pagination' => [
+                'route' => \Yii::$app->requestedRoute
+            ]
         ], $config));
     }
 
@@ -346,6 +355,25 @@ class ProdFilter extends Model
         }
 
         return $this->_categManufs;
+    }
+
+    /** @var \app\models\Manuf выбранные производители */
+    private $_selectedMaufs;
+
+    /**
+     * Выбранные произвдители.
+     *
+     * @return \app\models\Manuf[]
+     */
+    public function getSelectedManufs()
+    {
+        if (! isset($this->_selectedMaufs)) {
+            $this->_selectedMaufs = ! empty($this->manuf) ? Manuf::find()->where([
+                'manufacturer_id' => array_keys($this->manuf)
+            ])->orderBy('name')->all() : [];
+        }
+
+        return $this->_selectedMaufs;
     }
 
     /** @var \app\models\Attr[] характеристики категории с наборами значений для фильтра */
@@ -397,8 +425,11 @@ class ProdFilter extends Model
             }
 
             // получаем все характеристики из выбранных id
-            $this->_categAttrs = ! empty($values) ?
-                Attr::find()->where(['attribute_id' => array_keys($values)])->indexBy('attribute_id')->all() : [];
+            $this->_categAttrs = ! empty($values) ? Attr::find()
+                ->where(['attribute_id' => array_keys($values)])
+                ->orderBy('name')
+                ->indexBy('attribute_id')
+                ->all() : [];
 
             // расставляем значения
             foreach ($this->_categAttrs as $id => $attr) {
@@ -409,6 +440,24 @@ class ProdFilter extends Model
         }
 
         return $this->_categAttrs;
+    }
+
+    /** @var \app\models\Attr[] выбранные харакеристики */
+    private $_selectedAttrs;
+
+    /**
+     * Возвращает выбранные харакеристики.
+     *
+     * @return \app\models\Attr[]
+     */
+    public function getSelectedAttrs()
+    {
+        if (! isset($this->_selectedAttrs)) {
+            $this->_selectedAttrs = ! empty($this->attr) ?
+                Attr::find()->where(['attribute_id' => array_keys($this->attr)])->orderBy('name')->all() : [];
+        }
+
+        return $this->_selectedAttrs;
     }
 
     /**
@@ -429,5 +478,52 @@ class ProdFilter extends Model
         }
 
         return $params;
+    }
+
+    /** @var string текстовое представление характеристик фильтра */
+    private $_filterText;
+
+    /**
+     * Возвращает текстовое описание выбранных параметров.
+     *
+     * @return string
+     */
+    public function getFilterText()
+    {
+        if (! isset($this->_filterText)) {
+            $params = [];
+
+            if (! empty($this->selectedManufs)) {
+                $params[] = 'Производитель ' . implode('/', ArrayHelper::getColumn($this->selectedManufs, 'name'));
+            }
+
+            foreach ($this->selectedAttrs as $attr) {
+                switch ($attr->type) {
+                    case Attr::TYPE_FLAG:
+                        $params[] = $attr->name;
+                        break;
+
+                    case Attr::TYPE_NUMBER:
+                        $vals = array_unique(array_values($this->attr[$attr->attribute_id] ?? []));
+                        if (! empty($vals)) {
+                            sort($vals);
+                            $params[] = $attr->name . ' ' . implode('/', $vals);
+                        }
+                        break;
+
+                    default:
+                        $vals = array_unique(array_keys($this->attr[$attr->attribute_id] ?? []));
+                        if (! empty($vals)) {
+                            sort($vals);
+                            $params[] = $attr->name . ' ' . implode('/', $vals);
+                        }
+                        break;
+                }
+            }
+
+            $this->_filterText = implode(', ', $params);
+        }
+
+        return $this->_filterText;
     }
 }

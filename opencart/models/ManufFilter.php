@@ -106,6 +106,7 @@ class ManufFilter extends Model
         return new ActiveDataProvider(array_merge([
             'query' => $this->query,
             'sort' => [
+                'route' => \Yii::$app->requestedRoute,
                 'attributes' => [
                     'sort_order' => [
                         'asc' => ['m.[[sort_order]]' => SORT_ASC],
@@ -116,6 +117,9 @@ class ManufFilter extends Model
                     'sort_order' => SORT_ASC
                 ]
             ],
+            'pagination' => [
+                'route' => \Yii::$app->requestedRoute
+            ]
         ], $config));
     }
 }

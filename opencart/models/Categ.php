@@ -145,16 +145,6 @@ class Categ extends ActiveRecord
     }
 
     /**
-     * Таблица путей.
-     *
-     * @return string
-     */
-    public static function tablePath()
-    {
-        return '{{oc_category_path}}';
-    }
-
-    /**
      * Связи с городами.
      *
      * @return string
@@ -162,22 +152,6 @@ class Categ extends ActiveRecord
     public static function tableCities()
     {
         return '{{oc_category_to_city}}';
-    }
-
-    /**
-     * Возвращает скрытые категории для текущей страны.
-     *
-     * @param string|null $country
-     * @return int[]
-     */
-    public static function getHiddens(string $country = null)
-    {
-        if ($country === null) {
-            $parts = explode('.', $_SERVER['HTTP_HOST'] ?? '');
-            $country = end($parts);
-        }
-
-        return self::HIDDENS_BY_COUNTRY[$country] ?? [];
     }
 
     /**
@@ -198,8 +172,8 @@ class Categ extends ActiveRecord
     public function getParent()
     {
         return $this->hasOne(self::class, ['category_id' => 'parent_id'])->cache(true, new TagDependency([
-                'tags' => [self::class]
-            ]));
+            'tags' => [self::class]
+        ]));
     }
 
     /**
@@ -210,52 +184,6 @@ class Categ extends ActiveRecord
     public function getChilds()
     {
         return $this->hasMany(self::class, ['parent_id' => 'category_id'])->inverseOf('parent')->indexBy('category_id');
-    }
-
-    /**
-     * Возвращает количество дочерних категорий.
-     *
-     * @param array $options
-     * - bool $recursive
-     * - bool $status
-     * @return int
-     */
-    public function childsCount(array $options = null)
-    {
-        if ($options === null) {
-            $options = [
-                'status' => 1,
-                'recursive' => false
-            ];
-        }
-
-        $query = self::find()->alias('c')->where([
-                'c.[[parent_id]]' => empty($options['recursive']) ? $this->category_id :
-                    (new Query())->select('cp.[[category_id]]')
-                        ->from(self::tablePath() . ' cp')
-                        ->where(['cp.[[path_id]]' => $this->category_id])
-            ]);
-
-        if (isset($options['status'])) {
-            $query->andWhere(['c.[[status]]' => (int)$options['status']]);
-        }
-
-        $query->cache(true, new TagDependency([
-            'tags' => [self::class]
-        ]));
-
-        return $query->count();
-    }
-
-    /**
-     * Проверяет имеются ли дочерние категории.
-     *
-     * @param array $options
-     * @return bool
-     */
-    public function getHasChilds(array $options = null)
-    {
-        return $this->childsCount($options) > 0;
     }
 
     /**
@@ -270,55 +198,6 @@ class Categ extends ActiveRecord
             ->viaTable(Prod::tableCateg(), ['category_id' => 'category_id'])
             ->inverseOf('categ')
             ->indexBy('product_id');
-    }
-
-    /**
-     * Возращает кол-во товаров в категории.
-     *
-     * @param array $options
-     * - bool $recursive
-     * - bool $status
-     * @return int
-     */
-    public function getProdsCount(array $options = null)
-    {
-        if (! isset($options)) {
-            $options = [
-                'status' => 1,
-                'recursive' => false
-            ];
-        }
-
-        $query = (new Query())->from(Prod::tableCateg() . ' p2c')->where([
-                'p2c.[[category_id]]' => empty($options['recurse']) ? $this->category_id :
-                    (new Query())->select('cp.[[category_id]]')
-                        ->from(self::tablePath() . ' cp')
-                        ->where(['cp.[[path_id]]' => $this->category_id])
-
-            ]);
-
-        if (isset($options['status'])) {
-            $query->innerJoin(Prod::tableName() . ' p', 'p.[[product_id]]=p2c.[[product_id]]')
-                ->andWhere(['p.[[status]]' => (int)$options['status']]);
-        }
-
-        $query->cache(true, new TagDependency([
-            'tags' => [self::class]
-        ]));
-
-        return (int)$query->count();
-    }
-
-    /**
-     * Проверяет наличие товаров.
-     *
-     * @param array $options
-     * @return bool
-     * @see getProdsCount(array $options)
-     */
-    public function getHasProds(array $options = null)
-    {
-        return $this->getProdsCount($options) > 0;
     }
 
     /**
@@ -339,6 +218,130 @@ class Categ extends ActiveRecord
         }
 
         return ! $this->getHasChilds($options) && ! $this->getHasProds($options);
+    }
+
+    /**
+     * Проверяет имеются ли дочерние категории.
+     *
+     * @param array $options
+     * @return bool
+     */
+    public function getHasChilds(array $options = null)
+    {
+        return $this->childsCount($options) > 0;
+    }
+
+    /**
+     * Проверяет наличие товаров.
+     *
+     * @param array $options
+     * @return bool
+     * @see getProdsCount(array $options)
+     */
+    public function getHasProds(array $options = null)
+    {
+        return $this->getProdsCount($options) > 0;
+    }
+
+    /**
+     * Возвращает количество дочерних категорий.
+     *
+     * @param array $options
+     * - bool $recursive
+     * - bool $status
+     * @return int
+     */
+    public function childsCount(array $options = null)
+    {
+        if ($options === null) {
+            $options = [
+                'status' => 1,
+                'recursive' => false
+            ];
+        }
+
+        $query = self::find()->alias('c')->where([
+            'c.[[parent_id]]' => empty($options['recursive']) ? $this->category_id :
+                (new Query())->select('cp.[[category_id]]')
+                    ->from(self::tablePath() . ' cp')
+                    ->where(['cp.[[path_id]]' => $this->category_id])
+        ]);
+
+        if (isset($options['status'])) {
+            $query->andWhere(['c.[[status]]' => (int)$options['status']]);
+        }
+
+        $query->cache(true, new TagDependency([
+            'tags' => [self::class]
+        ]));
+
+        return $query->count();
+    }
+
+    /**
+     * Возращает кол-во товаров в категории.
+     *
+     * @param array $options
+     * - bool $recursive
+     * - bool $status
+     * @return int
+     */
+    public function getProdsCount(array $options = null)
+    {
+        if (! isset($options)) {
+            $options = [
+                'status' => 1,
+                'recursive' => false
+            ];
+        }
+
+        $query = (new Query())->from(Prod::tableCateg() . ' p2c')->where([
+            'p2c.[[category_id]]' => empty($options['recurse']) ? $this->category_id :
+                (new Query())->select('cp.[[category_id]]')
+                    ->from(self::tablePath() . ' cp')
+                    ->where(['cp.[[path_id]]' => $this->category_id])
+
+        ]);
+
+        if (isset($options['status'])) {
+            $query->innerJoin(Prod::tableName() . ' p', 'p.[[product_id]]=p2c.[[product_id]]')
+                ->andWhere(['p.[[status]]' => (int)$options['status']]);
+        }
+
+        $query->cache(true, new TagDependency([
+            'tags' => [self::class]
+        ]));
+
+        return (int)$query->count();
+    }
+
+    /**
+     * Таблица путей.
+     *
+     * @return string
+     */
+    public static function tablePath()
+    {
+        return '{{oc_category_path}}';
+    }
+
+    /**
+     * Возвращает путь категории.
+     *
+     * [
+     *   category_id => name,
+     *   category_id => name
+     * ]
+     *
+     * @return array
+     */
+    public function getPath()
+    {
+        if (! isset($this->_path)) {
+            $this->_path = self::path($this->category_id);
+        }
+
+        return $this->_path;
     }
 
     /**
@@ -363,25 +366,6 @@ class Categ extends ActiveRecord
     }
 
     /**
-     * Возвращает путь категории.
-     *
-     * [
-     *   category_id => name,
-     *   category_id => name
-     * ]
-     *
-     * @return array
-     */
-    public function getPath()
-    {
-        if (! isset($this->_path)) {
-            $this->_path = self::path($this->category_id);
-        }
-
-        return $this->_path;
-    }
-
-    /**
      * Возвращает уровень категории.
      *
      * @return int
@@ -400,17 +384,6 @@ class Categ extends ActiveRecord
     public function getPathName(string $glue = null)
     {
         return implode($glue ?? '/', array_values($this->path));
-    }
-
-    /**
-     * Проверяет наличие категории id в пути.
-     *
-     * @param int $category_id
-     * @return boolean
-     */
-    public function inPath(int $category_id)
-    {
-        return array_key_exists($category_id, $this->path);
     }
 
     /**
@@ -491,6 +464,22 @@ class Categ extends ActiveRecord
     {
         $hiddens = self::getHiddens($country);
         return count(array_intersect($hiddens, array_keys($this->path))) > 0;
+    }
+
+    /**
+     * Возвращает скрытые категории для текущей страны.
+     *
+     * @param string|null $country
+     * @return int[]
+     */
+    public static function getHiddens(string $country = null)
+    {
+        if ($country === null) {
+            $parts = explode('.', $_SERVER['HTTP_HOST'] ?? '');
+            $country = end($parts);
+        }
+
+        return self::HIDDENS_BY_COUNTRY[$country] ?? [];
     }
 
     /**
@@ -711,38 +700,51 @@ class Categ extends ActiveRecord
     }
 
     /**
+     * Проверяет наличие категории id в пути.
+     *
+     * @param int $category_id
+     * @return boolean
+     */
+    public function inPath(int $category_id)
+    {
+        return array_key_exists($category_id, $this->path);
+    }
+
+    /**
      * Возвращает meta_title категории.
      *
+     * @param array $args
      * @return string
      * @throws \yii\base\InvalidConfigException
      */
-    public function metaTitle()
+    public function metaTitle(array $args = [])
     {
         if ($this->_metaTitle === null) {
+            /** @var \app\models\ProdFilter $prodFilter */
+            $prodFilter = $args['prodFilter'] ?? null;
             $city = City::current();
+            $desc = $this->desc;
+            $page = (int)\Yii::$app->request->get('page', 1);
 
-            // для пагинаций
-            if (($this->request->get['page'] ?? 1) > 1) {
-                $meta =
-                    $this->name . ', стр. №' . ($this->request->get['page'] ?? 1) . ' - РТК «Новые технологии» ' . $city->name3;
-            } else {
+            if (! empty($prodFilter) && ! empty($prodFilter->filterText)) {
+                // для фильтров
+                $meta = $this->name . ' | ' . $prodFilter->filterText . ' купить оптом ' . $city->name3 . ', цены';
+            } elseif ($page > 1) {
+                // для пагинаций
+                $meta = $this->name . ', стр. №' . $page . ' - РТК «Новые технологии» ' . $city->name3;
+            } elseif (! empty($desc) && ! empty($desc->meta_title)) {
                 // если имеется, то возвращаем оригинальный meta title
-                $desc = $this->desc;
-                $meta = ! empty($desc) ? trim($desc->meta_title) : '';
-
+                $meta = $desc->meta_title;
+            } elseif ($this->isMarka) {
                 // генерируем для маркоразмеров
-                if (empty($meta)) {
-                    if ($this->isMarka) {
-                        $meta = $this->name . ' ' . $this->parent->name . ', купить оптом ' . $city->name3 .
-                                ', цены - РТК «Новые технологии»';
-                    } elseif (! $this->isTopCateg && $this->topCategId !== self::ID_CABLEPROV) {
-                        // для категорий более первого уровня не кабелей
-                        $meta = $this->name . ', купить ' . $city->name3 . ', цены - РТК «Новые технологии»';
-                    } else {
-                        // по-умолчанию
-                        $meta = $this->name . ' купить оптом ' . $city->name3 . ', цены - РТК «Новые технологии»';
-                    }
-                }
+                $meta = $this->name . ' ' . $this->parent->name . ', купить оптом ' . $city->name3 .
+                        ', цены - РТК «Новые технологии»';
+            } elseif (! $this->isTopCateg && $this->topCategId !== self::ID_CABLEPROV) {
+                // для категорий более первого уровня не кабелей
+                $meta = $this->name . ', купить ' . $city->name3 . ', цены - РТК «Новые технологии»';
+            } else {
+                // по-умолчанию
+                $meta = $this->name . ' купить оптом ' . $city->name3 . ', цены - РТК «Новые технологии»';
             }
 
             $this->_metaTitle = City::replaceVars($meta);
@@ -754,57 +756,58 @@ class Categ extends ActiveRecord
     /**
      * Возвращает meta_description сраницы.
      *
+     * @param array $args
      * @return string
      * @throws \yii\base\InvalidConfigException
      */
-    public function metaDesc()
+    public function metaDesc(array $args = [])
     {
         if ($this->_metaDesc === null) {
-            // текущий город
+            /** @var \app\models\ProdFilter $prodFilter */
+            $prodFilter = $args['prodFilter'] ?? null;
             $city = City::current();
-
-            // выбираем первый телефон
             $phone = $city->firstPhone;
+            $desc = $this->desc;
+            $page = (int)Yii::$app->request->get('page', 1);
 
-            // для сраниц пагинаций
-            if (($this->request->get['page'] ?? 1) > 1) {
-                // для страниц маркоразмеров
+            if (! empty($prodFilter) && ! empty($prodFilter->filterText)) {
+                // для фильтров
+                $meta = 'РТК «НТ» ' . $city->name3 . ' предлагает: ✅Купить ' . $this->name . ', ' .
+                        $prodFilter->filterText . ' ✅Узнать цены ✆' . $phone;
+            } elseif ($page > 1) {
+                // для сраниц пагинаций
                 if ($this->isMarka) {
+                    // для страниц маркоразмеров
                     $meta = 'Доступные маркоразмеры ' . mb_strtolower((string)($this->parent->name ?? '')) . ' ' .
-                            $this->name . ' - Каталог, стр. №' . ($this->request->get['page'] ?? 1) .
-                            '. РТК «Новые технологии» ' . $city->name3;
+                            $this->name . ' - Каталог, стр. №' . $page . '. РТК «Новые технологии» ' . $city->name3;
                 } else {
                     // для остальных страниц
-                    $meta = $this->name . ', стр. №' . ($this->request->get['page'] ?? 1) .
-                            '. Полный каталог на сайте РТК «Новые технологии» ' . $city->name3;
+                    $meta = $this->name . ', стр. №' . $page . '. Полный каталог на сайте РТК «Новые технологии» ' .
+                            $city->name3;
                 }
-            } else {
+            } elseif (! empty($desc) && ! empty($desc->meta_description)) {
                 // искомое описание
-                $desc = $this->desc;
-                $meta = $desc === null ? '' : trim($desc->meta_description);
-
+                $meta = $desc->meta_description;
+            } elseif ($this->isMarka) {
                 // генерируем новое описание для страниц маркоразмеров
-                if (empty($meta)) {
-                    if ($this->isMarka) {
-                        $meta = 'РТК Новые технологии ' . $city->name3 . ' предлагает: ✅Купить ' . $this->name . ' ' .
-                                ($this->parent->name ?? '') . ' ✅Узнать цены на ' . $this->name . ' ✆' . $phone;
-                    } elseif (! $this->isTopCateg && $this->topCategId !== self::ID_CABLEPROV) {
-                        // для категорий второго уровня не кабелей
-                        $meta = $this->name . ': купить эту и другую продукцию из категории ' . $this->parent->name .
-                                ' вы можете в РТК Новые технологии ' . $city->name3 .
-                                ' ✅Узнать цены и оформить заказ: ✆' . $phone;
-                    } elseif ($this->level >= 4) {
-                        // если глубина более 4
-                        $pathName = array_values($this->path);
-                        $meta = 'РТК Новые технологии ' . $city->name3 . ' предлагает: ✅Купить ' . $this->name .
-                                ' (категория ' . ($pathName[1] ?? '') . ') ✅Узнать цены на ' . ($pathName[1] ?? '') .
-                                ' и другое оборудование ✆' . $phone;
-                    } else {
-                        // по-умолчанию
-                        $meta = 'РТК Новые технологии ' . $city->name3 . ' предлагает: ✅Купить ' . $this->name .
-                                ' ✅Узнать цены на ' . $this->name . ' ✆' . $phone;
-                    }
-                }
+                $meta = 'РТК Новые технологии ' . $city->name3 . ' предлагает: ✅Купить ' . $this->name . ' ' .
+                        ($this->parent->name ?? '') . ' ✅Узнать цены на ' . $this->name . ' ✆' . $phone;
+            } elseif (! $this->isTopCateg && $this->topCategId !== self::ID_CABLEPROV) {
+                // для категорий второго уровня не кабелей
+                $meta = $this->name . ': купить эту и другую продукцию из категории ' . $this->parent->name .
+                        ' вы можете в РТК Новые технологии ' . $city->name3 . ' ✅Узнать цены и оформить заказ: ✆' .
+                        $phone;
+            } elseif ($this->level >= 4) {
+                // если глубина более 4
+                $pathName = array_values($this->path);
+                $meta =
+                    'РТК Новые технологии ' . $city->name3 . ' предлагает: ✅Купить ' . $this->name . ' (категория ' .
+                    ($pathName[1] ?? '') . ') ✅Узнать цены на ' . ($pathName[1] ?? '') . ' и другое оборудование ✆' .
+                    $phone;
+            } else {
+                // по-умолчанию
+                $meta = 'РТК Новые технологии ' . $city->name3 . ' предлагает: ✅Купить ' . $this->name .
+                        ' ✅Узнать цены на ' . $this->name . ' ✆' . $phone;
             }
 
             $this->_metaDesc = City::replaceVars($meta);

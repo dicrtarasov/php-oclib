@@ -47,6 +47,7 @@ class AttrFilter extends Model
         return new ActiveDataProvider(array_merge([
             'query' => $this->getQuery(),
             'sort' => [
+                'route' => \Yii::$app->requestedRoute,
                 'attributes' => [
                     'name' => [
                         'asc' => ['a.[[name]]' => SORT_ASC],
@@ -63,6 +64,9 @@ class AttrFilter extends Model
                     'name' => SORT_ASC,
                 ]
             ],
+            'pagination' => [
+                'route' => \Yii::$app->requestedRoute
+            ]
         ], $config));
     }
 

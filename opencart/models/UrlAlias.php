@@ -17,6 +17,7 @@ use yii\db\Query;
 use function array_slice;
 use function count;
 use function is_array;
+use function strlen;
 
 /**
  * Алиас Url.
@@ -302,7 +303,7 @@ class UrlAlias extends ActiveRecord
      */
     public static function findRouteAlias(string $route)
     {
-        return self::findOne(['query' => $route]);
+        return static::findOne(['query' => $route]);
     }
 
     /**
@@ -323,7 +324,7 @@ class UrlAlias extends ActiveRecord
             throw new InvalidArgumentException('route');
         }
 
-        return (new self(['keyword' => $keyword, 'query' => $route]))->upsert(true);
+        return (new static(['keyword' => $keyword, 'query' => $route]))->upsert(true);
     }
 
     /**
@@ -415,7 +416,7 @@ class UrlAlias extends ActiveRecord
         }
 
         // находим алиас для объекта
-        $alias = self::findOne(['query' => $idParam . '=' . $idValue]);
+        $alias = static::findOne(['query' => $idParam . '=' . $idValue]);
 
         // удаляем из парамеров id-параметр
         if (! empty($alias)) {
@@ -434,7 +435,7 @@ class UrlAlias extends ActiveRecord
     public static function paramByRoute(string $route)
     {
         foreach (static::paramRoutes() as $paramRoute) {
-            if ($paramRoute['route'] === $paramRoute) {
+            if ($paramRoute['route'] === $route) {
                 return $paramRoute['param'];
             }
         }
@@ -466,12 +467,12 @@ class UrlAlias extends ActiveRecord
         }
 
         // находим название id-парметра по маршруту
-        $idParam = self::paramByRoute($route);
+        $idParam = static::paramByRoute($route);
         if (empty($idParam)) {
             throw new InvalidArgumentException('route: ' . $route . ': неизвестный маршрут объекта');
         }
 
-        return (new self([
+        return (new static([
             'keyword' => $keyword,
             'query' => $idParam . '=' . $id
         ]))->upsert(true);
@@ -504,13 +505,13 @@ class UrlAlias extends ActiveRecord
 
         // если параметр всего один, то ускоряем поиск, не используя регулярные выражения
         if (count($flatParams) === 1) {
-            $maxAlias = self::findOne(['query' => $flatParams[0]]);
+            $maxAlias = static::findOne(['query' => $flatParams[0]]);
         } else {
             // находим все алиасы, которые содержат хоть какие-то из парамеров
-            $query = self::find()->where('[[query]] rlike :regex', [
+            $query = static::find()->where('[[query]] rlike :regex', [
                 ':regex' => '[[:<:]](' . implode('|', array_map('preg_quote', $flatParams)) . ')[[:>:]]'
             ])->orderBy('keyword')->cache(true, new TagDependency([
-                'tags' => [self::class]
+                'tags' => [static::class]
             ]));
 
             // обходим все и выбираем тот, у которого совпадает больше параметров
@@ -556,7 +557,7 @@ class UrlAlias extends ActiveRecord
             throw new InvalidArgumentException('params');
         }
 
-        return (new self([
+        return (new static([
             'keyword' => $keyword,
             'query' => Url::buildQuery(Url::normalizeQuery(Url::filterQuery($params)))
         ]))->upsert(true);
@@ -574,7 +575,7 @@ class UrlAlias extends ActiveRecord
         foreach (static::paramRoutes() as $table => $paramRoute) {
             $param = $paramRoute['param'];
 
-            $stat[$table] = UrlAlias::deleteAll([
+            $stat[$table] = static::deleteAll([
                 'and',
                 '[[query]] like "' . $param . '=%"',
                 [
