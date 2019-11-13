@@ -3,4 +3,14 @@
   <component name="JavaScriptSettings">
     <option name="languageLevel" value="ES6" />
   </component>
+  <component name="PhpEntryPointsManager">
+    <entry_point>
+      <entry_point TYPE="phpMethod" FQNAME="\dicr\oclib\Cache __construct" />
+      <entry_point TYPE="phpClass" FQNAME="\dicr\oclib\Cache" />
+      <entry_point TYPE="phpClass" FQNAME="\dicr\oclib\ControllerAdminStartupUrl" />
+    </entry_point>
+    <pattern value="\dicr\oclib\Cache" member="__construct" />
+    <pattern value="\dicr\oclib\Cache" />
+    <pattern value="\dicr\oclib\ControllerAdminStartupUrl" />
+  </component>
 </project>

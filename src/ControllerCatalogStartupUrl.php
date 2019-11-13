@@ -9,10 +9,11 @@ declare(strict_types = 1);
 
 namespace dicr\oclib;
 
-use Action;
+use \Action;
 use Yii;
 use yii\helpers\ArrayHelper;
 use yii\web\UrlNormalizerRedirectException;
+use function is_array;
 
 /**
  * Контроллер маршрутизации.
@@ -30,8 +31,6 @@ class ControllerCatalogStartupUrl extends Controller
      *
      * @return \Action
      * @throws \yii\base\ExitException
-     * @throws \yii\console\Exception
-     * @throws \yii\web\NotFoundHttpException
      */
     public function index()
     {
@@ -45,9 +44,9 @@ class ControllerCatalogStartupUrl extends Controller
         Yii::$app->request->queryParams = $this->request->get;
 
         // создаем конроллер Yii
-        \Yii::$app->controller =
+        Yii::$app->controller =
             new \yii\web\Controller(substr(Yii::$app->requestedRoute, strpos(Yii::$app->requestedRoute, '/')),
-                \Yii::$app);
+                Yii::$app);
 
         // возвращаем действие
         return new Action(Yii::$app->requestedRoute);
@@ -62,7 +61,7 @@ class ControllerCatalogStartupUrl extends Controller
     protected function resolveRoute()
     {
         // маршрут Yii по-умолчанию
-        \Yii::$app->defaultRoute = 'common/home';
+        Yii::$app->defaultRoute = 'common/home';
 
         // поддержка ссылок с прямым указанием маршрута, пример: /index.php?route=catalog/product
         if (! empty($this->request->get['route'])) {
@@ -89,7 +88,7 @@ class ControllerCatalogStartupUrl extends Controller
                     }
 
                     if (! empty(Yii::$app->request->queryParams)) {
-                        $url .= '?' . http_build_query(Yii::$app->rquest->queryParams);
+                        $url .= '?' . http_build_query(Yii::$app->request->queryParams);
                     }
                 }
 

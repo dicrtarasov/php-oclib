@@ -10,8 +10,6 @@ namespace dicr\oclib;
 
 use app\models\Categ;
 use app\models\Prod;
-use app\models\UrlAlias;
-use Debug;
 use dicr\helper\ArrayHelper;
 use dicr\helper\Url;
 use Yii;
@@ -22,7 +20,7 @@ use yii\caching\TagDependency;
 use yii\di\Instance;
 use yii\web\UrlRuleInterface;
 use function count;
-use function in_array;
+use const PREG_SPLIT_NO_EMPTY;
 use const SORT_NATURAL;
 
 /**
@@ -64,7 +62,7 @@ class UrlAliasRule extends BaseObject implements UrlRuleInterface
 
         return Yii::$app->cache->getOrSet([__METHOD__, $route, $params], function() use ($route, $params) {
             // если роут объекта, то получаем ЧПУ объекта, иначе ЧПУ для маршрута
-            $slug = !empty(UrlAlias::paramByRoute($route)) ? $this->createObjectSlug($route, $params) :
+            $slug = ! empty(UrlAlias::paramByRoute($route)) ? $this->createObjectSlug($route, $params) :
                 $this->createRouteSlug($route);
 
             $url = null;
@@ -144,7 +142,7 @@ class UrlAliasRule extends BaseObject implements UrlRuleInterface
 
         // так как UrlManager складывает парамеры не рекурсивно, то обьединять будем сами
         if (! empty($route)) {
-            $params = ArrayHelper::merge(\Yii::$app->request->get(), $params);
+            $params = ArrayHelper::merge(Yii::$app->request->get(), $params);
             return [$route, $params];
         }
 
@@ -232,7 +230,7 @@ class UrlAliasRule extends BaseObject implements UrlRuleInterface
         $category_id = (int)($params['category_id'] ?? 0);
 
         if (empty($category_id) && ! empty($params['path'])) {
-            $path = preg_split('~[_]+~um', trim($params['path']), - 1, \PREG_SPLIT_NO_EMPTY);
+            $path = preg_split('~[_]+~um', trim($params['path']), - 1, PREG_SPLIT_NO_EMPTY);
             $category_id = ! empty($path) ? (int)array_pop($path) : 0;
             if (empty($category_id)) {
                 return false;

@@ -9,6 +9,7 @@ declare(strict_types = 1);
 namespace dicr\oclib;
 
 use Yii;
+use yii\base\InvalidArgumentException;
 use function is_string;
 
 /**
@@ -81,7 +82,7 @@ class Url
     public function link(string $route, $args = [])
     {
         if (empty($route)) {
-            throw new \yii\base\InvalidArgumentException('route');
+            throw new InvalidArgumentException('route');
         }
 
         if (is_string($args)) {

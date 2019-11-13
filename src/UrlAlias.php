@@ -299,7 +299,7 @@ class UrlAlias extends ActiveRecord
      * Возвращает алиас для роута.
      *
      * @param string $route
-     * @return \app\models\UrlAlias|null
+     * @return \dicr\oclib\UrlAlias|null
      */
     public static function findRouteAlias(string $route)
     {
@@ -399,7 +399,7 @@ class UrlAlias extends ActiveRecord
      *
      * @param string $route
      * @param array $params
-     * @return \app\models\UrlAlias|null
+     * @return \dicr\oclib\UrlAlias|null
      */
     public static function findObjectAlias(string $route, array &$params)
     {
@@ -483,7 +483,7 @@ class UrlAlias extends ActiveRecord
      * Подбирается алиас, у которого совпадает большее количество параметров в query.
      *
      * @param array $params
-     * @return \app\models\UrlAlias|null
+     * @return \dicr\oclib\UrlAlias|null
      */
     public static function findParamAlias(array &$params)
     {

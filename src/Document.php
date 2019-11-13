@@ -22,6 +22,7 @@ use yii\data\Sort;
  * @property string $ogImage
  * @property string $ogUrl
  * @property-read array $links
+ * @property array $styles
  * @property-read array $scripts
  *
  * @package dicr\oclib
@@ -62,11 +63,11 @@ class Document extends BaseObject
     {
         parent::init();
 
-        if (!isset($this->sort)) {
+        if (! isset($this->sort)) {
             $this->sort = new Sort(['route' => Yii::$app->requestedRoute]);
         }
 
-        if (!isset($this->pager)) {
+        if (! isset($this->pager)) {
             $this->pager = new \yii\data\Pagination(['route' => Yii::$app->requestedRoute]);
         }
     }
