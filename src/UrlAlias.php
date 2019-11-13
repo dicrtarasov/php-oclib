@@ -489,7 +489,9 @@ class UrlAlias extends ActiveRecord
     {
         // фильтруем параметры, удаляя те, которые не могут участвовать в построении алиаса
         $flatParams = Url::normalizeQuery(Url::filterQuery(array_slice($params, 0)));
+
         unset($flatParams['sort'], $flatParams['order'], $flatParams['page'], $flatParams['limit'], $flatParams['route'], $flatParams['_route_']);
+
         if (empty($flatParams)) {
             return null;
         }
@@ -510,7 +512,7 @@ class UrlAlias extends ActiveRecord
             // находим все алиасы, которые содержат хоть какие-то из парамеров
             $query = static::find()->where('[[query]] rlike :regex', [
                 ':regex' => '[[:<:]](' . implode('|', array_map('preg_quote', $flatParams)) . ')[[:>:]]'
-            ])->orderBy('keyword')->cache(true, new TagDependency([
+            ])->orderBy('length([[query]]) desc')->limit(1000)->cache(true, new TagDependency([
                 'tags' => [static::class]
             ]));
 
