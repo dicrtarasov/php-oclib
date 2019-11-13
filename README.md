@@ -6,8 +6,6 @@
 ```composer
 "require": {
     "php": ">=7.2",
-    "ext-mbstring": "*",
-    "ext-pdo": "*",
     "dicr/php-oclib": "~3.1.5",
 }
 ```
@@ -27,17 +25,19 @@
 
 #### /system/startup.php
 ```php
-// Yii
-$config = require(__DIR__ . '/../config/yii.web.php');
-
-// YII_ENV и YII_DEBUG должны быть усановлены в конфиге ранее
+// Composer
 require(__DIR__ . '/../vendor/autoload.php');
+
+// константы YII_ENV и YII_DEBUG должны быть установлены до загрузки Yii
+defined('YII_ENV') or define('YII_ENV', 'dev');
+defined('YII_DEBUG') or define('YII_DEBUG', DEBUG);
+
+// подключаем класс Yii
 require(__DIR__ . '/../vendor/yiisoft/yii2/Yii.php');
 
-new yii\web\Application($config);
+// создаем приложение Yii
+new yii\web\Application(require(__DIR__ . '/../config/yii.web.php'));
 ```
-YII_ENV и YII_DEBUG должны быь установлены до загрузки библиотек Yii.
-
 ## Маршруизация
 ### /.htaccess, /admin/.htaccess
 ```
@@ -51,18 +51,12 @@ RewriteRule ^([^?]*) index.php?_route_=$1 [L,QSA]
 
 ### /admin/index.php
 ```php
-\Yii::$app->defaultRoute = 'common/dashboard';
+// инициализация маршрута Yii
+$controller->addPreAction(new Action('startup/url'));
 
-if (!empty($request->get['route'])) {
-    \Yii::$app->requestedRoute = $request->get['route'];
-} elseif (!empty($request->get['_route_'])) {
-    \Yii::$app->requestedRoute = $request->get['_route_'];
-} else {
-    \Yii::$app->requestedRoute = \Yii::$app->defaultRoute;
-}
 ```
 
-В catalog используеся preAction в /catalog/controllers/common/seo_url.php
+Для работы ЧПУ в catalog используеся аналогичный preAction в /catalog/controllers/startup/url.php
 
 ## Прокси-классы
 Требуется заменить классы OpenCart на пустышки из каталога `opencart`, наследующие одноименные классы dicr\oclib.
