@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "57d0ea755c7df519d7989ba02b3a16a8",
+    "content-hash": "c86cbe00f0eae813d558ef01ea83e031",
     "packages": [
         {
             "name": "bower-asset/inputmask",
@@ -32,7 +32,7 @@
             "version": "3.4.1",
             "source": {
                 "type": "git",
-                "url": "https://github.com/jquery/jquery-dist.git",
+                "url": "git@github.com:jquery/jquery-dist.git",
                 "reference": "15bc73803f76bc53b654b9fdbbbc096f56d7c03d"
             },
             "dist": {
@@ -143,11 +143,11 @@
         },
         {
             "name": "dicr/yii2-helper",
-            "version": "2.1.1",
+            "version": "2.1.2",
             "source": {
                 "type": "git",
                 "url": "https://gitlab.com/dicr/yii2-helper.git",
-                "reference": "7e53b0e295c806515dec80aa103819e25c9b3c3b"
+                "reference": "8880948352cfc8b8d1e90956440e22222ea18bca"
             },
             "require": {
                 "ext-intl": "*",
@@ -184,7 +184,7 @@
             "support": {
                 "source": "https://gitlab.com/dicr/yii2-helper.git"
             },
-            "time": "2019-11-08T14:13:51+00:00"
+            "time": "2019-11-13T22:58:26+00:00"
         },
         {
             "name": "dicr/yii2-validate",
@@ -442,7 +442,8 @@
         "php": ">=7.1",
         "ext-mysqli": "*",
         "ext-json": "*",
-        "ext-pdo": "*"
+        "ext-pdo": "*",
+        "ext-mbstring": "*"
     },
     "platform-dev": []
 }
