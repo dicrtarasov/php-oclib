@@ -583,7 +583,7 @@ class Categ extends ActiveRecord
      * @param int $height
      * @param array $options
      * @return string
-     * @throws \dicr\oclib\OcException
+     * @throws \yii\base\Exception
      */
     public function thumb(int $width, int $height, array $options = null)
     {

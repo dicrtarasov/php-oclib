@@ -17,6 +17,7 @@ use Registry;
 use Yii;
 use yii\base\InvalidConfigException;
 use function count;
+use function in_array;
 
 /**
  * Виджет фильра товаров.
@@ -99,16 +100,16 @@ class CategFilterWidget extends Widget
             return;
         }
 
-        echo Html::beginTag('div', ['class' => 'param manuf ' . (! empty($this->prodFilter->manuf) ? 'open' : '')]);
+        echo Html::beginTag('div', ['class' => 'param manuf ' . (! empty($this->prodFilter->manufacturer_id) ? 'open' : '')]);
         echo Html::tag('div', 'Производитель', ['class' => 'name']);
         echo Html::beginTag('div', ['class' => 'values']);
 
         foreach ($manufs as $manuf) {
             echo Html::beginTag('div', ['class' => 'value']);
 
-            echo Html::input('checkbox', 'manuf[' . $manuf->manufacturer_id . ']', 1, [
+            echo Html::input('checkbox', 'm' . $manuf->manufacturer_id, 1, [
                 'id' => $this->id . '-manuf-' . $manuf->manufacturer_id,
-                'checked' => ! empty($this->prodFilter->manuf[$manuf->manufacturer_id]),
+                'checked' => in_array((int)$manuf->manufacturer_id, (array)($this->prodFilter->manufacturer_id ?: []), false),
             ]);
 
             echo Html::tag('label', Html::esc($manuf->name), [
@@ -133,12 +134,12 @@ class CategFilterWidget extends Widget
             return;
         }
 
-        $selected = ! empty($this->prodFilter->attr[$attr->attribute_id]);
+        $selected = in_array(1, (array)($this->prodFilter->attrs[$attr->attribute_id] ?? []), false);
         ?>
         <div class="param flag <?=$selected ? 'open' : ''?>">
             <div class="values">
                 <div class="value">
-                    <?=Html::input('checkbox', 'attr[' . $attr->attribute_id . ']', 1, [
+                    <?=Html::input('checkbox', 'a' . $attr->attribute_id, 1, [
                         'id' => $this->id . '-attr-' . $attr->attribute_id,
                         'checked' => $selected
                     ])?>
@@ -162,8 +163,7 @@ class CategFilterWidget extends Widget
             return;
         }
 
-        $selected = isset($this->prodFilter->attr[$attr->attribute_id]['min']) ||
-                    isset($this->prodFilter->attr[$attr->attribute_id]['max']);
+        $selected = (array)($this->prodFilter->attrs[$attr->attribute_id] ?? []);
 
         $vals = $attr->values;
         $min = reset($vals);
@@ -173,19 +173,19 @@ class CategFilterWidget extends Widget
             <div class="name"><?=Html::esc($attr->name)?></div>
             <div class="values">
                 <div class="value">
-                    <?=Html::input('number', 'attr[' . $attr->attribute_id . '][min]',
-                        $this->prodFilter->attr[$attr->attribute_id]['min'] ?? '', [
+                    <?=Html::input('number', 'a' . $attr->attribute_id . '[min]',
+                        $selected['min'] ?? '', [
                             'min' => $min,
                             'max' => $max,
                             'placeholder' => 'от',
-                            'step' => 0.1
+                            'step' => 0.001
                         ])?> -
-                    <?=Html::input('number', 'attr[' . $attr->attribute_id . '][max]',
-                        $this->prodFilter->attr[$attr->attribute_id]['max'] ?? '', [
+                    <?=Html::input('number', 'a' . $attr->attribute_id . '[max]',
+                        $selected['max'] ?? '', [
                             'min' => $min,
                             'max' => $max,
                             'placeholder' => 'до',
-                            'step' => 0.1
+                            'step' => 0.001
                         ])?>
                 </div>
             </div>
@@ -204,15 +204,15 @@ class CategFilterWidget extends Widget
             return;
         }
 
-        $selected = ! empty($this->prodFilter->attr[$attr->attribute_id]);
+        $selected = (array)($this->prodFilter->attrs[$attr->attribute_id] ?? []);
         ?>
         <div class="param string <?=$selected ? 'open' : ''?>">
             <div class="name"><?=Html::esc($attr->name)?></div>
             <div class="values">
                 <?php foreach ($attr->values as $val) { ?>
                     <div class="value">
-                        <?=Html::input('checkbox', 'attr[' . $attr->attribute_id . '][' . $val . ']', 1, [
-                            'checked' => ! empty($this->prodFilter->attr[$attr->attribute_id][$val]),
+                        <?=Html::input('checkbox', 'a' . $attr->attribute_id . '[]', $val, [
+                            'checked' => in_array($val, $selected, false),
                             'id' => $this->id . '-attr-' . $attr->attribute_id . '-' . $val,
                         ])?>
                         <?=Html::tag('label', $val, [
@@ -231,17 +231,12 @@ class CategFilterWidget extends Widget
     protected function renderAttrs()
     {
         foreach ($this->prodFilter->categAttrs as $attr) {
-            switch ($attr->type) {
-                case Attr::TYPE_FLAG:
-                    echo $this->renderFlagAttr($attr);
-                    break;
-
-                case Attr::TYPE_NUMBER:
-                    echo $this->renderNumberAttr($attr);
-                    break;
-
-                default:
-                    echo $this->renderStringAttr($attr);
+            if ($attr->type === Attr::TYPE_FLAG) {
+                echo $this->renderFlagAttr($attr);
+            } elseif ($attr->type === Attr::TYPE_NUMBER) {
+                echo $this->renderNumberAttr($attr);
+            } else {
+                echo $this->renderStringAttr($attr);
             }
         }
     }

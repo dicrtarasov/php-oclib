@@ -67,6 +67,7 @@ class CatProds extends Widget
         echo Html::cssLink('/catalog/res/widgets/cat-prods.css');
 
         echo Html::beginTag('div', $this->options);
+
         foreach ($provider->models as $subcateg) {
             $this->renderCateg($subcateg);
         }
@@ -137,12 +138,14 @@ class CatProds extends Widget
 
         echo Html::beginTag('div', ['class' => 'categ-title']);
         echo Html::a(Html::esc($categ->name), $categ->url, ['class' => 'name']);
-        echo Html::tag('sup', $totalProdsCount > 0 ? number_format($totalProdsCount, 0) : '', ['class' => 'quantity']);
+        echo Html::tag('sup', $totalProdsCount > 0 ? \Yii::$app->formatter->asInteger($totalProdsCount) : '', ['class' => 'quantity']);
         echo Html::endTag('div');
 
         $microrazm = trim(Html::toText($categ->microrazm));
         if (! empty($microrazm)) {
+            echo '<!-- noindex -->';
             echo Html::tag('div', Html::esc($microrazm), ['class' => 'desc']);
+            echo '<!-- /noindex -->';
         }
 
         echo ProdsList::widget([

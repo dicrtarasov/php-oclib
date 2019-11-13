@@ -10,6 +10,7 @@ namespace dicr\oclib;
 
 use yii\base\InvalidArgumentException;
 use function is_string;
+use const PREG_SPLIT_NO_EMPTY;
 
 /**
  * URL для OpenCart.
@@ -103,4 +104,47 @@ class Url extends \dicr\helper\Url
 
         return self::normalizeQuery($params);
     }
+
+    /**
+     * Парсит роут.
+     *
+     * @param string $route
+     * @return string[]
+     */
+    public static function parseRoute(string $route)
+    {
+        if (empty($route)) {
+            throw new InvalidArgumentException('route');
+        }
+
+        return preg_split('~/+~u', $route, - 1, PREG_SPLIT_NO_EMPTY);
+    }
+
+    /**
+     * Собирает роут.
+     *
+     * @param array $parts
+     * @return string
+     */
+    public static function buildRoute(array $parts)
+    {
+        if (empty($parts)) {
+            throw new InvalidArgumentException('parts');
+        }
+
+        return implode('/', $parts);
+    }
+
+    /**
+     * Возвращает идентификатор контроллера по маршруту.
+     *
+     * @param string $route
+     * @return string
+     */
+    public static function controllerByRoute(string $route)
+    {
+        $parts = static::parseRoute($route);
+        return reset($parts);
+    }
+
 }

@@ -1,4 +1,6 @@
 <?php
+declare(strict_types = 1);
+
 /**
  * Copyright (c) 2019.
  *
@@ -7,8 +9,8 @@
 
 namespace app\models;
 
-use app\components\Sort;
-use dicr\oclib\Filter;
+use Filter;
+use Yii;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 use yii\db\Query;
@@ -77,19 +79,20 @@ class ManufFilter extends Model
             $query->andWhere([
                 'm.[[manufacturer_id]]' => (new Query())->select('p.[[manufacturer_id]]')->from(Prod::tableName() .
                                                                                                 ' p')->where([
-                        'p.[[product_id]]' => (new Query())->select('p2c.[[product_id]]')->from(Prod::tableCateg() .
-                                                                                                ' p2c')->where([
-                                'p2c.[[category_id]]' => $this->recurse ? (new Query())->select('cp.[[category_id]]')
-                                    ->from(Categ::tablePath() . ' cp')
-                                    ->where(['cp.[[path_id]]' => $this->category_id]) : $this->category_id
-                            ])
-                    ])
+                    'p.[[product_id]]' => (new Query())->select('p2c.[[product_id]]')
+                        ->from(Prod::tableCateg() . ' p2c')
+                        ->where([
+                            'p2c.[[category_id]]' => $this->recurse ? (new Query())->select('cp.[[category_id]]')
+                                ->from(Categ::tablePath() . ' cp')
+                                ->where(['cp.[[path_id]]' => $this->category_id]) : $this->category_id
+                        ])
+                ])
             ]);
         }
 
         if (isset($this->status)) {
             $query->andWhere('p.[[status]]=1')->innerJoin(Categ::tableName() . ' c',
-                    'c.[[category_id]]=p2c.[[category_id]]')->andWhere('c.[[status]]=1');
+                'c.[[category_id]]=p2c.[[category_id]]')->andWhere('c.[[status]]=1');
         }
 
         return $query;
@@ -106,7 +109,7 @@ class ManufFilter extends Model
         return new ActiveDataProvider(array_merge([
             'query' => $this->query,
             'sort' => [
-                'route' => \Yii::$app->requestedRoute,
+                'route' => Yii::$app->requestedRoute,
                 'attributes' => [
                     'sort_order' => [
                         'asc' => ['m.[[sort_order]]' => SORT_ASC],
@@ -118,7 +121,7 @@ class ManufFilter extends Model
                 ]
             ],
             'pagination' => [
-                'route' => \Yii::$app->requestedRoute
+                'route' => Yii::$app->requestedRoute
             ]
         ], $config));
     }

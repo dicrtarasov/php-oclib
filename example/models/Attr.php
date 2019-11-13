@@ -10,7 +10,6 @@ namespace app\models;
 
 use yii\caching\TagDependency;
 use yii\db\ActiveRecord;
-use yii\db\Query;
 
 /**
  * Характеристика.
@@ -55,16 +54,6 @@ class Attr extends ActiveRecord
     }
 
     /**
-     * Таблица характерисик товаров.
-     *
-     * @return string
-     */
-    public static function tableProds()
-    {
-        return '{{oc_product_attribute}}';
-    }
-
-    /**
      * Правила.
      *
      * @return array[]
@@ -87,40 +76,25 @@ class Attr extends ActiveRecord
     private $_values;
 
     /**
-     * Устанавливает набр значений.
-     *
-     * @param array $values
-     */
-    public function setValues(array $values)
-    {
-        $this->_values = $values;
-    }
-
-    /**
      * Возвращает набор значений
      *
      * @return array
      */
     public function getValues()
     {
-        if (!isset($this->_values)) {
-            $query = (new Query())->select('pa.[[text]]')
+        if (! isset($this->_values)) {
+            $query = ProdAttr::find()
+                ->alias('pa')
+                ->select('pa.[[text]]')
                 ->distinct(true)
-                ->from(Prod::tableAttr() . ' pa')
-                ->where(['pa.[[attribute_id]]' => $this->attribute_id])
-                ->andWhere('pa.[[text]] != ""');
+                ->where(['pa.[[attribute_id]]' => $this->attribute_id]);
 
-            switch ($this->type) {
-                case self::TYPE_FLAG:
-                    $query->orderBy('cast(pa.[[text]] as unsigned), pa.[[text]]');
-                    break;
-
-                case self::TYPE_NUMBER:
-                    $query->orderBy('cast(pa.[[text]] as decimal(10,3), pa.[[text]]');
-                    break;
-
-                default:
-                    $query->orderBy('pa.[[text]]');
+            if ($this->type === self::TYPE_FLAG) {
+                $query->orderBy('cast(pa.[[text]] as unsigned), pa.[[text]]');
+            } elseif ($this->type === self::TYPE_NUMBER) {
+                $query->orderBy('cast(pa.[[text]] as decimal(10,3), pa.[[text]]');
+            } else {
+                $query->orderBy('pa.[[text]]');
             }
 
             $this->_values = $query->cache(true, new TagDependency([
@@ -129,5 +103,15 @@ class Attr extends ActiveRecord
         }
 
         return $this->_values;
+    }
+
+    /**
+     * Устанавливает набр значений.
+     *
+     * @param array $values
+     */
+    public function setValues(array $values)
+    {
+        $this->_values = $values;
     }
 }

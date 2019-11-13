@@ -1,11 +1,13 @@
 <?php
+/**
+ * Copyright (c) 2019.
+ *
+ * @author Igor (Dicr) Tarasov, develop@dicr.org
+ */
 
 /** @noinspection PhpUnhandledExceptionInspection */
 
 // Check Version
-use app\models\Categ;
-use yii\caching\TagDependency;
-use yii\log\Logger;
 
 if (version_compare(phpversion(), '5.3.0', '<') == true) {
     exit('PHP5.3+ Required');
@@ -13,7 +15,8 @@ if (version_compare(phpversion(), '5.3.0', '<') == true) {
 
 // Magic Quotes Fix
 if (ini_get('magic_quotes_gpc')) {
-    function clean($data) {
+    function clean($data)
+    {
         if (is_array($data)) {
             foreach ($data as $key => $value) {
                 $data[clean($key)] = clean($value);
@@ -62,8 +65,8 @@ if (! isset($_SERVER['HTTP_HOST'])) {
 }
 
 // Check if SSL
-$_SERVER['HTTPS'] = in_array($_SERVER['HTTPS'] ?? '', ['on', '1'], false) ||
-    ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https' ||
+$_SERVER['HTTPS'] =
+    in_array($_SERVER['HTTPS'] ?? '', ['on', '1'], false) || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https' ||
     ($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '') === 'on';
 
 // Autoloader

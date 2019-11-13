@@ -7,13 +7,9 @@
 
 declare(strict_types = 1);
 
-use app\models\Categ;
-use app\models\Prod;
 use app\models\UrlAlias;
 use app\models\UrlAliasFilter;
-use PharIo\Version\InvalidPreReleaseSuffixException;
 use yii\caching\TagDependency;
-use yii\db\Query;
 
 /**
  * Copyright (c) 2019.
@@ -30,15 +26,14 @@ class ControllerSeoUrlAlias extends Controller
      * Индекс.
      *
      * @throws \yii\base\InvalidConfigException
-     * @throws \yii\db\Exception
      */
     public function index()
     {
         $filter = new UrlAliasFilter();
-        $filter->load(\Yii::$app->request->get());
+        $filter->load(Yii::$app->request->get());
 
-        if (\Yii::$app->request->isPost) {
-            foreach (\Yii::$app->request->post(UrlAlias::instance()->formName(), []) as $data) {
+        if (Yii::$app->request->isPost) {
+            foreach (Yii::$app->request->post(UrlAlias::instance()->formName(), []) as $data) {
                 $url_alias_id = (int)($data['url_alias_id'] ?? 0);
                 $alias = $url_alias_id > 0 ? UrlAlias::findOne(['url_alias_id' => $url_alias_id]) : new UrlAlias();
                 if (empty($alias)) {
@@ -73,7 +68,7 @@ class ControllerSeoUrlAlias extends Controller
         }
 
         $alias = UrlAlias::findOne(['url_alias_id' => $url_alias_id]);
-        if (!empty($alias)) {
+        if (! empty($alias)) {
             $alias->delete();
         }
 

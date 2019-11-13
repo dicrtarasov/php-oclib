@@ -9,6 +9,8 @@ declare(strict_types = 1);
 
 namespace app\components;
 
+use Registry;
+
 /**
  * Форматер.
  *
@@ -24,6 +26,6 @@ class Formatter extends \yii\i18n\Formatter
      */
     public function asMoney(float $value)
     {
-        return \Registry::app()->currency->format($value);
+        return Registry::app()->currency->format($value);
     }
 }

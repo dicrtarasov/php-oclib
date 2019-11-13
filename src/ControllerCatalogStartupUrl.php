@@ -44,9 +44,7 @@ class ControllerCatalogStartupUrl extends Controller
         Yii::$app->request->queryParams = $this->request->get;
 
         // создаем конроллер Yii
-        Yii::$app->controller =
-            new \yii\web\Controller(substr(Yii::$app->requestedRoute, strpos(Yii::$app->requestedRoute, '/')),
-                Yii::$app);
+        Yii::$app->controller = new \yii\web\Controller(Url::controllerByRoute(Yii::$app->requestedRoute), Yii::$app);
 
         // возвращаем действие
         return new Action(Yii::$app->requestedRoute);

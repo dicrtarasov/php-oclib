@@ -10,6 +10,7 @@
 declare(strict_types = 1);
 namespace dicr\oclib;
 
+use dicr\helper\Html;
 use Throwable;
 use yii\base\BaseObject;
 
@@ -47,13 +48,6 @@ abstract class Widget extends BaseObject
     }
 
     /**
-     * Рендерит плагин.
-     *
-     * Функция должна выводить методом echo или возвращать string.
-     */
-    abstract public function run();
-
-    /**
      * Конверирует в строку.
      *
      * @return string
@@ -74,6 +68,13 @@ abstract class Widget extends BaseObject
 
         return trim($ret);
     }
+
+    /**
+     * Рендерит плагин.
+     *
+     * Функция должна выводить методом echo или возвращать string.
+     */
+    abstract public function run();
 
     /**
      * Выводит виджет. Для удобства в коде вместо new.

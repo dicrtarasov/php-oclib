@@ -8,6 +8,7 @@
 declare(strict_types = 1);
 namespace dicr\oclib;
 
+use dicr\helper\Html;
 use Yii;
 use yii\base\InvalidArgumentException;
 use yii\base\InvalidConfigException;

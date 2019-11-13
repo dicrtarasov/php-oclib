@@ -116,7 +116,6 @@ class ProdFilter extends Model
                     }
 
                     $ret = [];
-                    $attrs = $this->selectedAttrs;
 
                     // обходим все характеристики
                     foreach ((array)$this->{$attribute} as $id => $vals) {
@@ -126,39 +125,28 @@ class ProdFilter extends Model
                             continue;
                         }
 
-                        $attr = $attrs[$id] ?? null;
-                        if (empty($attr)) {
-                            continue;
-                        }
+                        // переводим значение в массив
+                        $vals = (array)$vals;
 
-                        if ($attr->type === Attr::TYPE_FLAG) {
-                            // если харакеристика типа флаг 0/1 (attr[5]=1)
-                            if (!in_array((string)$vals, ['0', '1'], false)) {
-                                $ret[$id] = $vals;
-                            }
-                        } elseif ($attr->type === Attr::TYPE_NUMBER) {
-                            // если числовая характеристика с min/max (attr[5] = [min => 23, max => 123] )
-                            $minmax = [];
-                            foreach (['min', 'max'] as $key) {
-                                if (isset($vals[$key]) && $vals[$key] !== '') {
-                                    $minmax[$key] = (float)$vals[$key];
+                        // значение типа min/max
+                        if (array_key_exists('min', $vals) || array_key_exists('max', $vals)) {
+                            foreach (['min', 'max'] as $field) {
+                                if (isset($vals[$field]) && $vals[$field] !== '') {
+                                    $ret[$id][$field] = $vals[$field];
                                 }
                             }
-
-                            if (! empty($minmax)) {
-                                $ret[$id] = $minmax;
-                            }
                         } else {
-                            // строковая характеристика (attr[5] = ['значение1', 'значение2', ...])
+                            // обычный массив значений
                             foreach ($vals as $i => $v) {
-                                if ($v === null || $v === '') {
+                                if (!isset($v) || $v === '') {
                                     unset($vals[$i]);
                                 }
                             }
 
-                            if (! empty($vals)) {
+                            if (!empty($vals)) {
                                 sort($vals);
-                                $ret[$id] = array_unique($vals);
+                                $vals = array_unique($vals);
+                                $ret[$id] = count($vals) > 1 ? $vals : reset($vals);
                             }
                         }
                     }
@@ -200,7 +188,7 @@ class ProdFilter extends Model
         // обходим все параметры
         foreach ($data as $param => $val) {
             $matches = null;
-            if ($val === null || $val === '') {
+            if ($val === null || $val === '' || $val === []) {
                 continue;
             }
 
@@ -212,24 +200,10 @@ class ProdFilter extends Model
                     $ret = true;
                 }
             } elseif (preg_match('~^a(\d+)$~', $param, $matches)) {
-                // характеристика типа флаг (attr25=1) или числовая без min/max (a235=5.13)
+                // фильтр характеристик
                 $id = (int)$matches[1];
-                if ($id > 0 && is_numeric($val)) {
-                    $this->attrs[$id] = (float)$val;
-                    $ret = true;
-                }
-            } elseif (preg_match('~^a(\d+)(min|max)$~', $param, $matches)) {
-                // числовая харакеристика
-                $id = (int)$matches[1];
-                if ($id > 0 && is_numeric($val)) {
-                    $this->attrs[$id][$matches[2]] = (float)$val;
-                    $ret = true;
-                }
-            } elseif (preg_match('~^a(\d+)-(.+)$~', $param, $matches)) {
-                // строковая характеристика (a25-значение=1)
-                $id = (int)$matches[1];
-                if ($id > 0 && in_array((string)$val, ['0', '1'], true)) {
-                    $this->attrs[$id][] = $matches[2];
+                if ($id > 0) {
+                    $this->attrs[$id] = $val;
                     $ret = true;
                 }
             }
@@ -283,49 +257,37 @@ class ProdFilter extends Model
             foreach ($this->attrs as $id => $vals) {
                 // получаем текущую хараткристику
                 $attr = $attrs[$id] ?? null;
-                if (empty($attr)) {
+                if (empty($attr) || $vals === null || $vals === '' || $vals === []) {
                     continue;
                 }
 
-                $attrQuery = (new Query())->from(Prod::tableAttr() . ' pa')->where([
-                    'pa.[[product_id]]' => new Expression('p.[[product_id]]'),
-                    'pa.[[attribute_id]]' => $id
-                ]);
+                $vals = (array)$vals;
 
-                // проверяем тип
                 if ($attr->type === Attr::TYPE_FLAG) {
-                    $query->addSelect([
-                        'a' . $id => $attrQuery->select(new Expression('cast(pa.[[text]] as unsigned)'))
-                    ]);
-                    $query->andHaving(['a' . $id => (int)(bool)$vals]);
+                    $cast = 'cast(pa.[[text]] as unsigned)';
                 } elseif ($attr->type === Attr::TYPE_NUMBER) {
-                    $attrQuery->select(new Expression('cast(pa.[[text]] as decimal(10,3))'));
-                    if (is_numeric($vals)) {
-                        $query->addSelect(['a' . $id => $attrQuery]);
-                        $query->andHaving(['a' . $id => (float)$vals]);
-                    } elseif (is_array($vals)) {
-                        $min = isset($vals['min']) ? (float)$vals['min'] : null;
-                        $max = isset($vals['max']) ? (float)$vals['max'] : null;
-                        if (isset($min, $max)) {
-                            [$min, $max] = [min($min, $max), max($min, $max)];
-                            $query->addSelect(['a' . $id => $attrQuery]);
-                            $query->andHaving(['between', 'a' . $id, $min, $max]);
-                        } elseif (isset($min)) {
-                            $query->addSelect(['a' . $id => $attrQuery]);
-                            $query->andHaving(['>=', 'a' . $id, $min]);
-                        } elseif (isset($max)) {
-                            $query->addSelect(['a' . $id => $attrQuery]);
-                            $query->andHaving(['<=', 'a' . $id, $max]);
-                        }
-                    }
+                    $cast = 'cast(pa.[[text]] as decimal(10,3))';
                 } else {
-                    // сроковые значения
-                    $vals = Filter::strings((array)$vals);
+                    $cast = 'pa.[[text]]';
+                }
 
-                    if (! empty($vals)) {
-                        $query->addSelect(['a' . $id => $attrQuery->select('pa.[[text]]')]);
-                        $query->andHaving(['a' . $id => $vals]);
+                $attrQuery = ProdAttr::find()->alias('pa')->select($cast)
+                    ->where('pa.[[product_id]]=p.[[product_id]]')
+                    ->andWhere(['pa.[[attribute_id]]' => $id]);
+
+                // workaround for condition operator
+                $attrExpression = new Expression('(' . $attrQuery->createCommand()->rawSql . ')');
+
+                if (array_key_exists('min', $vals) || array_key_exists('max', $vals)) {
+                    if (isset($vals['min'], $vals['max'])) {
+                        $query->andWhere(['between', $attrExpression, $vals['min'], $vals['max']]);
+                    } elseif (isset($vals['min'])) {
+                        $query->andWhere(['>=', $attrExpression, $vals['min']]);
+                    } elseif (isset($vals['max'])) {
+                        $query->andWhere(['<=', $attrExpression, $vals['max']]);
                     }
+                } elseif (!empty($vals)) {
+                    $query->andWhere(['in', $attrExpression, $vals]);
                 }
             }
         }
@@ -337,6 +299,8 @@ class ProdFilter extends Model
                 ':city' => City::current()->id
             ])->andWhere('p2l.[[city]] is not null');
         }
+
+        //echo $query->createCommand()->rawSql; exit;
 
         return $query;
     }
@@ -446,16 +410,14 @@ class ProdFilter extends Model
             }
 
             // получаем карту id характеристик и их значений
-            $query = (new Query())->select('pa.[[attribute_id]], pa.[[text]]')
-                ->distinct(true)
-                ->from(Prod::tableAttr() . ' pa')
+            $query = ProdAttr::find()->alias('pa')
+                ->select('pa.[[attribute_id]], pa.[[text]]')->distinct(true)
                 ->innerJoin(Prod::tableCateg() . ' p2c', 'p2c.[[product_id]]=pa.[[product_id]]')
                 ->andWhere([
                     'p2c.[[category_id]]' => $this->recurse ? (new Query())->select('cp.[[category_id]]')
                         ->from(Categ::tablePath() . ' cp')
                         ->where(['cp.[[path_id]]' => $this->category_id]) : $this->category_id
-                ])
-                ->andWhere('pa.[[text]] != ""');
+                ]);
 
             if (isset($this->status)) {
                 $query->innerJoin(Prod::tableName() . ' p', 'p.[[product_id]]=pa.[[product_id]]')
@@ -538,28 +500,13 @@ class ProdFilter extends Model
         // характеристики в сокращенной форме
         $attrs = $this->selectedAttrs;
         foreach ($this->attrs ?: [] as $id => $vals) {
+            $vals = (array)$vals;
             $attr = $attrs[$id] ?? null;
-            if (empty($attr)) {
-                continue;
-            }
-
-            if ($attr->type === Attr::TYPE_FLAG) {
-                $params['a' . $id] = (int)(bool)$vals;
-            } elseif ($attr->type === Attr::TYPE_NUMBER) {
-                if (is_numeric($vals)) {
-                    $params['a' . $id] = (float)$vals;
-                } elseif (is_array($vals)) {
-                    if (isset($vals['min'])) {
-                        $params['a' . $id . 'min'] = (float)$vals['min'];
-                    }
-
-                    if (isset($vals['max'])) {
-                        $params['a' . $id . 'max'] = (float)$vals['max'];
-                    }
-                }
-            } else {
-                foreach ($vals as $val) {
-                    $params['a' . $id . '-' . $val] = 1;
+            if (!empty($attr) && !empty($vals)) {
+                if (array_key_exists('min', $vals) || array_key_exists('max', $vals)) {
+                    $params['a' . $id] = $vals;
+                } else {
+                    $params['a' . $id] = count($vals) > 1 ? $vals : reset($vals);
                 }
             }
         }
@@ -585,26 +532,10 @@ class ProdFilter extends Model
             }
 
             foreach ($this->selectedAttrs as $attr) {
-                $vals = $this->attrs[$attr->attribute_id];
-
                 if ($attr->type === Attr::TYPE_FLAG) {
-                    // значения 0/1
                     $params[] = $attr->name;
-                } elseif ($attr->type === Attr::TYPE_NUMBER) {
-                    if (is_numeric($vals)) {
-                        // одно значение
-                        $params[] = $attr->name . ' ' . (float)$vals;
-                    } elseif (is_array($vals)) {
-                        // значения [min => ..., max => ...]
-                        $vals = array_unique(array_values($vals));
-                        if (! empty($vals)) {
-                            sort($vals);
-                            $params[] = $attr->name . ' ' . implode('/', $vals);
-                        }
-                    }
                 } else {
-                    // значения [значение1, значение2, ...значениеN]
-                    $vals = array_unique($vals);
+                    $vals = array_unique((array)$this->attrs[$attr->attribute_id]);
                     if (! empty($vals)) {
                         sort($vals);
                         $params[] = $attr->name . ' ' . implode('/', $vals);

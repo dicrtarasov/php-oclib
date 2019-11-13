@@ -1,5 +1,5 @@
 <?php
-class Html extends \dicr\oclib\Html
+class Html extends \dicr\helper\Html
 {
 
 }

@@ -10,6 +10,7 @@ declare(strict_types = 1);
 namespace dicr\oclib;
 
 use dicr\helper\Url;
+use Yii;
 use yii\base\InvalidArgumentException;
 use yii\caching\TagDependency;
 use yii\db\ActiveRecord;
@@ -487,7 +488,7 @@ class UrlAlias extends ActiveRecord
      */
     public static function findMultiParamAlias(array &$params)
     {
-        $alias = \Yii::$app->cache->getOrSet([__METHOD__, $params], function() use ($params) {
+        $alias = Yii::$app->cache->getOrSet([__METHOD__, $params], static function() use ($params) {
             // фильтруем параметры, удаляя те, которые не могут участвовать в построении алиаса
             $params = Url::normalizeQuery(Url::filterQuery(array_slice($params, 0)));
             unset($params['sort'], $params['order'], $params['page'], $params['limit'], $params['route'], $params['_route_']);

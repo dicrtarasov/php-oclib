@@ -84,7 +84,7 @@ class UrlAliasRule extends BaseObject implements UrlRuleInterface
 
                     // оставшиеся парамеры добавляем как параметры запроса
                     if (! empty($params)) {
-                        $url .= '?' . \dicr\helper\Url::buildQuery($params);
+                        $url .= '?' . Url::buildQuery($params);
                     }
                 }
             }

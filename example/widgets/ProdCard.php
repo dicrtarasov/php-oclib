@@ -5,14 +5,16 @@
  * @author Igor (Dicr) Tarasov, develop@dicr.org
  */
 
+declare(strict_types = 1);
+
 namespace app\widgets;
 
 use app\models\Categ;
 use app\models\Prod;
 use dicr\oclib\Widget;
-use Format;
 use Html;
 use Registry;
+use Yii;
 use yii\base\InvalidConfigException;
 
 /**
@@ -34,6 +36,8 @@ class ProdCard extends Widget
 
     /**
      * Консруктор.
+     *
+     * @throws \yii\base\InvalidConfigException
      */
     public function init()
     {
@@ -62,7 +66,7 @@ class ProdCard extends Widget
 
     /**
      * {@inheritDoc}
-     * @throws \dicr\oclib\OcException
+     * @throws \yii\base\Exception
      */
     public function run()
     {
@@ -74,7 +78,8 @@ class ProdCard extends Widget
 
         <a class="name" href="<?=Html::esc($this->prod->url)?>"><?=Html::esc($this->prod->fullName)?></a>
 
-        <div class="short_description"><?=Html::esc(Html::toText($this->prod->shortDescription))?></div>
+        <!-- noindex -->
+        <div class="short_description"><?=Html::esc(Html::toText($this->prod->shortDescription))?></div><!-- /noindex -->
 
         <div class="available">
             <div>Наличие:</div>
@@ -105,40 +110,41 @@ class ProdCard extends Widget
                 <div class="popup">
                     <div class="inner">
                         <div class="title">Зарудняетесь в выборе?</div>
-                        <div><a href="/contacts">Свяжитесь с нами</a></div>
+                        <div><a href="javascript:" data-toggle="modal" data-target="#modalCallback">Свяжитесь с нами</a>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="price"><?=Format::toMoney($this->prod->price)?></div>
+        <div class="price"><?=! empty($this->prod->price) ? Yii::$app->formatter->asMoney($this->prod->price) :
+                ''?></div>
 
         <div class="addby">
             <button type="button" class="btn ctl minus">-</button>
             <input class="quantity" type="number" name="quantity" value="1" min="1" step="1"/>
-            <span class="unit">м</span>
+            <span class="unit"><?=Html::esc($this->prod->units)?></span>
             <button type="button" class="btn ctl plus">+</button>
             <button type="button" class="btn tocart"><img src="/catalog/res/img/icon-cart-white.png" alt=""/></button>
         </div>
 
-        <?php if ($this->prod->categ->isCable) { ?>
+        <?php if ($this->prod->categ->isCable && ! empty($this->prod->price)) { ?>
         <div class="optinfo">
-            <div>от 100м - <?=Format::toMoney($this->prod->price * Prod::DISCOUNT_100, ['empty' => 'уточните'])?></div>
-            <div>от 1000м - <?=Format::toMoney($this->prod->price * Prod::DISCOUNT_1000,
-                    ['empty' => 'уточните'])?></div>
+            <div>от 100м - <?=Yii::$app->formatter->asMoney($this->prod->price * Prod::DISCOUNT_100)?></div>
+            <div>от 1000м - <?=Yii::$app->formatter->asMoney($this->prod->price * Prod::DISCOUNT_1000)?></div>
         </div>
     <?php } ?>
 
         <?php
-        echo Html::endTag('div');
         echo $this->plugin('widgetProdCard');
+        echo Html::endTag('div');
     }
 
     /**
      * Подменяет отсутствующие картинки.
      *
      * @return string URL картинки
-     * @throws \dicr\oclib\OcException
+     * @throws \yii\base\Exception
      */
     protected function prodImage()
     {

@@ -13,7 +13,7 @@ declare(strict_types = 1);
 namespace dicr\oclib;
 
 use yii\base\BaseObject;
-use yii\db\Exception;
+use yii\base\Exception;
 use function is_callable;
 
 /**
@@ -96,7 +96,7 @@ class Loader extends BaseObject
      * @param string $route
      * @param string $path
      * @return object модель
-     * @throws \dicr\oclib\OcException
+     * @throws \yii\base\Exception
      */
     public function model(string $route, string $path = '')
     {
@@ -116,7 +116,7 @@ class Loader extends BaseObject
             $model = new $class($this->registry);
             $this->registry->set($key, $model);
         } else {
-            throw new OcException('Error: Could not load model ' . $route . '!');
+            throw new Exception('Error: Could not load model ' . $route . '!');
         }
 
         return $model;
@@ -141,7 +141,7 @@ class Loader extends BaseObject
      *
      * @param string $route
      * @param array $config
-     * @throws \dicr\oclib\OcException
+     * @throws \yii\base\Exception
      */
     public function library(string $route, $config = [])
     {
@@ -157,13 +157,14 @@ class Loader extends BaseObject
             include_once($file);
             $this->registry->set(basename($route), new $class($this->registry));
         } else {
-            throw new OcException('Error: Could not load library ' . $route . '!');
+            throw new Exception('Error: Could not load library ' . $route . '!');
         }
     }
 
     /**
      * @param $helper
      * @throws \yii\db\Exception
+     * @throws \yii\base\Exception
      */
     public function helper($helper)
     {

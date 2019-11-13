@@ -8,7 +8,7 @@
 declare(strict_types = 1);
 namespace app\models;
 
-use dicr\oclib\Html;
+use Html;
 use Registry;
 use yii\caching\TagDependency;
 use yii\db\ActiveRecord;
@@ -58,6 +58,7 @@ use function in_array;
  * @property-read \app\models\ProdDesc $desc
  * @property-read \app\models\Categ $categ
  * @property-read \app\models\Manuf $manuf
+ * @property-read \app\models\ProdAttr[] $attrs
  *
  * // связанные из ProdDesc
  *
@@ -98,26 +99,6 @@ class Prod extends ActiveRecord
     }
 
     /**
-     * Таблица категорий.
-     *
-     * @return string
-     */
-    public static function tableCateg()
-    {
-        return '{{oc_product_to_category}}';
-    }
-
-    /**
-     * Таблица характеристик.
-     *
-     * @return string
-     */
-    public static function tableAttr()
-    {
-        return '{{oc_product_attribute}}';
-    }
-
-    /**
      * Наличие по городам.
      *
      * @return string
@@ -134,8 +115,7 @@ class Prod extends ActiveRecord
      */
     public function getDesc()
     {
-        return $this->hasOne(ProdDesc::class, ['product_id' => 'product_id'])
-            ->inverseOf('prod');
+        return $this->hasOne(ProdDesc::class, ['product_id' => 'product_id'])->inverseOf('prod');
     }
 
     /**
@@ -151,6 +131,16 @@ class Prod extends ActiveRecord
             ->cache(true, new TagDependency([
                 'tags' => [self::class, Categ::class]
             ]));
+    }
+
+    /**
+     * Таблица категорий.
+     *
+     * @return string
+     */
+    public static function tableCateg()
+    {
+        return '{{oc_product_to_category}}';
     }
 
     /**
@@ -178,10 +168,21 @@ class Prod extends ActiveRecord
      */
     public function getManuf()
     {
-        return $this->hasOne(Manuf::class, ['manufacturer_id' => 'manufacturer_id'])
-            ->cache(true, new TagDependency([
-                'tags' => [self::class, Manuf::class]
-            ]));
+        return $this->hasOne(Manuf::class, ['manufacturer_id' => 'manufacturer_id'])->cache(true, new TagDependency([
+            'tags' => [self::class, Manuf::class]
+        ]));
+    }
+
+    /**
+     * Возвращает запрос характерисик.
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getAttrs()
+    {
+        return $this->hasMany(ProdAttr::class, ['product_id' => 'product_id'])
+            ->inverseOf('prod')
+            ->indexBy('attribute_id');
     }
 
     /** @var string */
@@ -227,9 +228,9 @@ class Prod extends ActiveRecord
             ];
         }
 
-        $image = !empty($options['recurse']) ? $this->imageRecurse : $this->image;
+        $image = ! empty($options['recurse']) ? $this->imageRecurse : $this->image;
 
-        return !empty($image) ? '/image/' . $image : '';
+        return ! empty($image) ? '/image/' . $image : '';
     }
 
     /**
@@ -239,7 +240,7 @@ class Prod extends ActiveRecord
      * @param int $height
      * @param array|null $options
      * @return string url превью
-     * @throws \dicr\oclib\OcException
+     * @throws \yii\base\Exception
      */
     public function thumb(int $width, int $height, array $options = null)
     {
@@ -306,7 +307,7 @@ class Prod extends ActiveRecord
      */
     public function getFullName()
     {
-        if (!isset($this->_fullName)) {
+        if (! isset($this->_fullName)) {
             $singular = '';
 
             $categ = $this->categ;
@@ -382,7 +383,7 @@ class Prod extends ActiveRecord
     public function getPrimen()
     {
         $desc = $this->desc;
-        if (!isset($desc)) {
+        if (! isset($desc)) {
             return '';
         }
 
@@ -424,7 +425,7 @@ class Prod extends ActiveRecord
     public function getMetaTitle()
     {
         $desc = $this->desc;
-        if (!isset($desc)) {
+        if (! isset($desc)) {
             return '';
         }
 
@@ -445,7 +446,7 @@ class Prod extends ActiveRecord
     public function getMetaDescription()
     {
         $desc = $this->desc;
-        if (!isset($desc)) {
+        if (! isset($desc)) {
             return '';
         }
 
@@ -465,7 +466,7 @@ class Prod extends ActiveRecord
     public function getBreadcrumbs()
     {
         $categ = $this->categ;
-        $breadcrumbs = !empty($categ) ? $categ->breadcrumbs : [];
+        $breadcrumbs = ! empty($categ) ? $categ->breadcrumbs : [];
         $breadcrumbs[] = [
             'text' => $this->name,
             'href' => $this->url

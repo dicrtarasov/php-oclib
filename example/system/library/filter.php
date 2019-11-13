@@ -1,5 +1,5 @@
 <?php
-class Filter extends \dicr\oclib\Filter
+class Filter extends \dicr\helper\Filter
 {
 
 }

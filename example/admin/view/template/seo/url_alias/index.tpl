@@ -34,7 +34,8 @@ $breadcrumbs = [
     <div class="page-header">
         <div class="container-fluid">
             <div class="pull-right">
-                <button type="submit" form="form-aliases" data-toggle="tooltip" title="Сохранить" class="btn btn-primary">
+                <button type="submit" form="form-aliases" data-toggle="tooltip" title="Сохранить"
+                        class="btn btn-primary">
                     <i class="fa fa-save"></i> Сохранить
                 </button>
             </div>
@@ -69,40 +70,43 @@ $breadcrumbs = [
         <div class="panel panel-default">
             <div class="panel-body">
                 <!-- Фильтр -->
-                <?=Html::beginForm($this->url->link('seo/url_alias', ['token' => $this->session->data['token']]), 'GET', [
-                    'class' => 'form-filter',
-                    'style' => 'margin-bottom: 1.5rem'
-                ])?>
-                    <?=Html::hiddenInput('sort', Yii::$app->request->get('sort'))?>
-                    <div class="row">
-                        <div class="col-sm-3">
-                            <div class="form-group">
-                                <label class="control-label">Алиас:</label>
-                                <?=Html::activeTextInput($filter, 'keyword', ['class' => 'form-control'])?>
-                            </div>
+                <?=Html::beginForm($this->url->link('seo/url_alias', ['token' => $this->session->data['token']]), 'GET',
+                    [
+                        'class' => 'form-filter',
+                        'style' => 'margin-bottom: 1.5rem'
+                    ])?>
+                <?=Html::hiddenInput('sort', Yii::$app->request->get('sort'))?>
+                <div class="row">
+                    <div class="col-sm-3">
+                        <div class="form-group">
+                            <label class="control-label">Алиас:</label>
+                            <?=Html::activeTextInput($filter, 'keyword', ['class' => 'form-control'])?>
                         </div>
-                        <div class="col-sm-3">
-                            <div class="form-group">
-                                <label class="control-label">Маршрут/параметры:</label>
-                                <?=Html::activeTextInput($filter, 'query', ['class' => 'form-control'])?>
-                            </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div class="form-group">
+                            <label class="control-label">Маршрут/параметры:</label>
+                            <?=Html::activeTextInput($filter, 'query', ['class' => 'form-control'])?>
                         </div>
-                        <div class="col-sm-3">
-                            <div class="form-group">
-                                <label class="control-label">Тип</label>
-                                <?=Html::activeDropDownList($filter, 'type', UrlAlias::TYPES, [
-                                    'prompt' => '',
-                                    'class' => 'form-control'
-                                ])?>
-                            </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div class="form-group">
+                            <label class="control-label">Тип</label>
+                            <?=Html::activeDropDownList($filter, 'type', UrlAlias::TYPES, [
+                                'prompt' => '',
+                                'class' => 'form-control'
+                            ])?>
                         </div>
-                        <div class="col-sm-2">
-                            <div class="form-group">
-                                <label class="control-label">&nbsp;</label>
-                                <div><button type="submit" class="btn btn-default">Фильтровать</button></div>
+                    </div>
+                    <div class="col-sm-2">
+                        <div class="form-group">
+                            <label class="control-label">&nbsp;</label>
+                            <div>
+                                <button type="submit" class="btn btn-default">Фильтровать</button>
                             </div>
                         </div>
                     </div>
+                </div>
                 <?=Html::endForm()?>
 
                 <!-- Алиасы -->
@@ -116,39 +120,43 @@ $breadcrumbs = [
                     'class' => 'form-aliases',
                     'style' => 'margin-bottom: 1rem'
                 ])?>
-                    <table class="aliases table table-condensed table-hover">
-                        <thead>
-                        <tr>
-                            <th style="width: 40%;"><?=$provider->sort->link('keyword')?></th>
-                            <th style="width: 50%;"><?=$provider->sort->link('query')?></th>
-                            <th class="text-center" style="width: 9%;"><?=$provider->sort->link('type')?></th>
-                            <th style="width: 1%;"></th>
-                        </tr>
-                        </thead>
+                <table class="aliases table table-condensed table-hover">
+                    <thead>
+                    <tr>
+                        <th style="width: 40%;"><?=$provider->sort->link('keyword')?></th>
+                        <th style="width: 50%;"><?=$provider->sort->link('query')?></th>
+                        <th class="text-center" style="width: 9%;"><?=$provider->sort->link('type')?></th>
+                        <th style="width: 1%;"></th>
+                    </tr>
+                    </thead>
 
-                        <tbody>
-                            <?php foreach ($provider->models as $alias) {?>
-                                <tr class="alias" data-id="<?=(int)$alias->url_alias_id?>">
-                                    <td>
-                                        <?=Html::activeHiddenInput($alias, '[' . $alias->url_alias_id . ']url_alias_id')?>
-                                        <?=Html::activeTextInput($alias, '[' . $alias->url_alias_id . ']keyword', ['class' => 'form-control'])?>
-                                    </td>
-                                    <td><?=Html::activeTextInput($alias, '[' . $alias->url_alias_id . ']query', ['class' => 'form-control'])?></td>
-                                    <td class="text-center"><?=Html::esc(UrlAlias::TYPES[$alias->type])?></td>
-                                    <td><?=Html::button('<i class="fa fa-times text-danger"></i>', ['class' => 'del btn btn-link btn-xs', 'title' => 'Удалить'])?></td>
-                                </tr>
-                            <?php } ?>
-                        </tbody>
-
-                        <tfoot>
-                        <tr><td style="padding-top: 1rem;" colspan="4" class="text-center">
-                                <button type="button" class="btn btn-success add pull-left">Добавить</button>
-                                <!-- Pager -->
-                                <nav class="text-center" style="margin-bottom: 2rem;"><?=new Pagination($provider)?></nav>
+                    <tbody>
+                    <?php foreach ($provider->models as $alias) { ?>
+                        <tr class="alias" data-id="<?=(int)$alias->url_alias_id?>">
+                            <td>
+                                <?=Html::activeHiddenInput($alias, '[' . $alias->url_alias_id . ']url_alias_id')?>
+                                <?=Html::activeTextInput($alias, '[' . $alias->url_alias_id . ']keyword',
+                                    ['class' => 'form-control'])?>
                             </td>
+                            <td><?=Html::activeTextInput($alias, '[' . $alias->url_alias_id . ']query',
+                                    ['class' => 'form-control'])?></td>
+                            <td class="text-center"><?=Html::esc(UrlAlias::TYPES[$alias->type])?></td>
+                            <td><?=Html::button('<i class="fa fa-times text-danger"></i>',
+                                    ['class' => 'del btn btn-link btn-xs', 'title' => 'Удалить'])?></td>
                         </tr>
-                        </tfoot>
-                    </table>
+                    <?php } ?>
+                    </tbody>
+
+                    <tfoot>
+                    <tr>
+                        <td style="padding-top: 1rem;" colspan="4" class="text-center">
+                            <button type="button" class="btn btn-success add pull-left">Добавить</button>
+                            <!-- Pager -->
+                            <nav class="text-center" style="margin-bottom: 2rem;"><?=new Pagination($provider)?></nav>
+                        </td>
+                    </tr>
+                    </tfoot>
+                </table>
                 <?=Html::endForm()?>
             </div>
         </div>
@@ -210,7 +218,7 @@ $breadcrumbs = [
                 $.ajax({
                     url: '<?=$this->url->link('seo/url_alias/delete', ['token' => $this->session->data['token']])?>',
                     method: 'POST',
-                    data: { url_alias_id: id}
+                    data: {url_alias_id: id}
                 }).done(function (ret) {
                     if (ret.error) {
                         console.error(ret.error);

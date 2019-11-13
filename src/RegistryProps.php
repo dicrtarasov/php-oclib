@@ -19,6 +19,7 @@ namespace dicr\oclib;
  * @property-read \Currency $currency
  * @property-read \Tax $tax
  * @property-read \Customer $customer
+ * @property-read \Cart $cart
  *
  * @property-read \dicr\oclib\Cache $cache
  * @property-read \dicr\oclib\DB $db
@@ -30,6 +31,7 @@ namespace dicr\oclib;
  *
  * @property-read \ModelCatalogProduct $model_catalog_product
  * @property-read \ModelCatalogCategory $model_catalog_category
+ * @property-read \ModelCatalogManufacturer $model_catalog_manufacturer
  * @property-read \ModelToolImage $model_tool_image
  *
  * @package dicr\oclib
