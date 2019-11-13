@@ -17,6 +17,15 @@ require_once(__DIR__ . '/local.php');
 // HOME
 define('DIR_HOME', dirname(__DIR__));
 
+// Прокси
+const SERVICE_PROXY = [
+    'tcp://95.181.183.234:8085',
+    'tcp://95.181.183.240:8085',
+    'tcp://185.101.71.222:8085',
+    'tcp://188.68.1.227:8085',
+    'tcp://185.101.68.212:8085'
+];
+
 // DEBUG
 define('DEBUG_IPS', [
     'office' => gethostbyname('gw.up-advert.ru'),

@@ -135,7 +135,7 @@ $breadcrumbs = [
                                     </td>
                                     <td><?=Html::activeTextInput($alias, '[' . $alias->url_alias_id . ']query', ['class' => 'form-control'])?></td>
                                     <td class="text-center"><?=Html::esc(UrlAlias::TYPES[$alias->type])?></td>
-                                    <td><?=Html::button('&times;', ['class' => 'del btn btn-danger btn-xs', 'title' => 'Удалить'])?></td>
+                                    <td><?=Html::button('<i class="fa fa-times text-danger"></i>', ['class' => 'del btn btn-link btn-xs', 'title' => 'Удалить'])?></td>
                                 </tr>
                             <?php } ?>
                         </tbody>
@@ -195,7 +195,7 @@ $breadcrumbs = [
                         $('<input/>', {'class': 'form-control', type: 'text', name: 'UrlAlias[' + index + '][query]'})
                     ),
                     $('<td>&nbsp;</td>'),
-                    $('<td><button type="button" class="del btn btn-danger btn-xs" title="Удалить">&times;</button></td>')
+                    $('<td><button type="button" class="del btn btn-link btn-xs" title="Удалить"><i class="fa fa-times text-danger"></i></button></td>')
                 )
             );
         });

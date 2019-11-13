@@ -77,6 +77,7 @@ use function in_array;
  * @property-read $imageUrl
  * @property-read $url
  * @property-read string $fullName полное имя с присавкой singular из каегории
+ * @property-read string $units единицы измерения
  */
 class Prod extends ActiveRecord
 {
@@ -471,5 +472,13 @@ class Prod extends ActiveRecord
         ];
 
         return $breadcrumbs;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUnits()
+    {
+        return $this->categ->units;
     }
 }

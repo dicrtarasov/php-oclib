@@ -1,4 +1,4 @@
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_URI} !.*\.(ico|gif|jpg|jpeg|png|js|css|pdf)
-RewriteRule ^([^?]*) index.php?_route_=$1 [L,QSA]
+RewriteRule ^(.*)$ index.php?_route_=$1 [L,QSA]

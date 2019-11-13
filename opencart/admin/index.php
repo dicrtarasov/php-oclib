@@ -152,21 +152,11 @@ $controller->addPreAction(new Action('common/login/check'));
 // Permission
 $controller->addPreAction(new Action('error/permission/check'));
 
-// Router
-\Yii::$app->defaultRoute = 'common/dashboard';
-
-if (!empty($request->get['route'])) {
-    \Yii::$app->requestedRoute = $request->get['route'];
-} elseif (!empty($request->get['_route_'])) {
-    \Yii::$app->requestedRoute = $request->get['_route_'];
-} else {
-    \Yii::$app->requestedRoute = \Yii::$app->defaultRoute;
-}
-
-unset($request->get['route'], $request->get['_route_']);
+// инициализация маршрута Yii
+$controller->addPreAction(new Action('startup/url'));
 
 // Dispatch
-$controller->dispatch(new Action(\Yii::$app->requestedRoute), new Action('error/not_found'));
+$controller->dispatch(new Action('common/dashboard'), new Action('error/not_found'));
 
 // Output
 $response->output();

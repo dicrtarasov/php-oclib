@@ -8,6 +8,7 @@
 declare(strict_types = 1);
 namespace app\models;
 
+use Debug;
 use Html;
 use Registry;
 use Yii;
@@ -63,6 +64,7 @@ use function in_array;
  * @property-read bool $isEnabled рекурсивная проверка статуса
  * @property-read \app\models\Prod[] $frontProds витринные товары категории для показа в качестве примерных
  * @property-read string|null $glushImage картинка для сраницы товаров
+ * @property-read string $units единицы измерения товаров
  *
  * // проксируемые свойства из CategDec
  *
@@ -984,5 +986,15 @@ class Categ extends ActiveRecord
 
         $img = $map[$this->category_id] ?? null;
         return ! empty($img) ? '/image/catalog/cat_glush/' . $img : null;
+    }
+
+    /**
+     * Возвращает единицы измерения товаров.
+     *
+     * @return string
+     */
+    public function getUnits()
+    {
+        return $this->isCable ? 'м' : 'шт';
     }
 }

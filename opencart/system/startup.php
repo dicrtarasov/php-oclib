@@ -110,14 +110,18 @@ require_once(DIR_SYSTEM . 'helper/general.php');
 require_once(DIR_SYSTEM . 'helper/json.php');
 require_once(DIR_SYSTEM . 'helper/utf8.php');
 
-// Yii
-$config = require(__DIR__ . '/../config/yii.web.php');
-
-// YII_ENV и YII_DEBUG должны быть усановлены в конфиге ранее
+// Composer
 require(__DIR__ . '/../vendor/autoload.php');
+
+// константы YII_ENV и YII_DEBUG должны быть установлены до загрузки Yii
+defined('YII_ENV') or define('YII_ENV', 'dev');
+defined('YII_DEBUG') or define('YII_DEBUG', DEBUG);
+
+// подключаем класс Yii
 require(__DIR__ . '/../vendor/yiisoft/yii2/Yii.php');
 
-$yii = new yii\web\Application($config);
+// создаем приложение Yii
+new yii\web\Application(require(__DIR__ . '/../config/yii.web.php'));
 
 
 

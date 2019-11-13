@@ -8,6 +8,7 @@
 declare(strict_types = 1);
 namespace app\models;
 
+use Debug;
 use dicr\helper\ArrayHelper;
 use dicr\validate\ValidateException;
 use Filter;
@@ -18,6 +19,7 @@ use yii\db\Expression;
 use yii\db\Query;
 use function array_key_exists;
 use function count;
+use function in_array;
 use function is_array;
 use const SORT_ASC;
 use const SORT_DESC;
@@ -72,11 +74,8 @@ class ProdFilter extends Model
     /** @var int|int[] id производителей */
     public $manufacturer_id;
 
-    /** @var array фильтр производителей */
-    public $manuf;
-
-    /** @var array фильтр характеристик */
-    public $attr;
+    /** @var array фильтр характеристик id => [vals] */
+    public $attrs;
 
     /** @var bool статус товара */
     public $status;
@@ -107,57 +106,64 @@ class ProdFilter extends Model
             ['recurse', 'boolean'],
             ['recurse', 'filter', 'filter' => 'boolval'],
 
-            ['manuf', 'default'],
+            ['attrs', 'default'],
             [
-                'manuf',
+                'attrs',
                 function($attribute) {
                     if (empty($this->{$attribute})) {
-                        $vals = null;
-                    } else {
-                        $vals = [];
-                        foreach ((array)$this->{$attribute} as $id => $val) {
-                            $id = (int)$id;
-                            if ($id > 0 && ! empty($val)) {
-                                $vals[$id] = 1;
-                            }
-                        }
+                        $this->{$attribute} = null;
+                        return;
                     }
 
-                    $this->{$attribute} = $vals ?: null;
-                }
-            ],
+                    $ret = [];
+                    $attrs = $this->selectedAttrs;
 
-            ['attr', 'default'],
-            [
-                'attr',
-                function($attribute) {
-                    if (empty($this->{$attribute})) {
-                        $vals = null;
-                    } else {
-                        $vals = [];
-                        foreach ((array)$this->{$attribute} as $id => $val) {
-                            $id = (int)$id;
-                            if ($id < 1 || $val === null || $val === '' || $val === []) {
-                                continue;
+                    // обходим все характеристики
+                    foreach ((array)$this->{$attribute} as $id => $vals) {
+                        //  проверяем id-характеристики и значения
+                        $id = (int)$id;
+                        if ($id < 1 || $vals === null || $vals === '' || $vals === []) {
+                            continue;
+                        }
+
+                        $attr = $attrs[$id] ?? null;
+                        if (empty($attr)) {
+                            continue;
+                        }
+
+                        if ($attr->type === Attr::TYPE_FLAG) {
+                            // если харакеристика типа флаг 0/1 (attr[5]=1)
+                            if (!in_array((string)$vals, ['0', '1'], false)) {
+                                $ret[$id] = $vals;
                             }
-
-                            if (is_array($val) && (array_key_exists('min', $val) || array_key_exists('max', $val))) {
-                                foreach (['min', 'max'] as $key) {
-                                    if (! isset($val[$key]) || $val[$key] === '') {
-                                        unset($val[$key]);
-                                    }
-
-                                    if (count($val) < 1) {
-                                        continue;
-                                    }
+                        } elseif ($attr->type === Attr::TYPE_NUMBER) {
+                            // если числовая характеристика с min/max (attr[5] = [min => 23, max => 123] )
+                            $minmax = [];
+                            foreach (['min', 'max'] as $key) {
+                                if (isset($vals[$key]) && $vals[$key] !== '') {
+                                    $minmax[$key] = (float)$vals[$key];
                                 }
                             }
 
-                            $vals[$id] = $val;
+                            if (! empty($minmax)) {
+                                $ret[$id] = $minmax;
+                            }
+                        } else {
+                            // строковая характеристика (attr[5] = ['значение1', 'значение2', ...])
+                            foreach ($vals as $i => $v) {
+                                if ($v === null || $v === '') {
+                                    unset($vals[$i]);
+                                }
+                            }
+
+                            if (! empty($vals)) {
+                                sort($vals);
+                                $ret[$id] = array_unique($vals);
+                            }
                         }
                     }
 
-                    $this->{$attribute} = $vals ?: null;
+                    $this->{$attribute} = $ret ?: null;
                 }
             ],
 
@@ -169,6 +175,67 @@ class ProdFilter extends Model
             ['stock', 'in', 'range' => self::STOCKS],
             ['stock', 'filter', 'filter' => 'intval', 'skipOnEmpty' => true],
         ];
+    }
+
+    /**
+     * Загрузка значений из данных.
+     *
+     * @param array $data
+     * @param string|null $formName
+     * @return bool
+     */
+    public function load($data, $formName = null)
+    {
+        // загружаем основные параметры фильтра
+        $ret = parent::load($data, $formName);
+
+        // дополнительно загружаем сокращенные варианты характеристик фильтра
+        $this->manufacturer_id = (array)($this->manufacturer_id ?: []);
+        $this->attrs = (array)($this->attrs ?: []);
+
+        if ($formName !== null && $formName !== '') {
+            $data = $data[$formName] ?? [];
+        }
+
+        // обходим все параметры
+        foreach ($data as $param => $val) {
+            $matches = null;
+            if ($val === null || $val === '') {
+                continue;
+            }
+
+            if (preg_match('~^m(\d+)$~', $param, $matches)) {
+                // фильр производителей (m25=1)
+                $id = (int)$matches[1];
+                if ($id > 0 && (string)$val === '1') {
+                    $this->manufacturer_id[] = $id;
+                    $ret = true;
+                }
+            } elseif (preg_match('~^a(\d+)$~', $param, $matches)) {
+                // характеристика типа флаг (attr25=1) или числовая без min/max (a235=5.13)
+                $id = (int)$matches[1];
+                if ($id > 0 && is_numeric($val)) {
+                    $this->attrs[$id] = (float)$val;
+                    $ret = true;
+                }
+            } elseif (preg_match('~^a(\d+)(min|max)$~', $param, $matches)) {
+                // числовая харакеристика
+                $id = (int)$matches[1];
+                if ($id > 0 && is_numeric($val)) {
+                    $this->attrs[$id][$matches[2]] = (float)$val;
+                    $ret = true;
+                }
+            } elseif (preg_match('~^a(\d+)-(.+)$~', $param, $matches)) {
+                // строковая характеристика (a25-значение=1)
+                $id = (int)$matches[1];
+                if ($id > 0 && in_array((string)$val, ['0', '1'], true)) {
+                    $this->attrs[$id][] = $matches[2];
+                    $ret = true;
+                }
+            }
+        }
+
+        return $ret;
     }
 
     /**
@@ -207,21 +274,16 @@ class ProdFilter extends Model
         // производитель
         $query->andFilterWhere(['p.[[manufacturer_id]]' => $this->manufacturer_id]);
 
-        // фильтр производителей
-        if (! empty($this->manuf)) {
-            $query->andWhere(['p.[[manufacturer_id]]' => array_keys($this->manuf)]);
-        }
-
         // фильтр характеристик
-        if (! empty($this->attr)) {
+        if (! empty($this->attrs)) {
             // получаем все характеристики
-            $attrs = Attr::find()->where(['attribute_id' => array_keys($this->attr)])->indexBy('attribute_id')->all();
+            $attrs = $this->selectedAttrs;
 
             // обходим фильтр характеристик
-            foreach ($this->attr as $id => $val) {
+            foreach ($this->attrs as $id => $vals) {
                 // получаем текущую хараткристику
                 $attr = $attrs[$id] ?? null;
-                if ($attr === null) {
+                if (empty($attr)) {
                     continue;
                 }
 
@@ -230,46 +292,40 @@ class ProdFilter extends Model
                     'pa.[[attribute_id]]' => $id
                 ]);
 
-                $valValid = false;
-
                 // проверяем тип
-                switch ($attr->type) {
-                    case Attr::TYPE_FLAG:
-                        $attrQuery->select(new Expression('cast(pa.[[text]] as unsigned)'));
-                        if ($val !== '') {
-                            $query->andHaving(['attr' . $id => (int)(bool)$val]);
-                            $valValid = true;
-                        }
-                        break;
-
-                    case Attr::TYPE_NUMBER:
-                        $attrQuery->select(new Expression('cast(pa.[[text]] as decimal(10,3))'));
-                        $min = isset($val['min']) && $val['min'] !== '' ? (float)$val['min'] : null;
-                        $max = isset($val['max']) && $val['max'] !== '' ? (float)$val['max'] : null;
+                if ($attr->type === Attr::TYPE_FLAG) {
+                    $query->addSelect([
+                        'a' . $id => $attrQuery->select(new Expression('cast(pa.[[text]] as unsigned)'))
+                    ]);
+                    $query->andHaving(['a' . $id => (int)(bool)$vals]);
+                } elseif ($attr->type === Attr::TYPE_NUMBER) {
+                    $attrQuery->select(new Expression('cast(pa.[[text]] as decimal(10,3))'));
+                    if (is_numeric($vals)) {
+                        $query->addSelect(['a' . $id => $attrQuery]);
+                        $query->andHaving(['a' . $id => (float)$vals]);
+                    } elseif (is_array($vals)) {
+                        $min = isset($vals['min']) ? (float)$vals['min'] : null;
+                        $max = isset($vals['max']) ? (float)$vals['max'] : null;
                         if (isset($min, $max)) {
                             [$min, $max] = [min($min, $max), max($min, $max)];
-                            $query->andHaving(['between', 'attr' . $id, $min, $max]);
-                            $valValid = true;
+                            $query->addSelect(['a' . $id => $attrQuery]);
+                            $query->andHaving(['between', 'a' . $id, $min, $max]);
                         } elseif (isset($min)) {
-                            $query->andHaving(['>=', 'attr' . $id, $min]);
-                            $valValid = true;
+                            $query->addSelect(['a' . $id => $attrQuery]);
+                            $query->andHaving(['>=', 'a' . $id, $min]);
                         } elseif (isset($max)) {
-                            $query->andHaving(['<=', 'attr' . $id, $max]);
-                            $valValid = true;
+                            $query->addSelect(['a' . $id => $attrQuery]);
+                            $query->andHaving(['<=', 'a' . $id, $max]);
                         }
-                        break;
+                    }
+                } else {
+                    // сроковые значения
+                    $vals = Filter::strings((array)$vals);
 
-                    default:
-                        $attrQuery->select('pa.[[text]]');
-                        $val = Filter::strings(array_keys((array)$val));
-                        if (! empty($val)) {
-                            $query->andHaving(['attr' . $id => $val]);
-                            $valValid = true;
-                        }
-                }
-
-                if ($valValid) {
-                    $query->addSelect(['attr' . $id => $attrQuery]);
+                    if (! empty($vals)) {
+                        $query->addSelect(['a' . $id => $attrQuery->select('pa.[[text]]')]);
+                        $query->andHaving(['a' . $id => $vals]);
+                    }
                 }
             }
         }
@@ -296,7 +352,6 @@ class ProdFilter extends Model
         return new ActiveDataProvider(array_merge([
             'query' => $this->query,
             'sort' => [
-                'route' => \Yii::$app->requestedRoute,
                 'attributes' => [
                     self::SORT_ORDER => [
                         'asc' => [
@@ -322,9 +377,6 @@ class ProdFilter extends Model
                 'defaultOrder' => [
                     self::SORT_ORDER => SORT_ASC
                 ]
-            ],
-            'pagination' => [
-                'route' => \Yii::$app->requestedRoute
             ]
         ], $config));
     }
@@ -453,8 +505,8 @@ class ProdFilter extends Model
     public function getSelectedAttrs()
     {
         if (! isset($this->_selectedAttrs)) {
-            $this->_selectedAttrs = ! empty($this->attr) ?
-                Attr::find()->where(['attribute_id' => array_keys($this->attr)])->orderBy('name')->all() : [];
+            $this->_selectedAttrs = ! empty($this->attrs) ?
+                Attr::find()->where(['attribute_id' => array_keys($this->attrs)])->orderBy('name')->indexBy('attribute_id')->all() : [];
         }
 
         return $this->_selectedAttrs;
@@ -471,9 +523,44 @@ class ProdFilter extends Model
 
         $params = [];
 
-        foreach (['product_id', 'category_id', 'manufacturer_id', 'manuf', 'attr', 'stock'] as $param) {
+        // обычные параметры
+        foreach (['product_id', 'category_id', 'stock'] as $param) {
             if (! empty($this->{$param})) {
                 $params[$param] = $this->{$param};
+            }
+        }
+
+        // параметры производителя в укороченной форме
+        foreach ((array)($this->manufacturer_id ?: []) as $id) {
+            $params['m' . $id] = 1;
+        }
+
+        // характеристики в сокращенной форме
+        $attrs = $this->selectedAttrs;
+        foreach ($this->attrs ?: [] as $id => $vals) {
+            $attr = $attrs[$id] ?? null;
+            if (empty($attr)) {
+                continue;
+            }
+
+            if ($attr->type === Attr::TYPE_FLAG) {
+                $params['a' . $id] = (int)(bool)$vals;
+            } elseif ($attr->type === Attr::TYPE_NUMBER) {
+                if (is_numeric($vals)) {
+                    $params['a' . $id] = (float)$vals;
+                } elseif (is_array($vals)) {
+                    if (isset($vals['min'])) {
+                        $params['a' . $id . 'min'] = (float)$vals['min'];
+                    }
+
+                    if (isset($vals['max'])) {
+                        $params['a' . $id . 'max'] = (float)$vals['max'];
+                    }
+                }
+            } else {
+                foreach ($vals as $val) {
+                    $params['a' . $id . '-' . $val] = 1;
+                }
             }
         }
 
@@ -498,26 +585,30 @@ class ProdFilter extends Model
             }
 
             foreach ($this->selectedAttrs as $attr) {
-                switch ($attr->type) {
-                    case Attr::TYPE_FLAG:
-                        $params[] = $attr->name;
-                        break;
+                $vals = $this->attrs[$attr->attribute_id];
 
-                    case Attr::TYPE_NUMBER:
-                        $vals = array_unique(array_values($this->attr[$attr->attribute_id] ?? []));
+                if ($attr->type === Attr::TYPE_FLAG) {
+                    // значения 0/1
+                    $params[] = $attr->name;
+                } elseif ($attr->type === Attr::TYPE_NUMBER) {
+                    if (is_numeric($vals)) {
+                        // одно значение
+                        $params[] = $attr->name . ' ' . (float)$vals;
+                    } elseif (is_array($vals)) {
+                        // значения [min => ..., max => ...]
+                        $vals = array_unique(array_values($vals));
                         if (! empty($vals)) {
                             sort($vals);
                             $params[] = $attr->name . ' ' . implode('/', $vals);
                         }
-                        break;
-
-                    default:
-                        $vals = array_unique(array_keys($this->attr[$attr->attribute_id] ?? []));
-                        if (! empty($vals)) {
-                            sort($vals);
-                            $params[] = $attr->name . ' ' . implode('/', $vals);
-                        }
-                        break;
+                    }
+                } else {
+                    // значения [значение1, значение2, ...значениеN]
+                    $vals = array_unique($vals);
+                    if (! empty($vals)) {
+                        sort($vals);
+                        $params[] = $attr->name . ' ' . implode('/', $vals);
+                    }
                 }
             }
 

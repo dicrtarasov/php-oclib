@@ -22,7 +22,6 @@ return [
     'language' => 'ru',
     'sourceLanguage' => 'ru',
     'basePath' => DIR_HOME,
-    'defaultRoute' => 'common/home',
     'timeZone' => date_default_timezone_get(),
 
     'components' => [
@@ -63,33 +62,10 @@ return [
             ]
         ],
 
-        'urlManager' => [
-            'class' => yii\web\UrlManager::class,
-            'enablePrettyUrl' => true,
-            'showScriptName' => false,
-            'routeParam' => 'route',
-            'rules' => [
-                '' => 'common/home',
-                'search' => 'product/search',
-                'cart' => 'checkout/cart',
-                'price' => 'tool/price',
-                'account' => 'account/account',
-                'register' => 'account/register',
-                'login' => 'account/login',
-                'logout' => 'account/logout',
-                'news' => 'information/news',
-                'review' => 'information/review',
-                'catalogue' => 'product/catalogue',
-                'categories' => 'common/categs',
-                'contacts' => 'information/contact',
-                'posts' => 'information/posts',
-                'brands' => 'product/manufacturer',
-                'services' => 'service/service',
-                [
-                    'class' => app\components\UrlAliasRule::class
-                ]
-            ]
+        'formatter' => [
+            'class' => app\components\Formatter::class
         ]
     ],
+
     'bootstrap' => ['log']
 ];

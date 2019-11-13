@@ -12,6 +12,7 @@ use app\models\Prod;
 use app\models\UrlAlias;
 use app\models\UrlAliasFilter;
 use PharIo\Version\InvalidPreReleaseSuffixException;
+use yii\caching\TagDependency;
 use yii\db\Query;
 
 /**
@@ -48,6 +49,8 @@ class ControllerSeoUrlAlias extends Controller
                     $alias->save(true);
                 }
             }
+
+            TagDependency::invalidate(Yii::$app->cache, [UrlAlias::class]);
         }
 
         $this->response->setOutput($this->load->view('seo/url_alias/index', [
