@@ -30,6 +30,9 @@ use const SORT_NATURAL;
  */
 class UrlAliasRule extends BaseObject implements UrlRuleInterface
 {
+    /** @var bool поддержка мультипараметровых алиасов (алиас для нескольких праметров - медленно через RLIKE) */
+    public $multiQueryAliases = false;
+
     /** @var \yii\caching\CacheInterface */
     public $cache = 'cache';
 
@@ -67,7 +70,7 @@ class UrlAliasRule extends BaseObject implements UrlRuleInterface
 
             $url = null;
 
-            // ЧПУ не найдено
+            // ЧПУ найдено
             if (! empty($slug)) {
                 // строим URL
                 $url = '/' . trim($slug, '/');
@@ -81,7 +84,7 @@ class UrlAliasRule extends BaseObject implements UrlRuleInterface
 
                     // оставшиеся парамеры добавляем как параметры запроса
                     if (! empty($params)) {
-                        $url .= '?' . http_build_query($params);
+                        $url .= '?' . \dicr\helper\Url::buildQuery($params);
                     }
                 }
             }
@@ -201,13 +204,18 @@ class UrlAliasRule extends BaseObject implements UrlRuleInterface
         }
 
         $keywords = [];
-        while (! empty($params)) {
-            $alias = UrlAlias::findParamAlias($params);
-            if (empty($alias)) {
-                break;
-            }
 
-            $keywords[] = $alias->keyword;
+        if ($this->multiQueryAliases) {
+            while (! empty($params)) {
+                $alias = UrlAlias::findMultiParamAlias($params);
+                if (empty($alias)) {
+                    break;
+                }
+
+                $keywords[] = $alias->keyword;
+            }
+        } else {
+            $keywords = ArrayHelper::getColumn(UrlAlias::findSingleParamAliases($params), 'keyword');
         }
 
         if (empty($keywords)) {

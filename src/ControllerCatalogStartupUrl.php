@@ -9,7 +9,7 @@ declare(strict_types = 1);
 
 namespace dicr\oclib;
 
-use \Action;
+use Action;
 use Yii;
 use yii\helpers\ArrayHelper;
 use yii\web\UrlNormalizerRedirectException;
@@ -88,7 +88,7 @@ class ControllerCatalogStartupUrl extends Controller
                     }
 
                     if (! empty(Yii::$app->request->queryParams)) {
-                        $url .= '?' . http_build_query(Yii::$app->request->queryParams);
+                        $url .= '?' . \dicr\helper\Url::buildQuery(Yii::$app->request->queryParams);
                     }
                 }
 

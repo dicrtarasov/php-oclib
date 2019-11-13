@@ -8,7 +8,6 @@
 declare(strict_types = 1);
 namespace dicr\oclib;
 
-use Yii;
 use yii\base\InvalidArgumentException;
 use function is_string;
 
@@ -18,7 +17,7 @@ use function is_string;
  * @author Igor (Dicr) Tarasov <develop@dicr.org>
  * @version 2019
  */
-class Url
+class Url extends \dicr\helper\Url
 {
     /**
      * Конструктор.
@@ -27,6 +26,19 @@ class Url
      */
     public function __construct(string $url)
     {
+
+    }
+
+    /** @noinspection PhpMethodMayBeStaticInspection */
+
+    /**
+     * Добавляе обработчики ЧПУ.
+     *
+     * @param object $rewrite
+     */
+    public function addRewrite($rewrite)
+    {
+
     }
 
     /**
@@ -49,29 +61,6 @@ class Url
         }
     }
 
-    /** @noinspection PhpMethodMayBeStaticInspection */
-
-    /**
-     * Добавляе обработчики ЧПУ.
-     *
-     * @param object $rewrite
-     */
-    public function addRewrite($rewrite)
-    {
-    }
-
-    /**
-     * Ссылка с фильтрованными парамерами.
-     *
-     * @param string $route
-     * @param array $params
-     * @return string
-     */
-    public function canonical(string $route, array $params = [])
-    {
-        return $this->link($route, self::filterParams($params));
-    }
-
     /**
      * Строит ссылку.
      *
@@ -86,14 +75,14 @@ class Url
         }
 
         if (is_string($args)) {
-            $args = \dicr\helper\Url::parseQuery($args);
+            $args = static::parseQuery($args);
         }
 
         // удаляем служебные параметры
         unset($args['route']);
         $args[0] = $route;
 
-        return Yii::$app->urlManager->createAbsoluteUrl($args);
+        return static::to($args, true);
     }
 
     /**
@@ -104,7 +93,7 @@ class Url
      */
     public static function filterParams(array $params)
     {
-        $params = \dicr\helper\Url::filterQuery($params);
+        $params = static::filterQuery($params);
 
         if (isset($params['page']) && (int)$params['page'] < 2) {
             unset($params['page']);
@@ -112,6 +101,6 @@ class Url
 
         unset($params['_route_']);
 
-        return \dicr\helper\Url::normalizeQuery($params);
+        return self::normalizeQuery($params);
     }
 }

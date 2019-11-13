@@ -177,8 +177,8 @@ class Pagination extends Widget
                 $start = 1;
                 $end = $num_pages;
             } else {
-                $start = $this->page - floor($this->num_links / 2);
-                $end = $this->page + floor($this->num_links / 2);
+                $start = $this->page - (int)floor($this->num_links / 2);
+                $end = $this->page + (int)floor($this->num_links / 2);
 
                 if ($start < 1) {
                     $end += abs($start) + 1;
