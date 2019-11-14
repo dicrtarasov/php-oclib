@@ -1,9 +1,4 @@
 <?php
-/**
- * Copyright (c) 2019.
- *
- * @author Igor (Dicr) Tarasov, develop@dicr.org
- */
 
 /** @noinspection PhpUnhandledExceptionInspection */
 
@@ -151,14 +146,14 @@ foreach ($query->rows as $result) {
 // Front Controller
 $controller = new Front($registry);
 
+// инициализация маршрута Yii
+$controller->addPreAction(new Action('startup/url'));
+
 // Login
 $controller->addPreAction(new Action('common/login/check'));
 
 // Permission
 $controller->addPreAction(new Action('error/permission/check'));
-
-// инициализация маршрута Yii
-$controller->addPreAction(new Action('startup/url'));
 
 // Dispatch
 $controller->dispatch(new Action('common/dashboard'), new Action('error/not_found'));

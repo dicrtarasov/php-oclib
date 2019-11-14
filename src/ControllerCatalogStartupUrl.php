@@ -47,7 +47,7 @@ class ControllerCatalogStartupUrl extends Controller
         Yii::$app->controller = new \yii\web\Controller(Url::controllerByRoute(Yii::$app->requestedRoute), Yii::$app);
 
         // возвращаем действие
-        return new Action(Yii::$app->requestedRoute);
+        return Yii::$app->requestedRoute !== Yii::$app->defaultRoute ? new Action(Yii::$app->requestedRoute) : null;
     }
 
     /**

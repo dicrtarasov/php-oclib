@@ -10,6 +10,7 @@ declare(strict_types = 1);
 namespace dicr\oclib;
 
 use Action;
+use Debug;
 use Yii;
 
 /**
@@ -43,7 +44,7 @@ class ControllerAdminStartupUrl extends Controller
         Yii::$app->controller = new \yii\web\Controller(Url::controllerByRoute(Yii::$app->requestedRoute), Yii::$app);
 
         // возвращаем действие
-        return new Action(Yii::$app->requestedRoute);
+        return Yii::$app->requestedRoute === Yii::$app->defaultRoute ? null : new Action(Yii::$app->requestedRoute);
     }
 
     /**
