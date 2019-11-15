@@ -143,8 +143,7 @@ class Url extends \dicr\helper\Url
      */
     public static function controllerByRoute(string $route)
     {
-        $parts = static::parseRoute($route);
-        return reset($parts);
+        return $route;
     }
 
 }

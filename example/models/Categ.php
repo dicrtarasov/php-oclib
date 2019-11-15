@@ -8,7 +8,6 @@
 declare(strict_types = 1);
 namespace app\models;
 
-use Debug;
 use Html;
 use Registry;
 use Yii;
@@ -65,6 +64,7 @@ use function in_array;
  * @property-read \app\models\Prod[] $frontProds витринные товары категории для показа в качестве примерных
  * @property-read string|null $glushImage картинка для сраницы товаров
  * @property-read string $units единицы измерения товаров
+ * @property-read string|null $parentName название родительской категории
  *
  * // проксируемые свойства из CategDec
  *
@@ -179,6 +179,17 @@ class Categ extends ActiveRecord
     }
 
     /**
+     * Возвращает имя родиельской категории.
+     *
+     * @return string|null
+     */
+    public function getParentName()
+    {
+        $path = array_values($this->path);
+        return count($path) > 1 ? reset($path) : null;
+    }
+
+    /**
      * Возвращает связь с дочерними категориями.
      *
      * @return \yii\db\ActiveQuery
@@ -230,7 +241,7 @@ class Categ extends ActiveRecord
      */
     public function getHasChilds(array $options = null)
     {
-        return $this->childsCount($options) > 0;
+        return $this->getChildsCount($options) > 0;
     }
 
     /**
@@ -253,7 +264,7 @@ class Categ extends ActiveRecord
      * - bool $status
      * @return int
      */
-    public function childsCount(array $options = null)
+    public function getChildsCount(array $options = null)
     {
         if ($options === null) {
             $options = [
@@ -683,19 +694,25 @@ class Categ extends ActiveRecord
     public function metaH1()
     {
         if ($this->_metaH1 === null) {
-            $desc = $this->desc;
-            $meta = $desc === null ? '' : trim($desc->meta_h1);
-
-            // TODO очень сранно что добавляеся singular - проверить
+            /** @var \app\models\UrlAlias|null $alias */
+            $alias = Yii::$app->get('urlAlias', false);
+            $meta = isset($alias) ? trim($alias->meta_h1) : null;
             if (empty($meta)) {
-                if (! $this->isTopCateg && $this->inPath(self::ID_CABLEPROV) && ! empty($this->singular)) {
-                    $meta = $this->singular . ' ' . $this->name;
-                } else {
-                    $meta = $this->name;
+                $desc = $this->desc;
+                $meta = isset($desc) ? trim($desc->meta_h1) : null;
+                if (empty($meta)) {
+                    // TODO очень сранно что добавляеся singular - проверить
+                    if (! $this->isTopCateg && $this->inPath(self::ID_CABLEPROV) && ! empty($this->singular)) {
+                        $meta = '${categ.singular} . ${categ.name}';
+                    } else {
+                        $meta = '${categ.name}';
+                    }
                 }
             }
 
-            $this->_metaH1 = City::replaceVars($meta);
+            $meta = $this->replaceVars($meta);
+            $meta = City::replaceVars($meta);
+            $this->_metaH1 = $meta;
         }
 
         return $this->_metaH1;
@@ -713,6 +730,19 @@ class Categ extends ActiveRecord
     }
 
     /**
+     * Замена переменных свойствами категории.
+     *
+     * @param string $text
+     * @return string
+     */
+    public function replaceVars(string $text)
+    {
+        return trim(preg_replace_callback('~\${categ\.([^}]+)}~uim', function($matches) {
+            return $this->{$matches[1]} ?? '';
+        }, $text));
+    }
+
+    /**
      * Возвращает meta_title категории.
      *
      * @param array $args
@@ -722,34 +752,46 @@ class Categ extends ActiveRecord
     public function metaTitle(array $args = [])
     {
         if ($this->_metaTitle === null) {
+            /** @var \app\models\UrlAlias|null $alias */
+            $alias = Yii::$app->get('urlAlias', false);
+
             /** @var \app\models\ProdFilter $prodFilter */
             $prodFilter = $args['prodFilter'] ?? null;
-            $city = City::current();
-            $desc = $this->desc;
-            $page = (int)\Yii::$app->request->get('page', 1);
+            $page = (int)Yii::$app->request->get('page', 1);
 
-            if (! empty($prodFilter) && ! empty($prodFilter->filterText)) {
+            if ($page < 2 && isset($alias) && !empty($alias->meta_title)) {
+                $meta = $alias->meta_title;
+            } elseif (isset($prodFilter) && ! empty($prodFilter->filterText)) {
                 // для фильтров
-                $meta = $this->name . ' | ' . $prodFilter->filterText . ' купить оптом ' . $city->name3 . ', цены';
+                $meta = '${categ.name} | ${prodFilter.filterText} купить оптом ${city.name3}, цены';
+                if ($page > 1) {
+                    $meta .= ', стр. №' . $page;
+                }
             } elseif ($page > 1) {
                 // для пагинаций
-                $meta = $this->name . ', стр. №' . $page . ' - РТК «Новые технологии» ' . $city->name3;
-            } elseif (! empty($desc) && ! empty($desc->meta_title)) {
+                $meta = '${categ.name}, стр. №' . $page . ' - РТК «Новые технологии» ${city.name3}';
+            } elseif (! empty($this->desc) && ! empty($this->desc->meta_title)) {
                 // если имеется, то возвращаем оригинальный meta title
-                $meta = $desc->meta_title;
+                $meta = $this->desc->meta_title;
             } elseif ($this->isMarka) {
                 // генерируем для маркоразмеров
-                $meta = $this->name . ' ' . $this->parent->name . ', купить оптом ' . $city->name3 .
-                        ', цены - РТК «Новые технологии»';
+                $meta =
+                    '${categ.name} ${categ.parentName}, купить оптом ${city.name3}, цены - РТК «Новые технологии»';
             } elseif (! $this->isTopCateg && $this->topCategId !== self::ID_CABLEPROV) {
                 // для категорий более первого уровня не кабелей
-                $meta = $this->name . ', купить ' . $city->name3 . ', цены - РТК «Новые технологии»';
+                $meta = '${categ.name}, купить ${city.name3}, цены - РТК «Новые технологии»';
             } else {
                 // по-умолчанию
-                $meta = $this->name . ' купить оптом ' . $city->name3 . ', цены - РТК «Новые технологии»';
+                $meta = '${categ.name} купить оптом ${city.name3}, цены - РТК «Новые технологии»';
             }
 
-            $this->_metaTitle = City::replaceVars($meta);
+            $meta = $this->replaceVars($meta);
+            $meta = City::replaceVars($meta);
+            if (!empty($prodFilter)) {
+                $meta = $prodFilter->replaceVars($meta);
+            }
+
+            $this->_metaTitle = $meta;
         }
 
         return $this->_metaTitle;
@@ -765,54 +807,63 @@ class Categ extends ActiveRecord
     public function metaDesc(array $args = [])
     {
         if ($this->_metaDesc === null) {
+            /** @var \app\models\UrlAlias|null $alias */
+            $alias = Yii::$app->get('urlAlias', false);
+
             /** @var \app\models\ProdFilter $prodFilter */
             $prodFilter = $args['prodFilter'] ?? null;
-            $city = City::current();
-            $phone = $city->firstPhone;
-            $desc = $this->desc;
+
             $page = (int)Yii::$app->request->get('page', 1);
 
-            if (! empty($prodFilter) && ! empty($prodFilter->filterText)) {
+            if ($page < 2 && isset($alias) && !empty($alias->meta_desc)) {
+                $meta = $alias->meta_desc;
+            } elseif (! empty($prodFilter) && ! empty($prodFilter->filterText)) {
                 // для фильтров
-                $meta = 'РТК «НТ» ' . $city->name3 . ' предлагает: ✅Купить ' . $this->name . ', ' .
-                        $prodFilter->filterText . ' ✅Узнать цены ✆' . $phone;
+                $meta = 'РТК «НТ» ${city.name3} предлагает: ✅Купить ${categ.name}, ${prodFilter.filterText} ✅Узнать цены ✆${city.firstPhone}';
+                if ($page > 1) {
+                    $meta .= ', стр. №' . $page;
+                }
             } elseif ($page > 1) {
                 // для сраниц пагинаций
                 if ($this->isMarka) {
                     // для страниц маркоразмеров
-                    $meta = 'Доступные маркоразмеры ' . mb_strtolower((string)($this->parent->name ?? '')) . ' ' .
-                            $this->name . ' - Каталог, стр. №' . $page . '. РТК «Новые технологии» ' . $city->name3;
+                    $meta = 'Доступные маркоразмеры ' . mb_strtolower((string)$this->parentName) .
+                            ' ${categ.name} - Каталог, стр. №' . $page . '. РТК «Новые технологии» ${city.name3}';
                 } else {
                     // для остальных страниц
-                    $meta = $this->name . ', стр. №' . $page . '. Полный каталог на сайте РТК «Новые технологии» ' .
-                            $city->name3;
+                    $meta = '${categ.name}, стр. №' . $page .
+                            '. Полный каталог на сайте РТК «Новые технологии» ${city.name3}';
                 }
-            } elseif (! empty($desc) && ! empty($desc->meta_description)) {
+            } elseif (! empty($this->desc) && ! empty($this->desc->meta_description)) {
                 // искомое описание
-                $meta = $desc->meta_description;
+                $meta = $this->desc->meta_description;
             } elseif ($this->isMarka) {
                 // генерируем новое описание для страниц маркоразмеров
-                $meta = 'РТК Новые технологии ' . $city->name3 . ' предлагает: ✅Купить ' . $this->name . ' ' .
-                        ($this->parent->name ?? '') . ' ✅Узнать цены на ' . $this->name . ' ✆' . $phone;
+                $meta =
+                    'РТК Новые технологии ${city.name3} предлагает: ✅Купить ${categ.name} ${categ.parentName} ✅Узнать цены на ${categ.name} ✆${city.firstPhone}';
             } elseif (! $this->isTopCateg && $this->topCategId !== self::ID_CABLEPROV) {
                 // для категорий второго уровня не кабелей
-                $meta = $this->name . ': купить эту и другую продукцию из категории ' . $this->parent->name .
-                        ' вы можете в РТК Новые технологии ' . $city->name3 . ' ✅Узнать цены и оформить заказ: ✆' .
-                        $phone;
+                $meta =
+                    '${categ.name}: купить эту и другую продукцию из категории ${categ.parentName} вы можете в РТК Новые технологии ${city.name3} ✅Узнать цены и оформить заказ: ✆${city.firstPhone}';
             } elseif ($this->level >= 4) {
                 // если глубина более 4
                 $pathName = array_values($this->path);
-                $meta =
-                    'РТК Новые технологии ' . $city->name3 . ' предлагает: ✅Купить ' . $this->name . ' (категория ' .
-                    ($pathName[1] ?? '') . ') ✅Узнать цены на ' . ($pathName[1] ?? '') . ' и другое оборудование ✆' .
-                    $phone;
+                $meta = 'РТК Новые технологии ${city.name3} предлагает: ✅Купить ${categ.name} (категория ' .
+                        ($pathName[1] ?? '') . ') ✅Узнать цены на ' . ($pathName[1] ?? '') .
+                        ' и другое оборудование ✆${city.firstPhone}';
             } else {
                 // по-умолчанию
-                $meta = 'РТК Новые технологии ' . $city->name3 . ' предлагает: ✅Купить ' . $this->name .
-                        ' ✅Узнать цены на ' . $this->name . ' ✆' . $phone;
+                $meta =
+                    'РТК Новые технологии ${city.name3} предлагает: ✅Купить ${categ.name} ✅Узнать цены на ${categ.name} ✆${city.firstPhone}';
             }
 
-            $this->_metaDesc = City::replaceVars($meta);
+            $meta = $this->replaceVars($meta);
+            $meta = City::replaceVars($meta);
+            if (!empty($prodFilter)) {
+                $meta = $prodFilter->replaceVars($meta);
+            }
+
+            $this->_metaDesc = $meta;
         }
 
         return $this->_metaDesc;
@@ -833,7 +884,6 @@ class Categ extends ActiveRecord
      * Возвращает микроразметку категории.
      *
      * @return string html
-     * @throws \yii\base\InvalidConfigException
      */
     public function getMicrorazm()
     {
@@ -854,7 +904,6 @@ class Categ extends ActiveRecord
      * Возвращает текст применения.
      *
      * @return string
-     * @throws \yii\base\InvalidConfigException
      */
     public function getPrimen()
     {
@@ -875,7 +924,6 @@ class Categ extends ActiveRecord
      * Возвращает текс правой колонки.
      *
      * @return string
-     * @throws \yii\base\InvalidConfigException
      */
     public function getRightcol()
     {
@@ -967,6 +1015,7 @@ class Categ extends ActiveRecord
      */
     public function getGlushImage()
     {
+        /** @var string[] $map */
         $map = [
             69 => 'armatura.svg',
             59 => 'gbi.svg',

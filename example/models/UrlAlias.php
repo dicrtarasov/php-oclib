@@ -26,6 +26,11 @@ use function strlen;
  * @property-read int $url_alias_id
  * @property string $query
  * @property string $keyword
+ * @property string $meta_h1
+ * @property string $meta_title
+ * @property string $meta_desc
+ * @property string $text1 html-текст1
+ * @property string $text2 html-текст2
  *
  * @property-read string $type тип алиаса (TYPE_*)
  * @property-read string $route маршрут алиаса (или пустая строка для алиаса парамеров)
@@ -77,6 +82,51 @@ class UrlAlias extends ActiveRecord
 
     /** @var array значение query как массив */
     private $_query;
+
+    /**
+     * Таблица.
+     *
+     * @return string
+     */
+    public static function tableName()
+    {
+        return '{{%url_alias}}';
+    }
+
+    /**
+     * Правила валидации.
+     *
+     * @return array
+     */
+    public function rules()
+    {
+        // нельзя делать проверку на uique, иначе не проходит upsert
+
+        return [
+            ['keyword', 'trim'],
+            ['keyword', 'required'],
+            ['keyword', 'string', 'max' => 144],
+            ['query', 'required'],
+
+            [
+                'query',
+                function($attribute) {
+                    if (empty($this->{$attribute})) {
+                        $this->addError($attribute, 'Требуется указать парамеры запроса');
+                    } elseif (is_array($this->{$attribute})) {
+                        $this->{$attribute} = Url::buildQuery($this->{$attribute});
+                    }
+                }
+            ],
+            ['query', 'string', 'max' => 128],
+
+            [['meta_title', 'meta_desc', 'meta_h1'], 'trim'],
+            [['meta_title', 'meta_desc', 'meta_h1'], 'string', 'max' => 255],
+
+            [['text1', 'text2'], 'trim'],
+            [['text1', 'text2'], 'string', 'max' => 64000],
+        ];
+    }
 
     /**
      * Возвращает маршрут объекта по названию его id-параметра.
@@ -357,45 +407,6 @@ class UrlAlias extends ActiveRecord
     }
 
     /**
-     * Таблица.
-     *
-     * @return string
-     */
-    public static function tableName()
-    {
-        return '{{%url_alias}}';
-    }
-
-    /**
-     * Правила валидации.
-     *
-     * @return array
-     */
-    public function rules()
-    {
-        // нельзя делать проверку на uique, иначе не проходит upsert
-
-        return [
-            ['query', 'required'],
-            [
-                'query',
-                function($attribute) {
-                    if (empty($this->{$attribute})) {
-                        $this->addError($attribute, 'Требуется указать парамеры запроса');
-                    } elseif (is_array($this->{$attribute})) {
-                        $this->{$attribute} = Url::buildQuery($this->{$attribute});
-                    }
-                }
-            ],
-            ['query', 'string', 'max' => 512],
-
-            ['keyword', 'trim'],
-            ['keyword', 'required'],
-            ['keyword', 'string', 'max' => 144],
-        ];
-    }
-
-    /**
      * Находит алиас для объекта и удаляет из параметров id-параметр объекта.
      *
      * @param string $route
@@ -463,7 +474,7 @@ class UrlAlias extends ActiveRecord
             throw new InvalidArgumentException('route');
         }
 
-        if (empty($id)) {
+        if ($id < 1) {
             throw new InvalidArgumentException('id');
         }
 
@@ -488,34 +499,36 @@ class UrlAlias extends ActiveRecord
      */
     public static function findMultiParamAlias(array &$params)
     {
-        $alias = Yii::$app->cache->getOrSet([__METHOD__, $params], static function() use ($params) {
-            // фильтруем параметры, удаляя те, которые не могут участвовать в построении алиаса
-            $params = Url::normalizeQuery(Url::filterQuery(array_slice($params, 0)));
-            unset($params['sort'], $params['order'], $params['page'], $params['limit'], $params['route'], $params['_route_']);
-            if (empty($params)) {
+        // получаем id алиаса из кэша
+        $alias_id = Yii::$app->cache->getOrSet([__METHOD__, $params], static function() use ($params) {
+            // фильтруем параметры, делая копию параметров и удаляя те, которые не могут участвовать в построении алиаса
+            $flatParams = Url::normalizeQuery(Url::filterQuery(array_slice($params, 0)));
+            unset($flatParams['sort'], $flatParams['order'], $flatParams['page'], $flatParams['limit'], $flatParams['route'], $flatParams['_route_']);
+            if (empty($flatParams)) {
                 return null;
             }
+
+            $flatParams = Url::flatQuery($flatParams);
 
             /** @var self|null $alias алиас с максимальным кол-вом совпадений параметров */
             $alias = null;
 
-            /** @var string[] Для сравнения многомерных параметров переводим их в одномерный массив значений */
-            $flatParams = Url::flatQuery($params);
-
             // если параметр всего один, то ускоряем поиск, не используя регулярные выражения
             if (count($flatParams) === 1) {
-                $alias = static::findOne(['query' => $flatParams[0]]);
+                $alias = static::find()->select(['url_alias_id', 'query'])->where(['query' => $flatParams[0]])->one();
             } else {
-                // находим все алиасы, которые содержат хоть какие-то из парамеров
-                $query = static::find()->where('[[query]] rlike :regex', [
-                    ':regex' => '(^|&)(' . implode('|', array_map('preg_quote', $flatParams)) . ')($|&)'
-                ])->orderBy('length([[query]]) desc')->limit(1000);
-
                 /** @var array $maxParams парамеры найденного алиаса в одномерном виде */
                 $maxParams = null;
 
+                // находим все алиасы, которые содержат хоть какие-то из парамеров
+                $query = static::find()->select(['url_alias_id', 'query'])->where('[[query]] rlike :regex', [
+                    ':regex' => '(^|&)(' . implode('|', array_map('preg_quote', $flatParams)) . ')($|&)'
+                ])->orderBy('length([[query]]) desc')->limit(1000);
+
                 // обходим все и выбираем тот, у которого совпадает больше параметров
                 foreach ($query->each() as $al) {
+                    /** @var \app\models\UrlAlias $al */
+
                     $alParams = Url::flatQuery($al->query);
 
                     // проверяем чтобы в найденном алиасе не было парамеров, которые отсутствуют в запрошенных
@@ -524,22 +537,47 @@ class UrlAlias extends ActiveRecord
                     }
 
                     // если в данном алиасе больше совпадений чем прежде, то запоминаем его
-                    if (! isset($maxParams) || count($alParams) > count($maxParams)) {
+                    if (!isset($maxParams) || count($alParams) > count($maxParams)) {
                         $alias = $al;
                         $maxParams = $alParams;
                     }
                 }
             }
 
-            return $alias;
+            return isset($alias) ? $alias->url_alias_id : 0;
         }, null, new TagDependency(['tags' => self::class]));
 
+        $alias = $alias_id > 0 ? UrlAlias::findOne(['url_alias_id' => $alias_id]) : null;
+
         // если алиас найден, то удаляем его параметры и формируем новый query
-        if (! empty($alias)) {
+        if (isset($alias)) {
             $params = Url::diffQuery($params, $alias->query);
         }
 
         return $alias;
+    }
+
+    /**
+     * Находит все алиасы для заданных парамеров и удаляет из параметров парамеры найденных алиасов.
+     * Поиск алиасов выполняется по максимальному количеству совпадающих парамеров.
+     *
+     * @param array $params
+     * @return array
+     */
+    public static function findMultiParamAliases(array &$params)
+    {
+        $aliases = [];
+
+        while (!empty($params)) {
+            $alias = static::findMultiParamAlias($params);
+            if ($alias === null) {
+                break;
+            }
+
+            $aliases[] = $alias;
+        }
+
+        return $aliases;
     }
 
     /**
@@ -551,15 +589,15 @@ class UrlAlias extends ActiveRecord
      */
     public static function findSingleParamAliases(array &$params)
     {
-        // фильтруем параметры, удаляя те, которые не могут участвовать в построении алиаса
-        $params = Url::normalizeQuery(Url::filterQuery(array_slice($params, 0)));
-        unset($params['sort'], $params['order'], $params['page'], $params['limit'], $params['route'], $params['_route_']);
-        if (empty($params)) {
+        // делаем копию параметров и фильтруем, удаляя те, которые не могут участвовать в построении алиаса
+        $flatParams = Url::normalizeQuery(Url::filterQuery(array_slice($params, 0)));
+        unset($flatParams['sort'], $flatParams['order'], $flatParams['page'], $flatParams['limit'], $flatParams['route'], $flatParams['_route_']);
+        if (empty($flatParams)) {
             return [];
         }
 
         /** @var string[] Для сравнения многомерных параметров переводим их в одномерный массив значений */
-        $flatParams = Url::flatQuery($params);
+        $flatParams = Url::flatQuery($flatParams);
 
         // находим все алиасы, которые содержат хоть какие-то из парамеров
         $aliases = static::find()->where([

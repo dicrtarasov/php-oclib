@@ -34,7 +34,8 @@ namespace dicr\oclib;
  * @property-read \ModelCatalogManufacturer $model_catalog_manufacturer
  * @property-read \ModelToolImage $model_tool_image
  *
- * @@property  \app\models\UrlAlias|null $urlAlias ЧПУ-алиас текущей страницы (устанавливается в UrlAliasRule при парсинге url)
+ * @@property  \app\models\UrlAlias|null $urlAlias ЧПУ-алиас текущей страницы (устанавливается в UrlAliasRule при
+ *     парсинге url)
  *
  * @package dicr\oclib
  */

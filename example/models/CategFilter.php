@@ -137,9 +137,6 @@ class CategFilter extends Model
                     'sort_order' => SORT_ASC
                 ]
             ],
-            'pagination' => [
-                'route' => \Yii::$app->requestedRoute
-            ]
         ], $config));
     }
 }

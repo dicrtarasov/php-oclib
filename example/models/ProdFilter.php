@@ -12,6 +12,7 @@ use Debug;
 use dicr\helper\ArrayHelper;
 use dicr\validate\ValidateException;
 use Filter;
+use Yii;
 use yii\base\Model;
 use yii\caching\TagDependency;
 use yii\data\ActiveDataProvider;
@@ -216,7 +217,6 @@ class ProdFilter extends Model
      * Запрос товаров.
      *
      * @return \yii\db\ActiveQuery
-     * @throws \yii\base\InvalidConfigException
      */
     public function getQuery()
     {
@@ -409,45 +409,46 @@ class ProdFilter extends Model
                 throw new ValidateException($this, 'category_id');
             }
 
-            // получаем карту id характеристик и их значений
-            $query = ProdAttr::find()->alias('pa')
-                ->select('pa.[[attribute_id]], pa.[[text]]')->distinct(true)
-                ->innerJoin(Prod::tableCateg() . ' p2c', 'p2c.[[product_id]]=pa.[[product_id]]')
-                ->andWhere([
-                    'p2c.[[category_id]]' => $this->recurse ? (new Query())->select('cp.[[category_id]]')
-                        ->from(Categ::tablePath() . ' cp')
-                        ->where(['cp.[[path_id]]' => $this->category_id]) : $this->category_id
-                ]);
-
-            if (isset($this->status)) {
-                $query->innerJoin(Prod::tableName() . ' p', 'p.[[product_id]]=pa.[[product_id]]')
-                    ->innerJoin(Categ::tableName() . ' c', 'c.[[category_id]]=p2c.[[category_id]]')
+            $attrVals = Yii::$app->cache->getOrSet([__METHOD__, $this->category_id, $this->recurse, $this->status], function() {
+                // получаем карту id характеристик и их значений
+                $query = ProdAttr::find()
+                    ->alias('pa')
+                    ->select('pa.[[attribute_id]], pa.[[text]]')
+                    ->distinct(true)
+                    ->innerJoin(Prod::tableCateg() . ' p2c', 'p2c.[[product_id]]=pa.[[product_id]]')
                     ->andWhere([
-                        'p.[[status]]' => (int)$this->status,
-                        'c.[[status]]' => (int)$this->status
+                        'p2c.[[category_id]]' => $this->recurse ? (new Query())->select('cp.[[category_id]]')
+                            ->from(Categ::tablePath() . ' cp')
+                            ->where(['cp.[[path_id]]' => $this->category_id]) : $this->category_id
                     ]);
-            }
 
-            $query->cache(true, new TagDependency([
-                'tags' => [Attr::class, Categ::class]
+                if (isset($this->status)) {
+                    $query->innerJoin(Prod::tableName() . ' p', 'p.[[product_id]]=pa.[[product_id]]')
+                        ->innerJoin(Categ::tableName() . ' c', 'c.[[category_id]]=p2c.[[category_id]]')
+                        ->andWhere([
+                            'p.[[status]]' => (int)$this->status,
+                            'c.[[status]]' => (int)$this->status
+                        ]);
+                }
+
+                $attrVals = [];
+                foreach ($query->all() as $row) {
+                    $attrVals[(int)$row['attribute_id']][] = $row['text'];
+                }
+
+                return $attrVals;
+            }, null, new TagDependency([
+                'tags' => [Attr::class, Categ::class],
+                'reusable' => true
             ]));
 
-            /** @var array[] $values */
-            $values = [];
-            foreach ($query->all() as $row) {
-                $values[(int)$row['attribute_id']][] = $row['text'];
-            }
-
             // получаем все характеристики из выбранных id
-            $this->_categAttrs = ! empty($values) ? Attr::find()
-                ->where(['attribute_id' => array_keys($values)])
-                ->orderBy('name')
-                ->indexBy('attribute_id')
-                ->all() : [];
+            $this->_categAttrs = ! empty($attrVals) ? Attr::find()->where(['attribute_id' => array_keys($attrVals)])
+                ->orderBy('name')->indexBy('attribute_id')->all() : [];
 
             // расставляем значения
             foreach ($this->_categAttrs as $id => $attr) {
-                $vals = array_unique($values[$id]);
+                $vals = array_unique($attrVals[$id]);
                 sort($vals, $attr->type === Attr::TYPE_NUMBER ? SORT_NUMERIC : SORT_NATURAL);
                 $attr->values = $vals;
             }
@@ -547,5 +548,18 @@ class ProdFilter extends Model
         }
 
         return $this->_filterText;
+    }
+
+    /**
+     * Замена переменных свойствами категории.
+     *
+     * @param string $text
+     * @return string
+     */
+    public function replaceVars(string $text)
+    {
+        return trim(preg_replace_callback('~\${prodFilter\.([^}]+)}~uim', function($matches) {
+            return $this->{$matches[1]} ?? '';
+        }, $text));
     }
 }

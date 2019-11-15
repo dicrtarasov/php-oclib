@@ -9,7 +9,9 @@ declare(strict_types = 1);
 
 use app\models\UrlAlias;
 use app\models\UrlAliasFilter;
+use dicr\validate\ValidateException;
 use yii\caching\TagDependency;
+use yii\web\NotFoundHttpException;
 
 /**
  * Copyright (c) 2019.
@@ -50,6 +52,36 @@ class ControllerSeoUrlAlias extends Controller
 
         $this->response->setOutput($this->load->view('seo/url_alias/index', [
             'filter' => $filter
+        ]));
+    }
+
+    /**
+     * Редакирование алиаса.
+     *
+     * @throws \dicr\validate\ValidateException
+     * @throws \yii\base\ExitException
+     * @throws \yii\base\InvalidConfigException
+     * @throws \yii\web\NotFoundHttpException
+     */
+    public function edit()
+    {
+        $url_alias_id = (int)($this->request->get['url_alias_id'] ?? 0);
+        $urlAlias = !empty($url_alias_id) ? UrlAlias::findOne(['url_alias_id' => $url_alias_id]) : new UrlAlias();
+        if (empty($urlAlias)) {
+            throw new NotFoundHttpException('url_alias_id=' . $url_alias_id);
+        }
+
+        if (Yii::$app->request->isPost) {
+            $urlAlias->load(Yii::$app->request->post());
+            if ($urlAlias->save(true) === false) {
+                throw new ValidateException($urlAlias);
+            }
+
+            $this->response->redirect($this->url->link('seo/url_alias', ['token' => $this->session->data['token']]));
+        }
+
+        $this->response->setOutput($this->load->view('seo/url_alias/edit', [
+            'urlAlias' => $urlAlias
         ]));
     }
 

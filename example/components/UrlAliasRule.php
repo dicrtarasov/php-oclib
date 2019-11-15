@@ -55,15 +55,12 @@ class UrlAliasRule extends BaseObject implements UrlRuleInterface
      */
     public function createUrl($manager, $route, $params)
     {
+
         if (empty($route)) {
             throw new InvalidArgumentException('route');
         }
 
-        if (empty($params)) {
-            $params = [];
-        } else {
-            $params = Url::normalizeQuery($params);
-        }
+        $params = empty($params) ? [] : Url::normalizeQuery($params);
 
         return Yii::$app->cache->getOrSet([__METHOD__, $route, $params], function() use ($route, $params) {
             // если роут объекта, то получаем ЧПУ объекта, иначе ЧПУ для маршрута
@@ -99,6 +96,7 @@ class UrlAliasRule extends BaseObject implements UrlRuleInterface
 
     /**
      * @inheritDoc
+     * @throws \yii\base\InvalidConfigException
      * @property \yii\web\Request $request
      */
     public function parseRequest($manager, $request)
@@ -112,50 +110,47 @@ class UrlAliasRule extends BaseObject implements UrlRuleInterface
         }
 
         // конвертируем путь в маршрут и параметры
-        [$route, $params] = $this->cache->getOrSet([__METHOD__, $path], static function() use ($path) {
-            // если путь это prettyUrl (роут), то пытаемся найти его среди известных маршрутов
-            foreach (UrlAlias::paramRoutes() as $paramRoute) {
-                if ($path === $paramRoute['route']) {
-                    return [$paramRoute['route'], []];
-                }
-            }
-
+        [$url_alias_id, $route, $params] = $this->cache->getOrSet([__METHOD__, $path], static function() use ($path) {
+            $urlAlias = null;
             $route = null;
             $params = [];
 
             // обходим весь путь алиасов
             foreach (explode('/', $path) as $keyword) {
-                $alias = UrlAlias::findOne(['keyword' => $keyword]);
-                if (empty($alias)) {
-                    // маршрут не найден
-                    $route = null;
-
-                    // сбрасываем текущий алиас в реестре
-                    Registry::app()->urlAlias = null;
+                $urlAlias = UrlAlias::find()->select(['url_alias_id', 'query'])->where(['keyword' => $keyword])->one();
+                if (empty($urlAlias)) {
                     break;
                 }
 
                 // а улиаса параметров нет маршрута
-                if (! empty($alias->route)) {
+                if (! empty($urlAlias->route)) {
                     // заменяем текущий маршрут следующим алиасом в пути
-                    $route = $alias->route;
+                    $route = $urlAlias->route;
                 }
 
                 // аккумулируем парамеры следующего алиаса в пути
                 /** @noinspection SlowArrayOperationsInLoopInspection */
-                $params = ArrayHelper::merge($params, $alias->params);
-
-                // сохраняем последний найденный алиас в документе
-                Registry::app()->urlAlias = $alias;
+                $params = ArrayHelper::merge($params, $urlAlias->params);
             }
 
-            return [$route, $params];
+            // если последний алиас не найден, то сбрасываем и маршрут, и параметры
+            if (empty($urlAlias)) {
+                $route = null;
+                $params = null;
+            }
+
+            return [isset($urlAlias) ? $urlAlias->url_alias_id : 0, $route, $params];
         }, null, new TagDependency([
             'tags' => [UrlAlias::class]
         ]));
 
+        $urlAlias = $url_alias_id > 0 ? UrlAlias::findOne(['url_alias_id' => $url_alias_id]) : null;
+
+        // сохраняем алиас в реестре
+        \Yii::$app->set('urlAlias', $urlAlias);
+
         // так как UrlManager складывает парамеры не рекурсивно, то обьединять будем сами
-        if (! empty($route)) {
+        if (isset($urlAlias) && ! empty($route)) {
             $params = ArrayHelper::merge(Yii::$app->request->get(), $params);
             return [$route, $params];
         }
@@ -214,20 +209,11 @@ class UrlAliasRule extends BaseObject implements UrlRuleInterface
             return false;
         }
 
-        $keywords = [];
-
-        if ($this->multiQueryAliases) {
-            while (! empty($params)) {
-                $alias = UrlAlias::findMultiParamAlias($params);
-                if (empty($alias)) {
-                    break;
-                }
-
-                $keywords[] = $alias->keyword;
-            }
-        } else {
-            $keywords = ArrayHelper::getColumn(UrlAlias::findSingleParamAliases($params), 'keyword');
-        }
+        $keywords = ArrayHelper::getColumn( $this->multiQueryAliases ?
+            UrlAlias::findMultiParamAliases($params) :
+            UrlAlias::findSingleParamAliases($params),
+            'keyword'
+        );
 
         if (empty($keywords)) {
             return false;

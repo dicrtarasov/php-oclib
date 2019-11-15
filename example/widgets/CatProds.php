@@ -64,9 +64,8 @@ class CatProds extends Widget
 
         $this->addPaginationLinks();
 
-        echo Html::cssLink('/catalog/res/widgets/cat-prods.css');
-
         echo Html::beginTag('div', $this->options);
+        echo Html::cssLink('/catalog/res/widgets/cat-prods.css');
 
         foreach ($provider->models as $subcateg) {
             $this->renderCateg($subcateg);
@@ -74,6 +73,7 @@ class CatProds extends Widget
 
         /** @var \Pagination $pagination */
         $pagination = new \Pagination($provider);
+
         echo $pagination->render();
 
         echo Html::endTag('div');
@@ -95,15 +95,16 @@ class CatProds extends Widget
             ]);
 
             $this->_categsProvider = $filter->getProvider([
-                'sort' => [
-                    'route' => \Yii::$app->requestedRoute
-                ],
                 'pagination' => [
-                    'route' => \Yii::$app->requestedRoute,
                     'defaultPageSize' => $this->pageSize,
+                    'pageSizeParam' => false,
+                    'forcePageParam' => false,
                     'validatePage' => false
                 ]
             ]);
+
+            /** @noinspection PhpMethodParametersCountMismatchInspection */
+            $this->_categsProvider->query->with('desc');
         }
 
         return $this->_categsProvider;

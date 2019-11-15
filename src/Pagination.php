@@ -9,7 +9,6 @@ declare(strict_types = 1);
 namespace dicr\oclib;
 
 use dicr\helper\Html;
-use Yii;
 use yii\base\InvalidArgumentException;
 use yii\base\InvalidConfigException;
 use yii\data\DataProviderInterface;
@@ -97,12 +96,12 @@ class Pagination extends Widget
     {
         parent::init();
 
-        if (! empty($this->provider)) {
+        if (isset($this->provider)) {
             if (! ($this->provider instanceof DataProviderInterface)) {
                 throw new InvalidConfigException('provider');
             }
 
-            if (empty($this->pager)) {
+            if (! isset($this->pager)) {
                 $this->pager = $this->provider->getPagination();
             }
 
@@ -111,16 +110,13 @@ class Pagination extends Widget
             }
         }
 
-        if (! empty($this->pager)) {
+        if (isset($this->pager)) {
             if (! ($this->pager instanceof \yii\data\Pagination)) {
                 throw new InvalidConfigException('pager');
             }
 
             $this->pager->pageParam = 'page';
             $this->pager->pageSizeParam = 'limit';
-            if (empty($this->pager->route)) {
-                $this->pager->route = Yii::$app->requestedRoute;
-            }
 
             if (empty($this->page)) {
                 $this->page = $this->pager->page + 1;
@@ -137,6 +133,7 @@ class Pagination extends Widget
             if (empty($this->url)) {
                 $this->url = str_replace('999999999', '{page}', $this->pager->createUrl(999999998));
             }
+
         }
 
         Html::addCssClass($this->options, 'dicr-oclib-pagination pagination');

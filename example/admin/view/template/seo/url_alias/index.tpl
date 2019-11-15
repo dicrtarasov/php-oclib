@@ -24,7 +24,7 @@ $provider->pagination->defaultPageSize = 50;
 $breadcrumbs = [
     ['text' => 'Главная', 'href' => $this->url->link('common/dashboard', ['token' => $this->session->data['token']])],
     ['text' => 'SEO', 'href' => 'javascript:'],
-    ['text' => 'ЧПУ алиасы', 'href' => $this->url->link('tool/seo/alias', ['token' => $this->session->data['token']])]
+    ['text' => 'ЧПУ алиасы', 'href' => $this->url->link('tool/seo/url_alias', ['token' => $this->session->data['token']])]
 ];
 ?>
 <?=$this->load->controller('common/header')?>
@@ -53,62 +53,46 @@ $breadcrumbs = [
     </div>
 
     <div class="container-fluid">
-        <?php if (! empty($error_warning)) { ?>
-            <div class="alert alert-danger">
-                <i class="fa fa-exclamation-circle"></i> <?=$error_warning?>
-                <button type="button" class="close" data-dismiss="alert">&times;</button>
-            </div>
-        <?php } ?>
-
-        <?php if (! empty($success)) { ?>
-            <div class="alert alert-success">
-                <i class="fa fa-check-circle"></i> <?=$success?>
-                <button type="button" form="form-backup" class="close" data-dismiss="alert">&times;</button>
-            </div>
-        <?php } ?>
-
         <div class="panel panel-default">
             <div class="panel-body">
                 <!-- Фильтр -->
-                <?=Html::beginForm($this->url->link('seo/url_alias', ['token' => $this->session->data['token']]), 'GET',
-                    [
-                        'class' => 'form-filter',
-                        'style' => 'margin-bottom: 1.5rem'
-                    ])?>
-                <?=Html::hiddenInput('sort', Yii::$app->request->get('sort'))?>
-                <div class="row">
-                    <div class="col-sm-3">
-                        <div class="form-group">
-                            <label class="control-label">Алиас:</label>
-                            <?=Html::activeTextInput($filter, 'keyword', ['class' => 'form-control'])?>
+                <?=Html::beginForm($this->url->link('seo/url_alias', ['token' => $this->session->data['token']]),
+                    'GET',
+                    ['class' => 'form-filter', 'style' => 'margin-bottom: 1.5rem']
+                )?>
+                    <?=Html::hiddenInput('sort', Yii::$app->request->get('sort'))?>
+                    <div class="row">
+                        <div class="col-sm-3">
+                            <div class="form-group">
+                                <label class="control-label">Алиас:</label>
+                                <?=Html::activeTextInput($filter, 'keyword', ['class' => 'form-control'])?>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-sm-3">
-                        <div class="form-group">
-                            <label class="control-label">Маршрут/параметры:</label>
-                            <?=Html::activeTextInput($filter, 'query', ['class' => 'form-control'])?>
+                        <div class="col-sm-3">
+                            <div class="form-group">
+                                <label class="control-label">Маршрут/параметры:</label>
+                                <?=Html::activeTextInput($filter, 'query', ['class' => 'form-control'])?>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-sm-3">
-                        <div class="form-group">
-                            <label class="control-label">Тип</label>
-                            <?=Html::activeDropDownList($filter, 'type', UrlAlias::TYPES, [
-                                'prompt' => '',
-                                'class' => 'form-control'
-                            ])?>
+                        <div class="col-sm-3">
+                            <div class="form-group">
+                                <label class="control-label">Тип</label>
+                                <?=Html::activeDropDownList($filter, 'type', UrlAlias::TYPES, [
+                                    'prompt' => '',
+                                    'class' => 'form-control'
+                                ])?>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-sm-2">
-                        <div class="form-group">
-                            <label class="control-label">&nbsp;</label>
-                            <div>
-                                <button type="submit" class="btn btn-default">Фильтровать</button>
+                        <div class="col-sm-2">
+                            <div class="form-group">
+                                <label class="control-label">&nbsp;</label>
+                                <div>
+                                    <button type="submit" class="btn btn-default">Фильтровать</button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
                 <?=Html::endForm()?>
-
                 <!-- Алиасы -->
                 <?=Html::beginForm($this->url->link('seo/url_alias', [
                     'token' => $this->session->data['token'],
@@ -123,24 +107,29 @@ $breadcrumbs = [
                 <table class="aliases table table-condensed table-hover">
                     <thead>
                     <tr>
+                        <th style="width: 1%;">&nbsp;</th>
                         <th style="width: 40%;"><?=$provider->sort->link('keyword')?></th>
-                        <th style="width: 50%;"><?=$provider->sort->link('query')?></th>
-                        <th class="text-center" style="width: 9%;"><?=$provider->sort->link('type')?></th>
-                        <th style="width: 1%;"></th>
+                        <th style="width: 49%;"><?=$provider->sort->link('query')?></th>
+                        <th style="width: 9%;"><?=$provider->sort->link('type')?></th>
+                        <th style="width: 1%;">&nbsp;</th>
                     </tr>
                     </thead>
 
                     <tbody>
+                    <?php /** @var UrlAlias $alias */ ?>
                     <?php foreach ($provider->models as $alias) { ?>
+                        <?=Html::activeHiddenInput($alias, '[' . $alias->url_alias_id . ']url_alias_id')?>
                         <tr class="alias" data-id="<?=(int)$alias->url_alias_id?>">
-                            <td>
-                                <?=Html::activeHiddenInput($alias, '[' . $alias->url_alias_id . ']url_alias_id')?>
-                                <?=Html::activeTextInput($alias, '[' . $alias->url_alias_id . ']keyword',
-                                    ['class' => 'form-control'])?>
+                            <td><?=Html::a('<i class="fa fa-pencil"></i>', $this->url->link('seo/url_alias/edit', [
+                                    'url_alias_id' => $alias->url_alias_id,
+                                    'token' => $this->session->data['token']
+                                ]), ['class' => 'btn btn-link text-info btn-xs'])?>
                             </td>
+                            <td><?=Html::activeTextInput($alias, '[' . $alias->url_alias_id . ']keyword',
+                                    ['class' => 'form-control'])?></td>
                             <td><?=Html::activeTextInput($alias, '[' . $alias->url_alias_id . ']query',
                                     ['class' => 'form-control'])?></td>
-                            <td class="text-center"><?=Html::esc(UrlAlias::TYPES[$alias->type])?></td>
+                            <td><?=Html::esc(UrlAlias::TYPES[$alias->type])?></td>
                             <td><?=Html::button('<i class="fa fa-times text-danger"></i>',
                                     ['class' => 'del btn btn-link btn-xs', 'title' => 'Удалить'])?></td>
                         </tr>
@@ -165,10 +154,6 @@ $breadcrumbs = [
 <style type="text/css">
     .aliases tbody > tr > td {
         padding: 0 5px;
-    }
-
-    .aliases tbody tr td:first-of-type {
-        border-right: 1px solid #ccc;
     }
 
     .aliases tbody tr td:last-of-type {

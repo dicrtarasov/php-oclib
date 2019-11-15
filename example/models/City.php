@@ -26,14 +26,14 @@ use function is_array;
  * @property string $name2 доставка (по Городу)
  * @property string $name3 где (в Городе)
  * @property string $name4 доставка (в Город)
+ * @property string $name98 null
+ * @property string $name99 null
  * @property string $address полный адрес
  * @property string $phone html-телефоны
  * @property int $metrika номер счетчика метрики
  * @property string $google идентификатор счетчика google
  * @property string $map скрипт карты
  * @property string $main_text основной html-текст
- * @property string $name99 null
- * @property string $name98 null
  * @property string $coord json [lat, lon]
  *
  * @property-read  string $firstPhone первый телефон из списка телефонов
@@ -154,7 +154,6 @@ class City extends ActiveRecord
      *
      * @param string|null $text
      * @return string
-     * @throws \yii\base\InvalidConfigException
      */
     public static function replaceVars(string $text = null)
     {
@@ -174,7 +173,11 @@ class City extends ActiveRecord
             $rpls[] = $phone;
         }
 
-        return str_replace($srch, $rpls, $text);
+        $text = str_replace($srch, $rpls, $text);
+
+        return trim(preg_replace_callback('~\${city\.([^}]+)}~uim', static function($matches) use ($current) {
+            return $current->{$matches[1]} ?: '';
+        }, $text));
     }
 
     /**
