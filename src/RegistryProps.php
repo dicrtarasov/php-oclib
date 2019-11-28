@@ -20,6 +20,7 @@ namespace dicr\oclib;
  * @property-read \Tax $tax
  * @property-read \Customer $customer
  * @property-read \Cart $cart
+ * @property-read \User $user
  *
  * @property-read \dicr\oclib\Cache $cache
  * @property-read \dicr\oclib\DB $db
@@ -33,8 +34,10 @@ namespace dicr\oclib;
  * @property-read \ModelCatalogCategory $model_catalog_category
  * @property-read \ModelCatalogManufacturer $model_catalog_manufacturer
  * @property-read \ModelToolImage $model_tool_image
+ * @property-read \ModelCatalogAttribute $model_catalog_attribute
+ * @property-read \ModelLocalisationLanguage $model_localisation_language
  *
- * @@property  \app\models\UrlAlias|null $urlAlias ЧПУ-алиас текущей страницы (устанавливается в UrlAliasRule при
+ * @property-read \app\models\UrlAlias|null $urlAlias ЧПУ-алиас текущей страницы (устанавливается в UrlAliasRule при
  *     парсинге url)
  *
  * @package dicr\oclib
