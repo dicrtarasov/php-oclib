@@ -3,7 +3,7 @@
  * @copyright 2019-2019 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 24.12.19 01:47:29
+ * @version 24.12.19 02:41:26
  */
 
 /** @noinspection PhpUnusedParameterInspection */
@@ -102,14 +102,14 @@ abstract class Controller extends BaseObject implements RegistryProps
 
         // устанавливаем заголовки
         header(sprintf('ETag: "%s"', $etag), true);
-        header('Last-Modified: ' . gmdate('r', $modified));
+        header('Last-Modified: ' . gmdate('r', $timestamp));
         header('Cache-Control: public');
 
         // проверяем заголовки запроса
         if ((!empty($_SERVER['HTTP_IF_NONE_MATCH']) &&
                 str_replace('"', '', $_SERVER['HTTP_IF_NONE_MATCH']) === $etag) ||
             (!empty($_SERVER['HTTP_IF_MODIFIED_SINCE']) &&
-                strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $modified)) {
+                strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $timestamp)) {
             // очищаем буфер
             self::cleanOutput();
 
