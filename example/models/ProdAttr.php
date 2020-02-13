@@ -10,6 +10,7 @@ declare(strict_types = 1);
 namespace app\models;
 
 use yii\caching\TagDependency;
+use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 
 /**
@@ -19,8 +20,8 @@ use yii\db\ActiveRecord;
  * @property int $attribute_id [int(11) unsigned]
  * @property string $text
  *
- * @property-read \app\models\Prod $prod
- * @property-read \app\models\Attr $attr
+ * @property-read Prod $prod
+ * @property-read Attr $attr
  */
 class ProdAttr extends ActiveRecord
 {
@@ -55,7 +56,7 @@ class ProdAttr extends ActiveRecord
     /**
      * Возвращает запрос товара.
      *
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery
      */
     public function getProd()
     {
@@ -68,7 +69,7 @@ class ProdAttr extends ActiveRecord
     /**
      * Запрос характеристики.
      *
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery
      */
     public function getAttr()
     {

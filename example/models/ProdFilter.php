@@ -6,22 +6,33 @@
  */
 
 declare(strict_types = 1);
+
 namespace app\models;
 
-use Debug;
 use dicr\helper\ArrayHelper;
+use dicr\helper\Filter;
 use dicr\validate\ValidateException;
-use Filter;
 use Yii;
 use yii\base\Model;
 use yii\caching\TagDependency;
 use yii\data\ActiveDataProvider;
+use yii\data\Pagination;
+use yii\data\Sort;
+use yii\db\ActiveQuery;
 use yii\db\Expression;
 use yii\db\Query;
 use function array_key_exists;
+use function array_keys;
+use function array_merge;
+use function array_unique;
 use function count;
-use function in_array;
+use function implode;
 use function is_array;
+use function preg_match;
+use function preg_replace_callback;
+use function reset;
+use function sort;
+use function trim;
 use const SORT_ASC;
 use const SORT_DESC;
 use const SORT_NATURAL;
@@ -30,12 +41,14 @@ use const SORT_NUMERIC;
 /**
  * Модель фильтра товаров.
  *
- * @property-read \yii\db\ActiveQuery $query
- * @property-read \yii\data\ActiveDataProvider $provider
- * @property-read \app\models\Manuf[] $categManufs производители категории
- * @property-read \app\models\Manuf[] $selectedManufs выбранные в фильре производиели
- * @property-read \app\models\Attr[] $categAttrs характеристики товаров категории со значениями
- * @property-read \app\models\Attr[] $selectedAttrs выбранные в фильтре характеристики
+ * @property-read ActiveQuery $query
+ * @property-read Sort $sort сортировка
+ * @property-read Pagination $pagination пагинация
+ * @property-read ActiveDataProvider $provider
+ * @property-read Manuf[] $categManufs производители категории
+ * @property-read Manuf[] $selectedManufs выбранные в фильре производиели
+ * @property-read Attr[] $categAttrs характеристики товаров категории со значениями
+ * @property-read Attr[] $selectedAttrs выбранные в фильтре характеристики
  * @property-read array $pageParams канонические параметры сраницы
  * @property-read string $filterText текст выбранных параметров
  */
@@ -57,11 +70,20 @@ class ProdFilter extends Model
         self::STOCK_REQUEST
     ];
 
-    /** @var string сортировка по-умолчанию */
-    public const SORT_ORDER = 'sort_order';
+    /** @var string сортировка по-умолчанию - наличие цены, порядок сортировки, название */
+    public const SORT_DEFAULT = 'default';
+
+    /** @var string сортировка по-умолчанию (по популярности) */
+    public const SORT_ORDER = 'order';
 
     /** @var string сортировка по цене */
     public const SORT_PRICE = 'price';
+
+    /** @var string сорировка по популярноси в заказах */
+    public const SORT_POPULAR = 'popular';
+
+    /** @var string string сортировка по имени */
+    public const SORT_NAME = 'name';
 
     /** @var int|int[] id товаров */
     public $product_id;
@@ -95,7 +117,7 @@ class ProdFilter extends Model
             [['product_id', 'category_id', 'manufacturer_id'], 'default'],
             [
                 ['product_id', 'category_id', 'manufacturer_id'],
-                function($attribute) {
+                function ($attribute) {
                     $this->{$attribute} = Filter::ids($this->{$attribute}) ?: null;
                     if (is_array($this->{$attribute}) && (count($this->{$attribute}) === 1)) {
                         $this->{$attribute} = reset($this->{$attribute});
@@ -103,58 +125,55 @@ class ProdFilter extends Model
                 }
             ],
 
-            ['recurse', 'default', 'value' => true],
+            ['recurse', 'default', 'value' => false],
             ['recurse', 'boolean'],
             ['recurse', 'filter', 'filter' => 'boolval'],
 
             ['attrs', 'default'],
-            [
-                'attrs',
-                function($attribute) {
-                    if (empty($this->{$attribute})) {
-                        $this->{$attribute} = null;
-                        return;
-                    }
-
-                    $ret = [];
-
-                    // обходим все характеристики
-                    foreach ((array)$this->{$attribute} as $id => $vals) {
-                        //  проверяем id-характеристики и значения
-                        $id = (int)$id;
-                        if ($id < 1 || $vals === null || $vals === '' || $vals === []) {
-                            continue;
-                        }
-
-                        // переводим значение в массив
-                        $vals = (array)$vals;
-
-                        // значение типа min/max
-                        if (array_key_exists('min', $vals) || array_key_exists('max', $vals)) {
-                            foreach (['min', 'max'] as $field) {
-                                if (isset($vals[$field]) && $vals[$field] !== '') {
-                                    $ret[$id][$field] = $vals[$field];
-                                }
-                            }
-                        } else {
-                            // обычный массив значений
-                            foreach ($vals as $i => $v) {
-                                if (!isset($v) || $v === '') {
-                                    unset($vals[$i]);
-                                }
-                            }
-
-                            if (!empty($vals)) {
-                                sort($vals);
-                                $vals = array_unique($vals);
-                                $ret[$id] = count($vals) > 1 ? $vals : reset($vals);
-                            }
-                        }
-                    }
-
-                    $this->{$attribute} = $ret ?: null;
+            ['attrs', function ($attribute) {
+                if (empty($this->{$attribute})) {
+                    $this->{$attribute} = null;
+                    return;
                 }
-            ],
+
+                $ret = [];
+
+                // обходим все характеристики
+                foreach ((array)$this->{$attribute} as $id => $vals) {
+                    //  проверяем id-характеристики и значения
+                    $id = (int)$id;
+                    if ($id < 1 || $vals === null || $vals === '' || $vals === []) {
+                        continue;
+                    }
+
+                    // переводим значение в массив
+                    $vals = (array)$vals;
+
+                    // значение типа min/max
+                    if (array_key_exists('min', $vals) || array_key_exists('max', $vals)) {
+                        foreach (['min', 'max'] as $field) {
+                            if (isset($vals[$field]) && $vals[$field] !== '') {
+                                $ret[$id][$field] = $vals[$field];
+                            }
+                        }
+                    } else {
+                        // обычный массив значений
+                        foreach ($vals as $i => $v) {
+                            if (! isset($v) || $v === '') {
+                                unset($vals[$i]);
+                            }
+                        }
+
+                        if (! empty($vals)) {
+                            sort($vals);
+                            $vals = array_unique($vals);
+                            $ret[$id] = count($vals) > 1 ? $vals : reset($vals);
+                        }
+                    }
+                }
+
+                $this->{$attribute} = $ret ?: null;
+            }],
 
             ['status', 'default'],
             ['status', 'boolean'],
@@ -180,7 +199,7 @@ class ProdFilter extends Model
 
         // дополнительно загружаем сокращенные варианты характеристик фильтра
         $this->manufacturer_id = (array)($this->manufacturer_id ?: []);
-        $this->attrs = (array)($this->attrs ?: []);
+        $this->attrs = $this->attrs ?: [];
 
         if ($formName !== null && $formName !== '') {
             $data = $data[$formName] ?? [];
@@ -197,6 +216,7 @@ class ProdFilter extends Model
                 // фильр производителей (m25=1)
                 $id = (int)$matches[1];
                 if ($id > 0 && (string)$val === '1') {
+                    /** @noinspection OffsetOperationsInspection */
                     $this->manufacturer_id[] = $id;
                     $ret = true;
                 }
@@ -216,12 +236,13 @@ class ProdFilter extends Model
     /**
      * Запрос товаров.
      *
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery
      */
     public function getQuery()
     {
-        $query = Prod::find()->alias('p')->select('p.*')->innerJoin(Prod::tableCateg() . ' p2c',
-            'p2c.[[product_id]]=p.[[product_id]]');
+        $query = Prod::find()->alias('p')
+            ->select('p.*')
+            ->innerJoinWith('categ c', false);
 
         if (! $this->validate()) {
             return $query->where('1=0');
@@ -232,16 +253,20 @@ class ProdFilter extends Model
 
         // статус
         if (isset($this->status)) {
-            $query->andWhere(['p.[[status]]' => (int)$this->status])->innerJoin(Categ::tableName() . ' c',
-                'c.[[category_id]]=p2c.[[category_id]]')->andWhere(['c.[[status]]' => (int)$this->status]);
+            $query->andWhere([
+                'p.[[status]]' => (int)$this->status,
+                'c.[[status]]' => (int)$this->status
+            ]);
         }
 
         // категория
         if (! empty($this->category_id)) {
             $query->andWhere([
-                'p2c.[[category_id]]' => $this->recurse ? (new Query())->select('cp.[[category_id]]')
-                    ->from(Categ::tablePath() . ' cp')
-                    ->where(['cp.[[path_id]]' => $this->category_id]) : $this->category_id
+                'c.[[category_id]]' => $this->recurse ?
+                    (new Query())->select('cp.[[category_id]]')
+                        ->from(Categ::tablePath() . ' cp')
+                        ->where(['cp.[[path_id]]' => $this->category_id]) :
+                    $this->category_id
             ]);
         }
 
@@ -257,7 +282,7 @@ class ProdFilter extends Model
             foreach ($this->attrs as $id => $vals) {
                 // получаем текущую хараткристику
                 $attr = $attrs[$id] ?? null;
-                if (empty($attr) || $vals === null || $vals === '' || $vals === []) {
+                if ($attr === null || $vals === null || $vals === '' || $vals === []) {
                     continue;
                 }
 
@@ -271,7 +296,9 @@ class ProdFilter extends Model
                     $cast = 'pa.[[text]]';
                 }
 
-                $attrQuery = ProdAttr::find()->alias('pa')->select($cast)
+                $attrQuery = ProdAttr::find()
+                    ->alias('pa')
+                    ->select($cast)
                     ->where('pa.[[product_id]]=p.[[product_id]]')
                     ->andWhere(['pa.[[attribute_id]]' => $id]);
 
@@ -286,7 +313,7 @@ class ProdFilter extends Model
                     } elseif (isset($vals['max'])) {
                         $query->andWhere(['<=', $attrExpression, $vals['max']]);
                     }
-                } elseif (!empty($vals)) {
+                } elseif (! empty($vals)) {
                     $query->andWhere(['in', $attrExpression, $vals]);
                 }
             }
@@ -305,60 +332,133 @@ class ProdFilter extends Model
         return $query;
     }
 
+    /** @var Sort */
+    private $_sort;
+
     /**
-     * Возвращае провайдер данных.
+     * Сортировка.
      *
-     * @param array $config
-     * @return \yii\data\ActiveDataProvider
+     * @param array|null $config
+     * @return Sort
      */
-    public function getProvider(array $config = [])
+    public function getSort(array $config = null)
     {
-        return new ActiveDataProvider(array_merge([
-            'query' => $this->query,
-            'sort' => [
+        if (! isset($this->_sort)) {
+            $defaultConfig = [
                 'attributes' => [
-                    self::SORT_ORDER => [
+                    self::SORT_DEFAULT => [
                         'asc' => [
-                            'if(p.[[price]]>0,0,1)' => SORT_ASC,
-                            'p.[[sort_order]]' => SORT_ASC
+                            'if(p.[[price]]>0,0,1)' => SORT_ASC, // вначале наличие цены
+                            'p.[[sort_order]]' => SORT_ASC,
                         ],
                         'desc' => [
-                            'if(p.[[price]]>0,0,1)' => SORT_DESC,
-                            'p.[[sort_order]]' => SORT_DESC
+                            'if(p.[[price]]>0,0,1)' => SORT_ASC,
+                            'p.[[sort_order]]' => SORT_DESC,
+                        ]
+                    ],
+                    self::SORT_ORDER => [
+                        'asc' => [
+                            'p.[[sort_order]]' => SORT_ASC,     // сначала сортировка вручную
+                            'if(p.[[price]]>0,0,1)' => SORT_ASC,
+                        ],
+                        'desc' => [
+                            'p.[[sort_order]]' => SORT_DESC,
+                            'if(p.[[price]]>0,0,1)' => SORT_ASC
                         ]
                     ],
                     self::SORT_PRICE => [
                         'asc' => [
+                            'if(p.[[price]]>0,0,1)' => SORT_ASC,
                             'p.[[price]]' => SORT_ASC,
-                            'p.[[sort_order]]' => SORT_ASC
                         ],
                         'desc' => [
+                            'if(p.[[price]]>0,0,1)' => SORT_ASC,
                             'p.[[price]]' => SORT_DESC,
-                            'p.[[sort_order]]' => SORT_DESC
                         ]
-                    ]
+                    ],
+                    self::SORT_POPULAR => [
+                        'asc' => [
+                            'if(p.[[price]]>0,0,1)' => SORT_ASC,
+                            'p.[[popularity]]' => SORT_DESC,
+                        ],
+                        'desc' => [
+                            'if(p.[[price]]>0,0,1)' => SORT_ASC,
+                            'p.[[popularity]]' => SORT_ASC,
+                        ]
+                    ],
                 ],
                 'defaultOrder' => [
-                    self::SORT_ORDER => SORT_ASC
+                    self::SORT_DEFAULT => SORT_ASC
                 ]
-            ]
-        ], $config));
+            ];
+
+            $this->_sort = new Sort(array_merge($defaultConfig, $config ?: []));
+        }
+
+        return $this->_sort;
     }
 
-    /** @var \app\models\Manuf[] производители в категории товаров */
+    /** @var Pagination пагинация */
+    private $_pagination;
+
+    /**
+     * Пагинация.
+     *
+     * @param array|null $config
+     * @return Pagination
+     */
+    public function getPagination(array $config = null)
+    {
+        if (! isset($this->_pagination)) {
+            $defaultConfig = [
+                'forcePageParam' => false,
+                'pageSizeParam' => 'limit'
+            ];
+
+            $this->_pagination = new Pagination(array_merge($defaultConfig, $config ?: []));
+        }
+
+        return $this->_pagination;
+    }
+
+    /** @var ActiveDataProvider */
+    private $_provider;
+
+    /**
+     * Возвращае провайдер данных.
+     *
+     * @param array $config
+     * @return ActiveDataProvider
+     * @noinspection PhpUnused
+     */
+    public function getProvider(array $config = null)
+    {
+        if (! isset($this->_provider)) {
+            $this->_provider = new ActiveDataProvider(array_merge([
+                'query' => $this->query,
+                'sort' => $this->sort,
+                'pagination' => $this->pagination
+            ], $config ?: []));
+        }
+
+        return $this->_provider;
+    }
+
+    /** @var Manuf[] производители в категории товаров */
     private $_categManufs;
 
     /**
      * Возвращает производителей в категории товаров.
      *
-     * @return \app\models\Manuf[]
-     * @throws \dicr\validate\ValidateException
+     * @return Manuf[]
+     * @throws ValidateException
+     * @noinspection PhpUnused
      */
     public function getCategManufs()
     {
         if (! isset($this->_categManufs)) {
+            /** @noinspection NotOptimalIfConditionsInspection */
             if (! $this->validate() || empty($this->category_id)) {
-                /** @noinspection PhpParamsInspection */
                 throw new ValidateException($this, 'category_id');
             }
 
@@ -373,78 +473,84 @@ class ProdFilter extends Model
         return $this->_categManufs;
     }
 
-    /** @var \app\models\Manuf выбранные производители */
-    private $_selectedMaufs;
+    /** @var Manuf выбранные производители */
+    private $_selectedManufs;
 
     /**
      * Выбранные произвдители.
      *
-     * @return \app\models\Manuf[]
+     * @return Manuf[]
+     * @noinspection PhpUnused
      */
     public function getSelectedManufs()
     {
-        if (! isset($this->_selectedMaufs)) {
-            $this->_selectedMaufs = ! empty($this->manuf) ? Manuf::find()->where([
-                'manufacturer_id' => array_keys($this->manuf)
+        if (! isset($this->_selectedManufs)) {
+            $this->_selectedManufs = ! empty($this->manufacturer_id) ? Manuf::find()->where([
+                'manufacturer_id' => $this->manufacturer_id
             ])->orderBy('name')->all() : [];
         }
 
-        return $this->_selectedMaufs;
+        return $this->_selectedManufs;
     }
 
-    /** @var \app\models\Attr[] характеристики категории с наборами значений для фильтра */
+    /** @var Attr[] характеристики категории с наборами значений для фильтра */
     private $_categAttrs;
 
     /**
      * Возвращает список характеристик товаров категории и их хначения для фильра.
      *
-     * @return \app\models\Attr[]
-     * @throws \dicr\validate\ValidateException
+     * @return Attr[]
+     * @throws ValidateException
+     * @noinspection PhpUnused
      */
     public function getCategAttrs()
     {
         if (! isset($this->_categAttrs)) {
+            /** @noinspection NotOptimalIfConditionsInspection */
             if (! $this->validate() || empty($this->category_id)) {
-                /** @noinspection PhpParamsInspection */
                 throw new ValidateException($this, 'category_id');
             }
 
-            $attrVals = Yii::$app->cache->getOrSet([__METHOD__, $this->category_id, $this->recurse, $this->status], function() {
-                // получаем карту id характеристик и их значений
-                $query = ProdAttr::find()
-                    ->alias('pa')
-                    ->select('pa.[[attribute_id]], pa.[[text]]')
-                    ->distinct(true)
-                    ->innerJoin(Prod::tableCateg() . ' p2c', 'p2c.[[product_id]]=pa.[[product_id]]')
-                    ->andWhere([
-                        'p2c.[[category_id]]' => $this->recurse ? (new Query())->select('cp.[[category_id]]')
-                            ->from(Categ::tablePath() . ' cp')
-                            ->where(['cp.[[path_id]]' => $this->category_id]) : $this->category_id
-                    ]);
-
-                if (isset($this->status)) {
-                    $query->innerJoin(Prod::tableName() . ' p', 'p.[[product_id]]=pa.[[product_id]]')
-                        ->innerJoin(Categ::tableName() . ' c', 'c.[[category_id]]=p2c.[[category_id]]')
+            $attrVals =
+                Yii::$app->cache->getOrSet([__METHOD__, $this->category_id, $this->recurse, $this->status], function () {
+                    // получаем карту id характеристик и их значений
+                    $query = ProdAttr::find()
+                        ->alias('pa')
+                        ->select('pa.[[attribute_id]], pa.[[text]]')
+                        ->distinct()
+                        ->innerJoin(Prod::tableCateg() . ' p2c', 'p2c.[[product_id]]=pa.[[product_id]]')
                         ->andWhere([
-                            'p.[[status]]' => (int)$this->status,
-                            'c.[[status]]' => (int)$this->status
+                            'p2c.[[category_id]]' => $this->recurse ? (new Query())->select('cp.[[category_id]]')
+                                ->from(Categ::tablePath() . ' cp')
+                                ->where(['cp.[[path_id]]' => $this->category_id]) : $this->category_id
                         ]);
-                }
 
-                $attrVals = [];
-                foreach ($query->all() as $row) {
-                    $attrVals[(int)$row['attribute_id']][] = $row['text'];
-                }
+                    if (isset($this->status)) {
+                        $query->innerJoin(Prod::tableName() . ' p', 'p.[[product_id]]=pa.[[product_id]]')
+                            ->innerJoin(Categ::tableName() . ' c', 'c.[[category_id]]=p2c.[[category_id]]')
+                            ->andWhere([
+                                'p.[[status]]' => (int)$this->status,
+                                'c.[[status]]' => (int)$this->status
+                            ]);
+                    }
 
-                return $attrVals;
-            }, null, new TagDependency([
-                'tags' => [Attr::class, Categ::class],
-                'reusable' => true
-            ]));
+                    $attrVals = [];
+                    foreach ($query->all() as $row) {
+                        $attrVals[(int)$row['attribute_id']][] = $row['text'];
+                    }
+
+                    return $attrVals;
+                }, null, new TagDependency([
+                    'tags' => [Attr::class, Categ::class],
+                    'reusable' => true
+                ]));
 
             // получаем все характеристики из выбранных id
-            $this->_categAttrs = ! empty($attrVals) ? Attr::find()->where(['attribute_id' => array_keys($attrVals)])
-                ->orderBy('name')->indexBy('attribute_id')->all() : [];
+            $this->_categAttrs = ! empty($attrVals) ? Attr::find()
+                ->where(['attribute_id' => array_keys($attrVals)])
+                ->orderBy('name')
+                ->indexBy('attribute_id')
+                ->all() : [];
 
             // расставляем значения
             foreach ($this->_categAttrs as $id => $attr) {
@@ -457,19 +563,23 @@ class ProdFilter extends Model
         return $this->_categAttrs;
     }
 
-    /** @var \app\models\Attr[] выбранные харакеристики */
+    /** @var Attr[] выбранные харакеристики */
     private $_selectedAttrs;
 
     /**
      * Возвращает выбранные харакеристики.
      *
-     * @return \app\models\Attr[]
+     * @return Attr[]
+     * @noinspection PhpUnused
      */
     public function getSelectedAttrs()
     {
         if (! isset($this->_selectedAttrs)) {
-            $this->_selectedAttrs = ! empty($this->attrs) ?
-                Attr::find()->where(['attribute_id' => array_keys($this->attrs)])->orderBy('name')->indexBy('attribute_id')->all() : [];
+            $this->_selectedAttrs = ! empty($this->attrs) ? Attr::find()
+                ->where(['attribute_id' => array_keys($this->attrs)])
+                ->orderBy('name')
+                ->indexBy('attribute_id')
+                ->all() : [];
         }
 
         return $this->_selectedAttrs;
@@ -503,7 +613,7 @@ class ProdFilter extends Model
         foreach ($this->attrs ?: [] as $id => $vals) {
             $vals = (array)$vals;
             $attr = $attrs[$id] ?? null;
-            if (!empty($attr) && !empty($vals)) {
+            if ($attr !== null && ! empty($vals)) {
                 if (array_key_exists('min', $vals) || array_key_exists('max', $vals)) {
                     $params['a' . $id] = $vals;
                 } else {
@@ -522,6 +632,7 @@ class ProdFilter extends Model
      * Возвращает текстовое описание выбранных параметров.
      *
      * @return string
+     * @noinspection PhpUnused
      */
     public function getFilterText()
     {
@@ -558,7 +669,7 @@ class ProdFilter extends Model
      */
     public function replaceVars(string $text)
     {
-        return trim(preg_replace_callback('~\${prodFilter\.([^}]+)}~uim', function($matches) {
+        return trim(preg_replace_callback('~\${prodFilter\.([^}]+)}~uim', function ($matches) {
             return $this->{$matches[1]} ?? '';
         }, $text));
     }

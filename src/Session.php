@@ -1,11 +1,10 @@
 <?php
 /**
- * Copyright (c) 2019.
- *
- * @author Igor (Dicr) Tarasov, develop@dicr.org
+ * @copyright 2019-2020 Dicr http://dicr.org
+ * @author Igor A Tarasov <develop@dicr.org>
+ * @license proprietary
+ * @version 14.02.20 00:46:01
  */
-
-/** @noinspection PhpUnusedParameterInspection */
 
 declare(strict_types = 1);
 namespace dicr\oclib;
@@ -28,11 +27,9 @@ class Session
     /**
      * Session constructor.
      *
-     * @param string $session_id
-     * @param string $key
      * @throws \yii\base\InvalidConfigException
      */
-    public function __construct($session_id = '', $key = 'default')
+    public function __construct()
     {
         $this->session = Instance::ensure($this->session, \yii\web\Session::class);
 

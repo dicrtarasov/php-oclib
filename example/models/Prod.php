@@ -1,20 +1,31 @@
 <?php
 /**
- * Copyright (c) 2019.
- *
- * @author Igor (Dicr) Tarasov, develop@dicr.org
+ * @copyright 2019-2019 Dicr http://dicr.org
+ * @author Igor A Tarasov <develop@dicr.org>
+ * @license proprietary
+ * @version 06.12.19 07:13:18
  */
 
+/** @noinspection LongInheritanceChainInspection */
 declare(strict_types = 1);
+
 namespace app\models;
 
 use Html;
 use Registry;
+use StringHelper;
+use Url;
+use Yii;
+use yii\base\Exception;
+use yii\base\ExitException;
+use yii\base\InvalidConfigException;
+use yii\behaviors\AttributeTypecastBehavior;
 use yii\caching\TagDependency;
+use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
+use yii\db\Expression;
 use yii\db\Query;
-use function count;
-use function in_array;
+use function trim;
 
 /**
  * Товар.
@@ -53,32 +64,39 @@ use function in_array;
  * @property int $viewed [int(5) unsigned]
  * @property string $date_added [datetime]
  * @property int $date_modified [timestamp]
+ * @property int $popularity популярность товара
  *
- * // relations
- * @property-read \app\models\ProdDesc $desc
- * @property-read \app\models\Categ $categ
- * @property-read \app\models\Manuf $manuf
- * @property-read \app\models\ProdAttr[] $attrs
+ * // Relations
+ * @property-read ProdDesc $desc
+ * @property-read Categ $categ
+ * @property-read Manuf $manuf
+ * @property-read ProdAttr[] $attrs
+ * @property-read UrlAlias $urlAlias
  *
  * // связанные из ProdDesc
  *
- * @property-read string $name
+ * @property-read string $name короткое название
+ * @property-read string $fullName полное название
  * @property-read string $description
- * @property-read string $shortDescription
- * @property-read bool $popular
+ * @property string $shortDescription
  * @property-read string $primen
  * @property-read string $metaH1
  * @property-read string $metaTitle
- * @property-read string $metaDescription
+ * @property-read string $metaDesc
  *
- * // виртуальные
+ * // Virtual
  *
  * @property-read array $breadcrumbs
- * @property-read $imageRecurse
- * @property-read $imageUrl
- * @property-read $url
- * @property-read string $fullName полное имя с присавкой singular из каегории
+ * @property-read string $imageRecurse
+ * @property-read string $imageUrl
+ * @property-read array $url
+ * @property-read string $href
  * @property-read string $units единицы измерения
+ * @property-read string $sku [varchar(32)] не используется
+ * @property-read string $ymlImageUrl фиг его знает
+ * @property int $categoryId id категории
+ * @property-read array $crossSib перекрестные ссылки на смежные товары
+ * @property-read array $crossUp перекрестные ссылки на верхние категории
  */
 class Prod extends ActiveRecord
 {
@@ -86,7 +104,13 @@ class Prod extends ActiveRecord
     public const DISCOUNT_100 = 0.99;
 
     /** @var float коэффициент цены для 100 метров кабеля */
-    public const DISCOUNT_1000 = 0.97;
+    public const DISCOUNT_1000 = 0.98;
+
+    /** @var int идентификатор в корзине */
+    public $cartId;
+
+    /** @var int кол-во в корзине */
+    public $inCart;
 
     /**
      * Название таблицы.
@@ -109,20 +133,112 @@ class Prod extends ActiveRecord
     }
 
     /**
+     * @inheritDoc
+     * @return array
+     */
+    public function rules()
+    {
+        return [
+            ['price', 'default', 'value' => 0],
+            ['price', 'number', 'min' => 0],
+
+            ['image', 'trim'],
+            ['image', 'string', 'max' => 255]
+        ];
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function behaviors()
+    {
+        return [
+            'typecast' => [
+                'class' => AttributeTypecastBehavior::class,
+                'typecastAfterFind' => true,
+                'typecastAfterValidate' => false
+            ]
+        ];
+    }
+
+    /**
      * Связь с описанием.
      *
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery
+     * @noinspection PhpUnused
      */
     public function getDesc()
     {
         return $this->hasOne(ProdDesc::class, ['product_id' => 'product_id'])->inverseOf('prod');
     }
 
+    /** @var UrlAlias|false */
+    private $_urlAlias;
+
+    /**
+     * Возвращает алиас ЧПУ.
+     *
+     * @return UrlAlias|null
+     * @noinspection PhpUnused
+     */
+    public function getUrlAlias()
+    {
+        if (! isset($this->urlAlias)) {
+            $this->_urlAlias = UrlAlias::findOne(['query' => 'product_id=' . $this->product_id]) ?: false;
+        }
+
+        return $this->_urlAlias ?: null;
+    }
+
+    /** @var int|false */
+    private $_categoryId;
+
+    /**
+     * Возвращает id категории.
+     *
+     * @return int|null
+     * @noinspection PhpUnused
+     */
+    public function getCategoryId()
+    {
+        if (empty($this->product_id)) {
+            return null;
+        }
+
+        if (! isset($this->_category_id)) {
+            $this->_categoryId = (new Query())
+                ->from(self::tableCateg())
+                ->select('category_id')
+                ->where(['product_id' => $this->product_id])
+                ->limit(1)
+                ->cache(true, new TagDependency([
+                    'tags' => [self::class, Categ::class]
+                ]))
+                ->scalar();
+
+            $this->_categoryId = isset($this->_categoryId) ? (int)$this->_categoryId : false;
+        }
+
+        return $this->_categoryId === false ? null : $this->_categoryId;
+    }
+
+    /**
+     * Устанавливает id категории.
+     *
+     * @param int $categoryId
+     * @noinspection PhpUnused
+     */
+    public function setCategoryId(int $categoryId)
+    {
+        $this->_categoryId = $categoryId;
+    }
+
     /**
      * Связь с категорией.
      *
-     * @return \yii\db\ActiveQuery
-     * @throws \yii\base\InvalidConfigException
+     * @return ActiveQuery
+     * @throws InvalidConfigException
+     * @noinspection PhpUnused
      */
     public function getCateg()
     {
@@ -164,7 +280,8 @@ class Prod extends ActiveRecord
     /**
      * Запрос производителя.
      *
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery
+     * @noinspection PhpUnused
      */
     public function getManuf()
     {
@@ -176,7 +293,8 @@ class Prod extends ActiveRecord
     /**
      * Возвращает запрос характерисик.
      *
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery
+     * @noinspection PhpUnused
      */
     public function getAttrs()
     {
@@ -192,22 +310,17 @@ class Prod extends ActiveRecord
      * Возвращает картинку рекурсивно.
      *
      * @return string
+     * @noinspection PhpUnused
      */
     public function getImageRecurse()
     {
-        if ($this->image !== '') {
+        if (! empty($this->image)) {
             return $this->image;
         }
 
         if (! isset($this->_imageRecurse)) {
             $categ = $this->categ;
-            if (empty($categ)) {
-                $this->_imageRecurse = '';
-            } elseif (in_array($categ->topCategId, [Categ::ID_IMPORTCABLE, Categ::ID_CABLEPROV], true)) {
-                $this->_imageRecurse = 'kabs-gl.svg';
-            } else {
-                $this->_imageRecurse = $categ->imageRecurse;
-            }
+            $this->_imageRecurse = $categ !== null ? $categ->imageRecurse : '';
         }
 
         return $this->_imageRecurse;
@@ -219,6 +332,7 @@ class Prod extends ActiveRecord
      * @param array $options
      * - bool $recurse рекурсивный поиск картинки
      * @return string
+     * @noinspection PhpUnused
      */
     public function getImageUrl(array $options = null)
     {
@@ -240,7 +354,7 @@ class Prod extends ActiveRecord
      * @param int $height
      * @param array|null $options
      * @return string url превью
-     * @throws \yii\base\Exception
+     * @throws Exception
      */
     public function thumb(int $width, int $height, array $options = null)
     {
@@ -253,37 +367,40 @@ class Prod extends ActiveRecord
         $modelToolImage = Registry::app()->load->model('tool/image');
 
         $image = empty($options['recurse']) ? $this->image : $this->imageRecurse;
+
         return $modelToolImage->resize($image ?: 'no_image.png', $width, $height);
     }
 
-    /** @var string */
-    private $_url;
-
     /**
-     * Возвращает URL товара.
+     * Возвращает URL страницы товара с параметрами.
      *
-     * @param array $params дополнительные парамеры запроса.
-     * @return string
+     * @param array|null $params
+     * @return array
      */
     public function getUrl(array $params = null)
     {
-        if ($params === null) {
-            $params = [];
+        $params = $params ?: [];
+        $params[0] = 'product/product';
+        $params['product_id'] = $this->product_id;
+        return $params;
+    }
+
+    /** @var string ссылка на страницу товара */
+    private $_href;
+
+    /**
+     * Возвращает ссылку на страницу товара.
+     *
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getHref()
+    {
+        if (!isset($this->_href)) {
+            $this->_href = Url::to($this->url);
         }
 
-        if (count($params)) {
-            return Registry::app()->url->link('product/product', array_merge($params, [
-                'product_id' => $this->product_id
-            ]));
-        }
-
-        if (! isset($this->_url)) {
-            $this->_url = Registry::app()->url->link('product/product', [
-                'product_id' => $this->product_id
-            ]);
-        }
-
-        return $this->_url;
+        return $this->_href;
     }
 
     /**
@@ -294,38 +411,32 @@ class Prod extends ActiveRecord
     public function getName()
     {
         $desc = $this->desc;
+
         return isset($desc) ? $desc->name : '';
     }
-
-    /** @var string полное название товара */
-    private $_fullName;
 
     /**
      * Полное название товара, включая singular из названия категории.
      *
      * @return string
+     * @noinspection PhpUnused
      */
     public function getFullName()
     {
-        if (! isset($this->_fullName)) {
-            $singular = '';
-
-            $categ = $this->categ;
-            if ($categ !== null) {
-                $singular = $categ->singular;
-            }
-
-            $this->_fullName = empty($singular) ? $this->name : $singular . ' ' . $this->name;
+        $desc = $this->desc;
+        if ($desc === null) {
+            return '';
         }
 
-        return $this->_fullName;
+        return $desc->name_full ?: $desc->name;
     }
 
     /**
      * Описание товара.
      *
      * @return string
-     * @throws \yii\base\InvalidConfigException
+     * @throws ExitException
+     * @noinspection PhpUnused
      */
     public function getDescription()
     {
@@ -342,43 +453,47 @@ class Prod extends ActiveRecord
         return City::replaceVars($text);
     }
 
+    /** @var string */
+    private $_shortDescription;
+
+    /**
+     * Установить короткое описание.
+     *
+     * @param string $shortDescription
+     * @noinspection PhpUnused
+     */
+    public function setShortDescription(string $shortDescription)
+    {
+        $this->_shortDescription = $shortDescription;
+    }
+
     /**
      * Короткое описание.
      *
      * @return string
-     * @throws \yii\base\InvalidConfigException
+     * @noinspection PhpUnused
+     * @throws ExitException
      */
     public function getShortDescription()
     {
-        $desc = $this->desc;
-        if (! isset($desc)) {
-            return '';
+        if (! isset($this->_shortDescription)) {
+            $desc = $this->desc;
+            if ($desc === null || ! Html::hasText($desc->short_description)) {
+                $this->_shortDescription = '';
+            } else {
+                $this->_shortDescription = trim(Html::decode($desc->short_description));
+            }
         }
 
-        $text = trim(Html::decode($desc->short_description));
-        if (trim(Html::toText($text)) === '') {
-            return '';
-        }
-
-        return City::replaceVars($text);
-    }
-
-    /**
-     * Популярный товар.
-     *
-     * @return bool
-     */
-    public function getPopular()
-    {
-        $desc = $this->desc;
-        return isset($desc) ? (bool)$desc->popular : false;
+        return City::replaceVars($this->_shortDescription);
     }
 
     /**
      * Применение товара.
      *
      * @return string
-     * @throws \yii\base\InvalidConfigException
+     * @noinspection PhpUnused
+     * @throws ExitException
      */
     public function getPrimen()
     {
@@ -399,77 +514,121 @@ class Prod extends ActiveRecord
      * H1 страницы.
      *
      * @return string
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
+     * @throws ExitException
+     * @noinspection PhpUnused
      */
     public function getMetaH1()
     {
-        $desc = $this->desc;
-        if (empty($desc)) {
-            return '';
+        /** @var UrlAlias|null $alias */
+        $alias = Yii::$app->get('urlAlias', false);
+        $meta = $alias ? trim($alias->meta_h1) : null;
+        if (empty($meta)) {
+            $desc = $this->desc;
+            $meta = $desc ? Html::decode($desc->meta_h1) : '';
+            if (empty($meta)) {
+                $meta = $this->fullName;
+            }
         }
 
-        $text = Html::decode($desc->meta_h1);
-        if (trim(Html::toText($text)) === '') {
-            return '';
-        }
-
-        return City::replaceVars($text);
+        return City::replaceVars($meta);
     }
 
     /**
      * Заголовок страницы.
      *
      * @return string
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
+     * @throws ExitException
+     * @noinspection PhpUnused
      */
     public function getMetaTitle()
     {
+        /** @var UrlAlias $alias */
+        $alias = Yii::$app->get('urlAlias', false);
+
+        /** @var ProdDesc $desc */
         $desc = $this->desc;
-        if (! isset($desc)) {
-            return '';
+
+        // прописан в ЧПУ
+        if ($alias !== null && ! empty($alias->meta_title)) {
+            $meta = $alias->meta_title;
+        }
+        //
+        // пропиан в товаре
+        elseif ($desc !== null && ! empty($desc->meta_title)) {
+            $meta = $desc->meta_title;
+        }
+        //
+        // маркоразмер кабеля
+        elseif ($this->categ->isMarka) {
+            $meta = $this->name . ' купить оптом ${city.name3}, низкие цены на кабель/провод';
+        }
+        //
+        // по-умолчанию
+        else {
+            $meta = $this->fullName . ' купить оптом ${city.name3}, цены';
         }
 
-        $text = Html::decode($desc->meta_title);
-        if (trim(Html::toText($text)) === '') {
-            return '';
-        }
-
-        return City::replaceVars($text);
+        return City::replaceVars($meta);
     }
 
     /**
      * Описание страницы.
      *
      * @return string
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
+     * @throws ExitException
+     * @noinspection PhpUnused
      */
-    public function getMetaDescription()
+    public function getMetaDesc()
     {
+        /** @var UrlAlias $alias */
+        $alias = Yii::$app->get('urlAlias', false);
+
+        /** @var ProdDesc $desc */
         $desc = $this->desc;
-        if (! isset($desc)) {
-            return '';
+
+        // прописан в ЧПУ
+        if ($alias !== null && ! empty($alias->meta_desc)) {
+            $meta = $alias->meta_desc;
+        }
+        //
+        // пропиан в товаре
+        elseif ($desc !== null && ! empty($desc->meta_description)) {
+            $meta = $desc->meta_description;
+        }
+        //
+        // маркоразмер кабеля
+        elseif ($this->categ->isMarka) {
+            $meta = '«РТК Новые технологии» ${city.name3} предлагает: ✅Купить ' .
+                StringHelper::mb_lcfirst($this->fullName) . ' ✅Уточнить наличие ' . $this->name .
+                ' и оптовые цены ✆${city.firstPhone}';
+        }
+        //
+        // по-умолчанию
+        else {
+            $meta = '«РТК Новые технологии» ${city.name3} предлагает: ✅Купить ' . $this->name . ' ' .
+                StringHelper::mb_lcfirst($this->categ->name) . ' ✅Уточнить наличие ' . $this->name .
+                ' и оптовые цены ✆${city.firstPhone}';
         }
 
-        $text = Html::decode($desc->meta_description);
-        if (trim(Html::toText($text)) === '') {
-            return '';
-        }
-
-        return City::replaceVars($text);
+        return City::replaceVars($meta);
     }
 
     /**
      * Возвращает хлебные крошки.
      *
      * @return array
+     * @noinspection PhpUnused
      */
     public function getBreadcrumbs()
     {
         $categ = $this->categ;
-        $breadcrumbs = ! empty($categ) ? $categ->breadcrumbs : [];
+        $breadcrumbs = $categ !== null ? $categ->breadcrumbs : [];
         $breadcrumbs[] = [
             'text' => $this->name,
-            'href' => $this->url
+            'href' => $this->href
         ];
 
         return $breadcrumbs;
@@ -477,9 +636,136 @@ class Prod extends ActiveRecord
 
     /**
      * @return string
+     * @noinspection PhpUnused
      */
     public function getUnits()
     {
         return $this->categ->units;
+    }
+
+    /**
+     * Взвращает скорректированное значение цены в зависимоси от города.
+     *
+     * @return float
+     * @noinspection PhpUnused
+     */
+    public function getPrice()
+    {
+        return empty($this->price) ? 0 : City::current()->adjustPrice($this->price);
+    }
+
+    /**
+     * Фиг его знает какой image
+     *
+     * @return string
+     * @throws Exception
+     * @noinspection PhpUnused
+     */
+    public function getYmlImageUrl()
+    {
+        if (! empty($this->image)) {
+            return Registry::app()->load->model('tool/image')->resize($this->image, false, false);
+        }
+
+        if (! empty($this->categ->yml_image)) {
+            return '/image/' . $this->categ->yml_image;
+        }
+
+        return '';
+    }
+
+    /**
+     * Перекрестные ссылки на смежные товары.
+     *
+     * @param int $count
+     * @return array [label => '...', url => '...']
+     * @noinspection PhpUnused
+     */
+    public function getCrossSib(int $count = 6)
+    {
+        if (empty($this->product_id)) {
+            return [];
+        }
+
+        $data = Yii::$app->cache->getOrSet([__METHOD__, (int)$this->product_id], function () use ($count) {
+            return Prod::find()->alias('p')
+                ->innerJoin(self::tableCateg() . ' p2c', 'p2c.[[product_id]]=p.[[product_id]]')
+                ->joinWith('desc pd', false)
+                ->select([
+                    'name' => 'pd.[[name]]',
+                    'product_id' => 'p.[[product_id]]'
+                ])
+                ->where([
+                    'p.[[status]]' => 1,
+                    'p2c.[[category_id]]' => $this->categoryId
+                ])
+                ->andWhere(['not', [
+                    'p.[[product_id]]' => $this->product_id]
+                ])
+                ->orderBy(new Expression('rand()'))
+                ->limit($count)
+                ->indexBy('product_id')
+                ->column();
+        }, null, new TagDependency([
+            'tags' => [self::class, ProdDesc::class]
+        ]));
+
+        $links = [];
+        foreach ($data as $id => $name) {
+            $links[] = [
+                'label' => $name,
+                'url' => Registry::app()->url->link('product/product', ['product_id' => $id])
+            ];
+        }
+
+        return $links;
+    }
+
+    /**
+     * Перекрестные ссылки на вышестоящие категориии.
+     *
+     * @param int $count
+     * @return array [label => '...', url => '...']
+     * @noinspection PhpUnused
+     */
+    public function getCrossUp(int $count = 6)
+    {
+        if (empty($this->product_id)) {
+            return [];
+        }
+
+        $data = Yii::$app->cache->getOrSet([__METHOD__, (int)$this->product_id], function () use ($count) {
+            $categ = $this->categ;
+            if ($categ === null) {
+                return [];
+            }
+
+            return Categ::find()->alias('c')
+                ->joinWith('desc cd', false)
+                ->select([
+                    'name' => 'cd.[[name]]',
+                    'category_id' => 'c.[[category_id]]'
+                ])
+                ->where([
+                    'c.[[parent_id]]' => $categ->parent_id,
+                    'c.[[status]]' => 1
+                ])
+                ->orderBy(new Expression('rand()'))
+                ->limit($count)
+                ->indexBy('category_id')
+                ->column();
+        }, null, new TagDependency([
+            'tags' => [self::class, CategDesc::class]
+        ]));
+
+        $links = [];
+        foreach ($data as $id => $name) {
+            $links[] = [
+                'label' => $name,
+                'url' => Registry::app()->url->link('product/category', ['category_id' => $id])
+            ];
+        }
+
+        return $links;
     }
 }

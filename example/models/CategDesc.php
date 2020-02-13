@@ -14,7 +14,8 @@ use yii\db\ActiveRecord;
  * Описание каегории
  *
  * @property int $category_id
- * @property string $name
+ * @property string $name краткое название
+ * @property string $full_name полное наименование
  * @property string $singular единичное название товара в категории
  * @property string $description
  * @property string $description2
@@ -26,19 +27,19 @@ use yii\db\ActiveRecord;
  * @property string $primen применение
  * @property string $rightcol правая колонка
  * @property string $catmenimg
+ * @property bool $template_text отображать шаблонные тексты
+ * @property string $h1_shab название в первом шаблонном тексте
+ * @property string $h1_shab2 название во втором шаблонном тексте
  *
- * // relations
+ * // Relations
  * @property-read \app\models\Categ $categ
  *
  * // не используемые
  * @property int $language_id [int(11) unsigned]
  * @property int $subcat_count [int(255)]
- * @property string $h1_shab [varchar(80)]
- * @property string $h1_shab2 [varchar(80)]
  * @property string $meta_keyword [varchar(255)]
  * @property int $how_to_order [int(1)]
  * @property string $cat_keys [varchar(150)]
- * @property bool $template_text [tinyint(4)]
  *
  * @package app\models
  */
@@ -51,7 +52,7 @@ class CategDesc extends ActiveRecord
      */
     public static function tableName()
     {
-        return '{{oc_category_description}}';
+        return '{{%category_description}}';
     }
 
     /**
@@ -64,7 +65,4 @@ class CategDesc extends ActiveRecord
         return $this->hasOne(Categ::class, ['category_id' => 'category_id'])
             ->inverseOf('desc');
     }
-
-
-
 }

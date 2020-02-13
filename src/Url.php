@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright (c) 2019.
- *
- * @author Igor (Dicr) Tarasov, develop@dicr.org
+ * @copyright 2019-2020 Dicr http://dicr.org
+ * @author Igor A Tarasov <develop@dicr.org>
+ * @license proprietary
+ * @version 14.02.20 00:46:01
  */
 
 declare(strict_types = 1);
@@ -14,9 +15,6 @@ use const PREG_SPLIT_NO_EMPTY;
 
 /**
  * URL для OpenCart.
- *
- * @author Igor (Dicr) Tarasov <develop@dicr.org>
- * @version 2019
  */
 class Url extends \dicr\helper\Url
 {
@@ -68,14 +66,17 @@ class Url extends \dicr\helper\Url
      * @param string $route
      * @param array|string $args
      * @return string
+     * @noinspection PhpMethodMayBeStaticInspection
      */
-    public function link(string $route, $args = [])
+    public function link(string $route, $args = null)
     {
         if (empty($route)) {
             throw new InvalidArgumentException('route');
         }
 
-        if (is_string($args)) {
+        if ($args === null) {
+            $args = [];
+        } elseif (is_string($args)) {
             $args = static::parseQuery($args);
         }
 

@@ -2,31 +2,43 @@
 **Адаптер Yii2 для OpenCart** позволяет подключить и использоваь в OpenCart библиотеку компонентов Yii методом перенаправления сандартных функций OpenCart в вызовы функций Yii (кроме контроллеров).
 
 ## Подключение библиотек Yii2
+Автозагрузка классов как сторонних библиотек, так и папки `system` выполняется через composer.
+
 ### composer.json
 ```composer
 "require": {
     "php": ">=7.2",
     "dicr/php-oclib": "~3.1.5",
+},
+"autoload": {
+    "classmap": ["system/"]
 }
 ```
+
 ### Конфиги
-Разделены на:
-- `/config/local.php` - опции локальной усановки (пароли, базы)
+- `/config/local.php` - опции локальной установки (протокол, домен, пароли, базы)
 - `/config/common.php` - общий для Yii и OpenCart содержит основные пути
-- `/config/opencart.php` - общий для /catalog и /admin opencart
-- `/admin/config.php` - конфиг для /admin
-- `/config.php` - конфиг для /catalog
-- `/config/yii.php` - общий для yii web и console
-- `/config/yii.web.php` - конфиг для yii web
-- `/config/yii.console.php` - конфиг для yii console
+---
+- `/config/opencart.php` - общий конфиг OpenCart для приложений /admin и /catalog
+- `/config.php` - конфиг OpenCart для приложения /catalog
+- `/admin/config.php` - OpenCart конфиг для приложения /admin
+----
+- `/config/yii.php` - общий конфиг Yii 
+- `/config/yii.web.php` - конфиг Yii для Web
+- `/config/yii.console.php` - конфиг для Yii для Console
 
 ### Инициализация
-Прилложение создается без запуска, так как Yii используется только как компоненты, а конроллеры работают в Opencart.
+Web-контроллеры оставлены OpenCart, поэтому приложении Yii создается, настраивается и используются его компоненты.
 
-#### /system/startup.php
+##### /system/startup.php
 ```php
-// Composer
+// Подключаем автозагрузчик Composer
 require(__DIR__ . '/../vendor/autoload.php');
+
+// удаляем автозагрузчик OpenCart
+// spl_autoload_register('library');
+// spl_autoload_register('vendor');
+// spl_autoload_extensions('.php');
 
 // константы YII_ENV и YII_DEBUG должны быть установлены до загрузки Yii
 defined('YII_ENV') or define('YII_ENV', 'dev');
@@ -39,25 +51,34 @@ require(__DIR__ . '/../vendor/yiisoft/yii2/Yii.php');
 new yii\web\Application(require(__DIR__ . '/../config/yii.web.php'));
 ```
 ## Маршруизация
-### /.htaccess, /admin/.htaccess
-```
+##### `/.htaccess` и `/admin/.htaccess`
+
+```htaccess
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_URI} !.*\.(ico|gif|jpg|jpeg|png|js|css|pdf)
 RewriteRule ^([^?]*) index.php?_route_=$1 [L,QSA]
 ```
 
-Также потребуется такой же .htaccess создать в /admin.
+### ЧПУ
+Для работы ЧПУ добавляем стандартный preAction-контроллер ЧПУ в OpenCart, в `/index.php`,
+и также в `/admin/index.php`  
 
-### /admin/index.php
 ```php
-// инициализация маршрута Yii
+// Инициализация SEO ЧПУ и маршрутизации Yii
 $controller->addPreAction(new Action('startup/url'));
-
 ```
 
-Для работы ЧПУ в catalog используеся аналогичный preAction в /catalog/controllers/startup/url.php
+При этом будут работать также короткие маршруты:
+- вместо `/index.php?route=catalog/product&product_id=123`
+- можно `/catalog/product?product_id=123`
 
-## Прокси-классы
-Требуется заменить классы OpenCart на пустышки из каталога `opencart`, наследующие одноименные классы dicr\oclib.
+В контроллере `/catalog/controllers/startup/url.php` используем наследование от контроллера oclib:
+
+```php
+class ControllerStartupUrl extends ControllerCatalogStartupUrl {}
+```
+
+### Прокси-классы
+Требуется заменить классы OpenCart на пустышки из каталога `opencart`, наследующие одноименные классы `dicr\oclib`.
 

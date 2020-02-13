@@ -1,27 +1,28 @@
 <?php
 /**
- * @copyright 2019-2019 Dicr http://dicr.org
+ * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 24.12.19 02:41:26
+ * @version 14.02.20 00:46:01
  */
 
 /** @noinspection PhpUnusedParameterInspection */
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace dicr\oclib;
 
+use Throwable;
 use Yii;
 use yii\base\BaseObject;
 use yii\base\ExitException;
 use yii\base\InvalidArgumentException;
 use function gmdate;
 use function header;
+use function in_array;
 use function md5;
 use function ob_end_clean;
 use function ob_get_level;
 use function sprintf;
-use function str_replace;
 use function strtotime;
 
 /**
@@ -39,18 +40,7 @@ abstract class Controller extends BaseObject implements RegistryProps
      */
     public function __construct($registry = null)
     {
-        parent::__construct([]);
-    }
-
-    /**
-     * Проверяет метод запроса POST.
-     *
-     * @return boolean
-     * @noinspection PhpUnused
-     */
-    public static function isPost()
-    {
-        return Yii::$app->request->isPost;
+        parent::__construct();
     }
 
     /**
@@ -101,21 +91,31 @@ abstract class Controller extends BaseObject implements RegistryProps
         $etag = md5($id . $timestamp);
 
         // устанавливаем заголовки
-        header(sprintf('ETag: "%s"', $etag), true);
+        header(sprintf('ETag: "%s"', $etag));
         header('Last-Modified: ' . gmdate('r', $timestamp));
         header('Cache-Control: public');
 
         // проверяем заголовки запроса
-        if ((!empty($_SERVER['HTTP_IF_NONE_MATCH']) &&
-                str_replace('"', '', $_SERVER['HTTP_IF_NONE_MATCH']) === $etag) ||
-            (!empty($_SERVER['HTTP_IF_MODIFIED_SINCE']) &&
-                strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $timestamp)) {
-            // очищаем буфер
-            self::cleanOutput();
+        if (! Yii::$app->request->isGet && ! Yii::$app->request->isPost) {
+            return;
+        }
 
-            // выходим как не измененный контент
-            header($_SERVER['SERVER_PROTOCOL'] . ' 304 Not Modified');
-            exit();
+        /** @noinspection PhpUsageOfSilenceOperatorInspection */
+        if ((Yii::$app->request->headers->has('If-None-Match') &&
+                in_array('"' . $etag . '"', Yii::$app->request->getETags(), true)) ||
+            (Yii::$app->request->headers->has('If-Modified-Since') &&
+                @strtotime(Yii::$app->request->headers->get('If-Modified-Since')) >= $timestamp)) {
+
+            $response = Yii::$app->response;
+            $response->clear();
+            $response->statusCode = 304;
+            $response->statusText = 'Not Modified';
+            try {
+                Yii::$app->end(0, $response);
+            } catch (Throwable $ex) {
+                Yii::error($ex, __METHOD__);
+                exit;
+            }
         }
     }
 }

@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright (c) 2019.
- *
- * @author Igor (Dicr) Tarasov, develop@dicr.org
+ * @copyright 2019-2020 Dicr http://dicr.org
+ * @author Igor A Tarasov <develop@dicr.org>
+ * @license proprietary
+ * @version 14.02.20 00:46:01
  */
 
 declare(strict_types = 1);
@@ -58,18 +59,17 @@ class Response
      * @return void|\yii\web\Response
      * @throws \yii\base\ExitException
      */
-    public function redirect($url, $status = 302)
+    public function redirect($url, $status = null)
     {
         $url = str_replace(['&amp;', "\n", "\r"], ['&', '', ''], $url);
-        Yii::$app->end(0, $this->response->redirect($url, $status));
+        Yii::$app->end(0, $this->response->redirect($url, $status ?: 302));
     }
-
-    /** @noinspection PhpMethodMayBeStaticInspection */
 
     /**
      * Усановить уровнь компрессии.
      *
      * @param $level
+     * @noinspection PhpMethodMayBeStaticInspection
      */
     public function setCompression($level)
     {

@@ -1,10 +1,4 @@
 <?php
-/**
- * Copyright (c) 2019.
- *
- * @author Igor (Dicr) Tarasov, develop@dicr.org
- */
-
 /** @noinspection PhpUnhandledExceptionInspection */
 
 use app\models\City;
@@ -12,14 +6,11 @@ use app\models\City;
 // Version
 define('VERSION', '2.1.0.1');
 
-/*include_once $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'Siter' . DIRECTORY_SEPARATOR . 'buffer_worker.php';
-siter_read_cache();
-ob_start();*/
-
 //redirect
-$st_query = substr($_SERVER['REQUEST_URI'], 0, - 1);
-if (substr($_SERVER['REQUEST_URI'], - 1) == '?') {
+$st_query = substr($_SERVER['REQUEST_URI'], 0, -1);
+if (substr($_SERVER['REQUEST_URI'], -1) === '?') {
     header('Location: ' . $_SERVER['REQUEST_SCHEME'] . '://' . DOMAIN . $st_query, true, 301);
+    exit;
 }
 
 // Configuration
@@ -60,18 +51,15 @@ define('CURRENCY', $currency);
 $db = new DB(DB_DRIVER, DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, DB_DATABASE, DB_PORT);
 $registry->set('db', $db);
 
-// Domain_id
-define('DOMAIN_ID', City::current()->id);
-
 // Store
 if ($_SERVER['HTTPS']) {
-    $store_query = $db->query("SELECT * FROM " . DB_PREFIX . "store WHERE REPLACE(`ssl`, 'www.', '') = '" .
-                              $db->escape('https://' . str_replace('www.', '', $_SERVER['HTTP_HOST']) .
-                                          rtrim(dirname($_SERVER['PHP_SELF']), '/.\\') . '/') . "'");
+    $store_query = $db->query('SELECT * FROM ' . DB_PREFIX . "store WHERE REPLACE(`ssl`, 'www.', '') = '" .
+        $db->escape('https://' . str_replace('www.', '', $_SERVER['HTTP_HOST']) .
+            rtrim(dirname($_SERVER['PHP_SELF']), '/.\\') . '/') . "'");
 } else {
-    $store_query = $db->query("SELECT * FROM " . DB_PREFIX . "store WHERE REPLACE(`url`, 'www.', '') = '" .
-                              $db->escape('http://' . str_replace('www.', '', $_SERVER['HTTP_HOST']) .
-                                          rtrim(dirname($_SERVER['PHP_SELF']), '/.\\') . '/') . "'");
+    $store_query = $db->query('SELECT * FROM ' . DB_PREFIX . "store WHERE REPLACE(`url`, 'www.', '') = '" .
+        $db->escape('http://' . str_replace('www.', '', $_SERVER['HTTP_HOST']) .
+            rtrim(dirname($_SERVER['PHP_SELF']), '/.\\') . '/') . "'");
 }
 
 if ($store_query->num_rows) {
@@ -81,18 +69,18 @@ if ($store_query->num_rows) {
 }
 
 // Settings
-$query = $db->query("SELECT * FROM `" . DB_PREFIX . "setting` WHERE store_id = '0' OR store_id = '" .
-                    (int)$config->get('config_store_id') . "' ORDER BY store_id ASC");
+$query = $db->query('SELECT * FROM `' . DB_PREFIX . "setting` WHERE store_id = '0' OR store_id = '" .
+    (int)$config->get('config_store_id') . "' ORDER BY store_id ASC");
 
 foreach ($query->rows as $result) {
-    if (! $result['serialized']) {
-        $config->set($result['key'], $result['value']);
-    } else {
+    if ($result['serialized']) {
         $config->set($result['key'], json_decode($result['value'], true));
+    } else {
+        $config->set($result['key'], $result['value']);
     }
 }
 
-if (! $store_query->num_rows) {
+if (!$store_query->num_rows) {
     $config->set('config_url', HTTP_SERVER);
     $config->set('config_ssl', HTTPS_SERVER);
 }
@@ -114,14 +102,14 @@ $registry->set('response', $response);
 $registry->set('cache', new Cache());
 
 // Session
-if (isset($request->get['token']) && isset($request->get['route']) && substr($request->get['route'], 0, 4) == 'api/') {
-    $db->query("DELETE FROM `" . DB_PREFIX . "api_session` WHERE TIMESTAMPADD(HOUR, 1, date_modified) < NOW()");
+if (isset($request->get['token'], $request->get['route']) && strpos($request->get['route'], 'api/') === 0) {
+    $db->query('DELETE FROM `' . DB_PREFIX . 'api_session` WHERE TIMESTAMPADD(HOUR, 1, date_modified) < NOW()');
 
-    $query = $db->query("SELECT DISTINCT * FROM `" . DB_PREFIX . "api` `a` LEFT JOIN `" . DB_PREFIX .
-                        "api_session` `as` ON (a.api_id = as.api_id) LEFT JOIN " . DB_PREFIX .
-                        "api_ip `ai` ON (as.api_id = ai.api_id) WHERE a.status = '1' AND as.token = '" .
-                        $db->escape($request->get['token']) . "' AND ai.ip = '" .
-                        $db->escape($request->server['REMOTE_ADDR']) . "'");
+    $query = $db->query('SELECT DISTINCT * FROM `' . DB_PREFIX . 'api` `a` LEFT JOIN `' . DB_PREFIX .
+        'api_session` `as` ON (a.api_id = as.api_id) LEFT JOIN ' . DB_PREFIX .
+        "api_ip `ai` ON (as.api_id = ai.api_id) WHERE a.status = '1' AND as.token = '" .
+        $db->escape($request->get['token']) . "' AND ai.ip = '" .
+        $db->escape($request->server['REMOTE_ADDR']) . "'");
 
     if ($query->num_rows) {
         // Does not seem PHP is able to handle sessions as objects properly so so wrote my own class
@@ -129,8 +117,8 @@ if (isset($request->get['token']) && isset($request->get['route']) && substr($re
         $registry->set('session', $session);
 
         // keep the session alive
-        $db->query("UPDATE `" . DB_PREFIX . "api_session` SET date_modified = NOW() WHERE api_session_id = '" .
-                   $query->row['api_session_id'] . "'");
+        $db->query('UPDATE `' . DB_PREFIX . "api_session` SET date_modified = NOW() WHERE api_session_id = '" .
+            $query->row['api_session_id'] . "'");
     }
 } else {
     $session = new Session();
@@ -140,7 +128,7 @@ if (isset($request->get['token']) && isset($request->get['route']) && substr($re
 // Language Detection
 $languages = [];
 
-$query = $db->query("SELECT * FROM `" . DB_PREFIX . "language` WHERE status = '1'");
+$query = $db->query('SELECT * FROM `' . DB_PREFIX . "language` WHERE status = '1'");
 
 foreach ($query->rows as $result) {
     $languages[$result['code']] = $result;
@@ -161,7 +149,7 @@ if (isset($session->data['language']) && array_key_exists($session->data['langua
                 if ($value['status']) {
                     $locale = explode(',', $value['locale']);
 
-                    if (in_array($browser_language, $locale)) {
+                    if (in_array($browser_language, $locale, true)) {
                         $detect = $key;
                         break 2;
                     }
@@ -173,11 +161,11 @@ if (isset($session->data['language']) && array_key_exists($session->data['langua
     $code = $detect ? $detect : $config->get('config_language');
 }
 
-if (! isset($session->data['language']) || $session->data['language'] != $code) {
+if (!isset($session->data['language']) || $session->data['language'] != $code) {
     $session->data['language'] = $code;
 }
 
-if (! isset($request->cookie['language']) || $request->cookie['language'] != $code) {
+if (!isset($request->cookie['language']) || $request->cookie['language'] != $code) {
     setcookie('language', $code, time() + 60 * 60 * 24 * 30, '/', $request->server['HTTP_HOST']);
 }
 
@@ -199,10 +187,10 @@ $registry->set('customer', $customer);
 // Customer Group
 if ($customer->isLogged()) {
     $config->set('config_customer_group_id', $customer->getGroupId());
-} elseif (isset($session->data['customer']) && isset($session->data['customer']['customer_group_id'])) {
+} elseif (isset($session->data['customer']['customer_group_id'])) {
     // For API calls
     $config->set('config_customer_group_id', $session->data['customer']['customer_group_id']);
-} elseif (isset($session->data['guest']) && isset($session->data['guest']['customer_group_id'])) {
+} elseif (isset($session->data['guest']['customer_group_id'])) {
     $config->set('config_customer_group_id', $session->data['guest']['customer_group_id']);
 }
 
@@ -210,8 +198,8 @@ if ($customer->isLogged()) {
 if (isset($request->get['tracking'])) {
     setcookie('tracking', $request->get['tracking'], time() + 3600 * 24 * 1000, '/');
 
-    $db->query("UPDATE `" . DB_PREFIX . "marketing` SET clicks = (clicks + 1) WHERE code = '" .
-               $db->escape($request->get['tracking']) . "'");
+    $db->query('UPDATE `' . DB_PREFIX . "marketing` SET clicks = (clicks + 1) WHERE code = '" .
+        $db->escape($request->get['tracking']) . "'");
 }
 
 // Affiliate
@@ -243,7 +231,7 @@ $zone = explode('.', $_SERVER['HTTP_HOST']);
 $event = new Event($registry);
 $registry->set('event', $event);
 
-$query = $db->query("SELECT * FROM " . DB_PREFIX . "event");
+$query = $db->query('SELECT * FROM ' . DB_PREFIX . 'event');
 
 foreach ($query->rows as $result) {
     $event->register($result['trigger'], $result['action']);
@@ -263,11 +251,4 @@ $controller->dispatch(new Action($request->get['route'] ?? 'common/home'), new A
 
 // Output
 $response->output();
-
-/*
-
-$content = siter_buffer_worker(ob_get_contents());
-ob_end_clean();
-siter_write_cache($content);
-echo $content;*/
 

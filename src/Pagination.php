@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright (c) 2019.
- *
- * @author Igor (Dicr) Tarasov, develop@dicr.org
+ * @copyright 2019-2020 Dicr http://dicr.org
+ * @author Igor A Tarasov <develop@dicr.org>
+ * @license proprietary
+ * @version 14.02.20 00:46:01
  */
 
 declare(strict_types = 1);
@@ -19,8 +20,8 @@ use const ENT_QUOTES;
  * Виджет паринации Opencart.
  *
  * @property-read int $numPages кол-во сраниц
- *
  * @package dicr\oclib
+ * @noinspection PhpUnused
  */
 class Pagination extends Widget
 {
@@ -61,9 +62,7 @@ class Pagination extends Widget
      */
     public $pager;
 
-    /**
-     * @var \yii\data\DataProviderInterface|null провайдер данных у которого возьмется пейджер и totalCount
-     */
+    /** @var \yii\data\DataProviderInterface|null провайдер данных у которого возьмется пейджер и totalCount */
     public $provider;
 
     /**
@@ -251,6 +250,7 @@ class Pagination extends Widget
         }
 
         if (! empty($this->url)) {
+            /** @noinspection SpellCheckingInspection */
             $this->url = str_replace('%7Bpage%7D', '{page}', $this->url);
             $this->url = html_entity_decode($this->url, ENT_QUOTES);
         }

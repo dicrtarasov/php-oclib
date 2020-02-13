@@ -79,6 +79,7 @@ class Attr extends ActiveRecord
      * Возвращает набор значений
      *
      * @return array
+     * @noinspection PhpUnused
      */
     public function getValues()
     {
@@ -109,6 +110,7 @@ class Attr extends ActiveRecord
      * Устанавливает набр значений.
      *
      * @param array $values
+     * @noinspection PhpUnused
      */
     public function setValues(array $values)
     {

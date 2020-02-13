@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright (c) 2019.
- *
- * @author Igor (Dicr) Tarasov, develop@dicr.org
+ * @copyright 2019-2020 Dicr http://dicr.org
+ * @author Igor A Tarasov <develop@dicr.org>
+ * @license proprietary
+ * @version 14.02.20 00:52:59
  */
 
 declare(strict_types = 1);
@@ -23,6 +24,7 @@ use function is_array;
  * добавить этот контроллер как preAction.
  *
  * @package dicr\oclib
+ * @noinspection PhpUnused
  */
 class ControllerCatalogStartupUrl extends Controller
 {
@@ -71,10 +73,14 @@ class ControllerCatalogStartupUrl extends Controller
             // восстанавливаем путь переадресации
             Yii::$app->request->pathInfo = $this->request->get['_route_'];
 
+            /** @var array|false $result */
+            $result = false;
+
             // пытаемся резолвить как ЧПУ
             try {
                 $result = Yii::$app->urlManager->parseRequest(Yii::$app->request);
-            } catch (UrlNormalizerRedirectException $ex) {
+            } /** @noinspection PhpRedundantCatchClauseInspection */
+            catch (UrlNormalizerRedirectException $ex) {
                 // переадресация от нормализаора Url
                 $url = $ex->url;
 
@@ -97,11 +103,15 @@ class ControllerCatalogStartupUrl extends Controller
             }
 
             // если ЧПУ решен
-            if (! empty($result) && ! empty($result[0])) {
+            /** @noinspection OffsetOperationsInspection */
+            if (is_array($result) && ! empty($result[0])) {
                 // добавляем парамеры ЧПУ в параметры запроса
-                $this->request->get = ArrayHelper::merge($this->request->get, $result[1]);
+                /** @noinspection OffsetOperationsInspection */
+                $this->request->get = ArrayHelper::merge($this->request->get, $result[1] ?? []);
 
                 // возвращаем полученный из ЧПУ маршрут
+
+                /** @noinspection OffsetOperationsInspection */
                 return $result[0];
             }
 

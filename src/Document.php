@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright (c) 2019.
- *
- * @author Igor (Dicr) Tarasov, develop@dicr.org
+ * @copyright 2019-2020 Dicr http://dicr.org
+ * @author Igor A Tarasov <develop@dicr.org>
+ * @license proprietary
+ * @version 14.02.20 00:46:01
  */
 
 declare(strict_types = 1);
@@ -27,6 +28,7 @@ use yii\data\Sort;
  * @property-read array $scripts
  *
  * @package dicr\oclib
+ * @noinspection PhpUnused
  */
 class Document extends BaseObject
 {
@@ -90,8 +92,8 @@ class Document extends BaseObject
      */
     public function setTitle(string $title = null)
     {
-        $this->_title =
-            isset($title) ? Html::decode(mb_strtoupper(mb_substr($title, 0, 1)) . mb_substr($title, 1)) : null;
+        $this->_title = isset($title) ?
+            Html::decode(mb_strtoupper(mb_substr($title, 0, 1)) . mb_substr($title, 1)) : null;
     }
 
     /**
@@ -212,13 +214,14 @@ class Document extends BaseObject
             'rel' => $rel,
             'media' => $media
         ];
-    }/** @noinspection PhpMethodMayBeStaticInspection */
+    }
 
     /**
      * Возвращает пусой массив, так как стили хранятся в links.
      *
      * @return array
      * @deprecated используйте getLinks()
+     * @noinspection PhpMethodMayBeStaticInspection
      */
     public function getStyles()
     {

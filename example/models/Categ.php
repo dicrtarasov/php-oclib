@@ -1,23 +1,39 @@
 <?php
 /**
- * Copyright (c) 2019.
- *
- * @author Igor (Dicr) Tarasov, develop@dicr.org
+ * @copyright 2019-2020 Dicr http://dicr.org
+ * @author Igor A Tarasov <develop@dicr.org>
+ * @license proprietary
+ * @version 11.02.20 02:57:39
  */
 
 declare(strict_types = 1);
+
 namespace app\models;
 
+use Exception;
 use Html;
 use Registry;
+use StringHelper;
+use Url;
 use Yii;
+use yii\base\InvalidArgumentException;
+use yii\base\InvalidConfigException;
 use yii\caching\TagDependency;
+use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 use yii\db\Expression;
 use yii\db\Query;
+use function array_intersect;
 use function array_key_exists;
+use function array_keys;
 use function count;
+use function end;
+use function explode;
+use function implode;
 use function in_array;
+use function preg_replace_callback;
+use function reset;
+use function trim;
 
 /**
  * Категория.
@@ -34,12 +50,12 @@ use function in_array;
  * @property int $column [int(3) unsigned]
  * @property string $date_added [datetime]
  *
- * // relations
+ * // Relations
  *
- * @property-read \app\models\CategDesc $desc описание категории
- * @property-read \app\models\Categ|null $parent
- * @property-read \app\models\Categ[] $childs
- * @property-read \app\models\Prod[] $prods
+ * @property-read CategDesc $desc описание категории
+ * @property-read Categ|null $parent
+ * @property-read Categ[] $childs
+ * @property-read Prod[] $prods
  *
  * // виртуальные свойства
  *
@@ -48,7 +64,8 @@ use function in_array;
  * @property-read int $prodsCount
  * @property-read bool $hasProds
  * @property-read bool $isEmpty
- * @property-read string $url URL категории
+ * @property-read array $url URL категории с параметрами
+ * @property-read string $href URL страницы категории
  * @property-read string $imageRecurse поиск каринки $image рекурсвно вверх
  * @property-read string $imageUrl URL каринки
  * @property-read string[] $path путь id => name
@@ -56,19 +73,23 @@ use function in_array;
  * @property-read string $pathName полный путь через '/'
  * @property-read int $topCategId id верхней категории без получения самой категории
  * @property-read bool $isTopCateg
- * @property-read \app\models\Categ $topCateg
+ * @property-read Categ $topCateg
  * @property-read bool $isCable принадлежи к каегориям кабелей
  * @property-read array $breadcrumbs хлебные крошки
  * @property-read bool $isHiddenForCountry спрятана для текущей страны
  * @property-read bool $isEnabled рекурсивная проверка статуса
- * @property-read \app\models\Prod[] $frontProds витринные товары категории для показа в качестве примерных
+ * @property-read Prod[] $frontProds витринные товары категории для показа в качестве примерных
  * @property-read string|null $glushImage картинка для сраницы товаров
  * @property-read string $units единицы измерения товаров
- * @property-read string|null $parentName название родительской категории
+ * @property-read string $parentName короткое название родительской категории
+ * @property-read string $parentFullName полное название родительской категории
+ * @property-read array $crossSib перекрестные ссылки на смежные категории
+ * @property-read array $crossUp перекрестные ссылки на категории выше
  *
  * // проксируемые свойства из CategDec
  *
- * @property string $name
+ * @property string $name короткое название категории
+ * @property string $fullName полное название категории
  * @property string $singular единичное название товара в категории
  * @property string $description
  * @property string $description2
@@ -77,9 +98,9 @@ use function in_array;
  * @property string $primen применение
  * @property string $rightcol правая колонка
  * @property string $catmenimg
- *
- * @author Igor (Dicr) Tarasov <develop@dicr.org>
- * @version 2019
+ * @property string $metaTitle title страницы
+ * @property string $metaDesc Meta Description
+ * @property string $metaH1 заголовок H1
  */
 class Categ extends ActiveRecord
 {
@@ -118,17 +139,11 @@ class Categ extends ActiveRecord
     /** @var int расчетное значение рекурсивного статуса и скрытости */
     private $_isEnabled;
 
-    /** @var string */
-    private $_url;
-
     /** @var string рекурсивный вверх $image */
     private $_imageRecurse;
 
     /** @var string рекурсивное единичное название товара */
     private $_singular;
-
-    /** @var string */
-    private $_metaH1;
 
     /** @var @var string */
     private $_metaTitle;
@@ -143,23 +158,26 @@ class Categ extends ActiveRecord
      */
     public static function tableName()
     {
-        return '{{oc_category}}';
+        return '{{%category}}';
     }
 
     /**
-     * Связи с городами.
-     *
-     * @return string
+     * @inheritDoc
+     * @return array
      */
-    public static function tableCities()
+    public function rules()
     {
-        return '{{oc_category_to_city}}';
+        return [
+            ['sort_order', 'default', 'value' => 999],
+            ['sort_order', 'integer', 'min' => - 999, 'max' => 999]
+        ];
     }
 
     /**
      * Возвращает описание категории.
      *
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery
+     * @noinspection PhpUnused
      */
     public function getDesc()
     {
@@ -169,7 +187,8 @@ class Categ extends ActiveRecord
     /**
      * Возвращает родительскую категорию.
      *
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery
+     * @noinspection PhpUnused
      */
     public function getParent()
     {
@@ -179,20 +198,35 @@ class Categ extends ActiveRecord
     }
 
     /**
-     * Возвращает имя родиельской категории.
+     * Короткое имя родиельской категории.
      *
-     * @return string|null
+     * @return string
+     * @noinspection PhpUnused
      */
     public function getParentName()
     {
-        $path = array_values($this->path);
-        return count($path) > 1 ? reset($path) : null;
+        $parent = $this->parent;
+
+        return $parent !== null ? $parent->name : '';
+    }
+
+    /**
+     * Полное имя родиельской категории.
+     *
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getParentFullName()
+    {
+        $parent = $this->parent;
+
+        return $parent !== null ? $parent->fullName : '';
     }
 
     /**
      * Возвращает связь с дочерними категориями.
      *
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery
      */
     public function getChilds()
     {
@@ -202,8 +236,8 @@ class Categ extends ActiveRecord
     /**
      * Возвращает запрос оваров.
      *
-     * @return \yii\db\ActiveQuery
-     * @throws \yii\base\InvalidConfigException
+     * @return ActiveQuery
+     * @throws InvalidConfigException
      */
     public function getProds()
     {
@@ -245,18 +279,6 @@ class Categ extends ActiveRecord
     }
 
     /**
-     * Проверяет наличие товаров.
-     *
-     * @param array $options
-     * @return bool
-     * @see getProdsCount(array $options)
-     */
-    public function getHasProds(array $options = null)
-    {
-        return $this->getProdsCount($options) > 0;
-    }
-
-    /**
      * Возвращает количество дочерних категорий.
      *
      * @param array $options
@@ -292,6 +314,28 @@ class Categ extends ActiveRecord
     }
 
     /**
+     * Таблица путей.
+     *
+     * @return string
+     */
+    public static function tablePath()
+    {
+        return '{{oc_category_path}}';
+    }
+
+    /**
+     * Проверяет наличие товаров.
+     *
+     * @param array $options
+     * @return bool
+     * @see getProdsCount(array $options)
+     */
+    public function getHasProds(array $options = null)
+    {
+        return $this->getProdsCount($options) > 0;
+    }
+
+    /**
      * Возращает кол-во товаров в категории.
      *
      * @param array $options
@@ -317,7 +361,7 @@ class Categ extends ActiveRecord
         ]);
 
         if (isset($options['status'])) {
-            $query->innerJoin(Prod::tableName() . ' p', 'p.[[product_id]]=p2c.[[product_id]]')
+            $query->rightJoin(Prod::tableName() . ' p', 'p.[[product_id]]=p2c.[[product_id]]')
                 ->andWhere(['p.[[status]]' => (int)$options['status']]);
         }
 
@@ -329,13 +373,32 @@ class Categ extends ActiveRecord
     }
 
     /**
-     * Таблица путей.
+     * Возвращает путь категории без ее загрузки.
      *
-     * @return string
+     * @param int $category_id
+     * @return array id => name
      */
-    public static function tablePath()
+    public static function path(int $category_id)
     {
-        return '{{oc_category_path}}';
+        if ($category_id < 1) {
+            throw new InvalidArgumentException('category_id');
+        }
+
+        return Yii::$app->cache->getOrSet([__METHOD__, $category_id], static function() use ($category_id) {
+            return CategDesc::find()->alias('cd')
+                ->innerJoin(Categ::tablePath() . ' cp', 'cp.[[path_id]]=cd.[[category_id]]')
+                ->select([
+                    'name' => 'cd.[[name]]',
+                    'path_id' => 'cp.[[path_id]]'
+                ])
+                ->where(['cp.[[category_id]]' => $category_id])
+                ->andWhere(['>', 'ifnull(cp.[[path_id]],0)', 0])
+                ->orderBy('cp.[[level]]')
+                ->indexBy('path_id')
+                ->column();
+        }, null, new TagDependency([
+            'tags' => [__CLASS__, CategDesc::class]
+        ]));
     }
 
     /**
@@ -350,38 +413,34 @@ class Categ extends ActiveRecord
      */
     public function getPath()
     {
+        if (empty($this->category_id)) {
+            return [];
+        }
+
         if (! isset($this->_path)) {
-            $this->_path = self::path($this->category_id);
+            // получаем путь из таблицы category_path - слишком долго
+            //$this->_path = self::path($this->category_id);
+
+            // получаем путь из родительской категории
+            $this->_path = Yii::$app->cache->getOrSet([__METHOD__, (int)$this->category_id], function() {
+                $parent = $this->parent;
+                $path = $parent !== null ? $parent->path : [];
+                $path[$this->category_id] = $this->name;
+
+                return $path;
+            }, null, new TagDependency([
+                'tags' => [__CLASS__]
+            ]));
         }
 
         return $this->_path;
     }
 
     /**
-     * Возвращает путь категории без ее загрузки.
-     *
-     * @param int $category_id
-     * @return array id => name
-     */
-    public static function path(int $category_id)
-    {
-        return (new Query())->select(['cd.[[name]]', 'cp.[[path_id]]'])
-            ->from(self::tablePath() . ' cp')
-            ->innerJoin(CategDesc::tableName() . ' cd', 'cd.[[category_id]]=cp.[[path_id]]')
-            ->where(['cp.[[category_id]]' => $category_id])
-            ->andWhere('ifnull(cp.[[path_id]],0) > 0')
-            ->orderBy('cp.[[level]]')
-            ->indexBy('path_id')
-            ->cache(true, new TagDependency([
-                'tags' => [self::class]
-            ]))
-            ->column();
-    }
-
-    /**
      * Возвращает уровень категории.
      *
      * @return int
+     * @noinspection PhpUnused
      */
     public function getLevel()
     {
@@ -393,20 +452,23 @@ class Categ extends ActiveRecord
      *
      * @param string|null $glue
      * @return string
+     * @noinspection PhpUnused
      */
     public function getPathName(string $glue = null)
     {
-        return implode($glue ?? '/', array_values($this->path));
+        return implode($glue ?? '/', $this->path);
     }
 
     /**
      * Возвращает ID верхней категории.
      *
      * @return int
+     * @noinspection PhpUnused
      */
     public function getTopCategId()
     {
         $path = array_keys($this->path);
+
         return (int)reset($path);
     }
 
@@ -414,6 +476,7 @@ class Categ extends ActiveRecord
      * Проверяет является ли категория верхнего уровня.
      *
      * @return bool
+     * @noinspection PhpUnused
      */
     public function getIsTopCateg()
     {
@@ -423,6 +486,7 @@ class Categ extends ActiveRecord
     /**
      * Возвращает главную категорию.
      *
+     * @noinspection PhpUnused
      */
     public function getTopCateg()
     {
@@ -442,6 +506,7 @@ class Categ extends ActiveRecord
      * Возвращает признак категории кабелей.
      *
      * @return bool
+     * @noinspection PhpUnused
      */
     public function getIsCable()
     {
@@ -452,6 +517,7 @@ class Categ extends ActiveRecord
      * Возвращает хлебные крошки.
      *
      * @return array
+     * @noinspection PhpUnused
      */
     public function getBreadcrumbs()
     {
@@ -471,11 +537,13 @@ class Categ extends ActiveRecord
      * Проверяет спрятана ли категория для текущей страны.
      *
      * @param string|null $country
-     * @return boolean
+     * @return bool
+     * @noinspection PhpUnused
      */
     public function getIsHiddenForCountry(string $country = null)
     {
-        $hiddens = self::getHiddens($country);
+        $hiddens = self::hiddens($country);
+
         return count(array_intersect($hiddens, array_keys($this->path))) > 0;
     }
 
@@ -485,7 +553,7 @@ class Categ extends ActiveRecord
      * @param string|null $country
      * @return int[]
      */
-    public static function getHiddens(string $country = null)
+    public static function hiddens(string $country = null)
     {
         if ($country === null) {
             $parts = explode('.', $_SERVER['HTTP_HOST'] ?? '');
@@ -499,6 +567,7 @@ class Categ extends ActiveRecord
      * Возвращает сатус рекурсивно.
      *
      * @return bool
+     * @noinspection PhpUnused
      */
     public function getIsEnabled()
     {
@@ -507,11 +576,16 @@ class Categ extends ActiveRecord
             return false;
         }
 
+        if (empty($this->category_id)) {
+            return false;
+        }
+
         // проверяем наличие запрета у родительских
         if ($this->_isEnabled === null) {
-            $this->_isEnabled = Yii::$app->cache->getOrSet([__METHOD__, $this->category_id], function() {
+            $this->_isEnabled = Yii::$app->cache->getOrSet([__METHOD__, (int)$this->category_id], function() {
                 $parent = $this->parent;
-                return isset($parent) ? (int)$parent->isEnabled : 1;
+
+                return $parent !== null ? (int)$parent->isEnabled : 1;
             }, null, new TagDependency([
                 'tags' => [self::class]
             ]));
@@ -521,48 +595,70 @@ class Categ extends ActiveRecord
     }
 
     /**
-     * Возвращает URL категории.
+     * Возвращает URL товара с параметрами
      *
-     * @param array $params дополнительные парамеры запроса.
-     * @return string
+     * @param array|null $params
+     * @return array
      */
     public function getUrl(array $params = null)
     {
-        if ($params === null) {
-            $params = [];
+        $params = $params ?: [];
+        $params[0] = 'product/category';
+        $params['category_id'] = $this->category_id;
+
+        return $params;
+    }
+
+    /** @var string */
+    private $_href;
+
+    /**
+     * Возвращает ссылку на страницу товара.
+     *
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getHref()
+    {
+        if (! isset($this->_href)) {
+            $this->_href = Url::to($this->url);
         }
 
-        if (count($params)) {
-            return Registry::app()->url->link('product/category', array_merge($params, [
-                'category_id' => $this->category_id,
-            ]));
-        }
-
-        if (! isset($this->_url)) {
-            $this->_url = Registry::app()->url->link('product/category', [
-                'category_id' => $this->category_id,
-            ]);
-        }
-
-        return $this->_url;
+        return $this->_href;
     }
 
     /**
      * Возвращает каринку, рекурсивно вверх.
      *
-     * @return string
+     * @return string|null
+     * @noinspection PhpUnused
      */
     public function getImageRecurse()
     {
-        if ($this->image !== '') {
+        if ($this->image !== null && $this->image !== '') {
             return $this->image;
         }
 
+        if (empty($this->category_id)) {
+            return null;
+        }
+
         if (! isset($this->_imageRecurse)) {
-            $this->_imageRecurse = Yii::$app->cache->getOrSet([__METHOD__, $this->category_id], function() {
+            $this->_imageRecurse = Yii::$app->cache->getOrSet([__METHOD__, (int)$this->category_id], function() {
                 $parent = $this->parent;
-                return isset($parent) ? $parent->imageRecurse : '';
-            });
+                $image = $parent !== null ? $parent->imageRecurse : '';
+                if (empty($image)) {
+                    if ($this->topCategId === self::ID_CABLEPROV) {
+                        $image = 'kabs-gl.svg';
+                    } elseif ($this->topCategId === self::ID_IMPORTCABLE) {
+                        $image = 'catalog/import_cabel-zh.svg';
+                    }
+                }
+
+                return $image;
+            }, null, new TagDependency([
+                'tags' => [__CLASS__]
+            ]));
         }
 
         return $this->_imageRecurse;
@@ -584,6 +680,7 @@ class Categ extends ActiveRecord
         }
 
         $image = ! empty($options['recurse']) ? $this->imageRecurse : $this->image;
+
         return ! empty($image) ? '/image/' . $image : '';
     }
 
@@ -606,18 +703,53 @@ class Categ extends ActiveRecord
 
         $model = Registry::app()->load->model('tool/image');
         $image = ! empty($options['recurse']) ? $this->imageRecurse : $this->image;
+
         return $model->resize($image ?: 'no_image.png', $width, $height);
     }
 
+    /** @var string */
+    private $_name;
+
     /**
-     * Возвращает название каегории.
+     * Короткое название категории.
      *
      * @return string
      */
     public function getName()
     {
+        if (! isset($this->_name)) {
+            $desc = $this->desc;
+            $this->_name = isset($desc) ? $desc->name : '';
+        }
+
+        return $this->_name;
+    }
+
+    /**
+     * Для сорхранения поля name при выборке по join.
+     *
+     * @param string $name
+     * @noinspection PhpUnused
+     */
+    public function setName(string $name)
+    {
+        $this->_name = $name;
+    }
+
+    /**
+     * Полное название категории.
+     *
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getFullName()
+    {
         $desc = $this->desc;
-        return isset($desc) ? $desc->name : '';
+        if ($desc === null) {
+            return '';
+        }
+
+        return $desc->full_name ?: $desc->name;
     }
 
     /**
@@ -625,6 +757,7 @@ class Categ extends ActiveRecord
      *
      * @param bool $recurse
      * @return string
+     * @noinspection PhpUnused
      */
     public function getSingular(bool $recurse = true)
     {
@@ -635,7 +768,7 @@ class Categ extends ActiveRecord
             if (empty($this->_singular) && $recurse) {
                 $parent = $this->parent;
                 if ($parent !== null) {
-                    $this->_singular = $parent->getSingular(true);
+                    $this->_singular = $parent->getSingular();
                 }
             }
         }
@@ -647,66 +780,95 @@ class Categ extends ActiveRecord
      * Возвращает первое описание категории.
      *
      * @return string html
-     * @throws \yii\base\InvalidConfigException
+     * @noinspection PhpUnused
      */
     public function getDescription()
     {
         $desc = $this->desc;
-        if (empty($desc)) {
+        if ($desc === null) {
             return '';
         }
 
-        $html = trim(Html::decode($desc->description));
-        if (trim(Html::toText($html)) === '') {
-            return '';
+        $html = [];
+
+        if (Html::hasText($desc->description)) {
+            $html[] = Html::decode($desc->description);
         }
 
-        return City::replaceVars($html);
+        if ($desc->template_text) {
+            $html[] = '<p>Уточнить цены на ' . Html::esc($desc->h1_shab ?: StringHelper::mb_lcfirst($this->fullName)) .
+                ', изучить технические характеристики, описание и сферы применения, рассчитать стоимость доставки в свой регион и заказать нужные маркоразмеры вы можете, выбрав необходимую марку в каталоге.</p>';
+        }
+
+        return ! empty($html) ? City::replaceVars(implode('', $html)) : '';
     }
 
     /**
      * Возвращает второе описание категории.
      *
      * @return string
-     * @throws \yii\base\InvalidConfigException
+     * @noinspection PhpUnused
      */
     public function getDescription2()
     {
         $desc = $this->desc;
-        if (empty($desc)) {
+        if ($desc === null) {
             return '';
         }
 
-        $html = trim(Html::decode($desc->description2));
-        if (trim(Html::toText($html)) === '') {
-            return '';
+        $html = [];
+
+        if (Html::hasText($desc->description2)) {
+            $html[] = Html::decode($desc->description2);
         }
 
-        return City::replaceVars($html);
+        if ($desc->template_text) {
+            $html[] =
+                '<p>Купить ' . Html::esc($desc->h1_shab2 ?: StringHelper::mb_lcfirst($this->fullName)) . ' оптом ' .
+                Html::esc(City::current()->name3) .
+                ' вы можете в РТК «Новые Технологии». Специалисты компании окажут квалифицированную помощь в выборе продукции с учетом технических требований и ответят на все интересующие вопросы.</p>';
+        }
+
+        return empty($html) ? '' : City::replaceVars(implode('', $html));
     }
+
+    /**
+     * Проверяет наличие категории id в пути.
+     *
+     * @param int $category_id
+     * @return bool
+     */
+    public function inPath(int $category_id)
+    {
+        return array_key_exists($category_id, $this->path);
+    }
+
+    /** @var string */
+    private $_metaH1;
 
     /**
      * Возвращает H1 (heading_title) страницы.
      *
      * @return string
-     * @throws \Exception
+     * @throws Exception
+     * @noinspection PhpUnused
      */
-    public function metaH1()
+    public function getMetaH1()
     {
-        if ($this->_metaH1 === null) {
-            /** @var \app\models\UrlAlias|null $alias */
+        if (! isset($this->_metaH1)) {
+            // получаем H1 их ЧПУ алиаса
+
+            /** @var UrlAlias|null $alias */
             $alias = Yii::$app->get('urlAlias', false);
-            $meta = isset($alias) ? trim($alias->meta_h1) : null;
+
+            $meta = $alias ? trim($alias->meta_h1) : null;
             if (empty($meta)) {
+                // получаем H1 из category_description
                 $desc = $this->desc;
-                $meta = isset($desc) ? trim($desc->meta_h1) : null;
+                $meta = $desc ? trim($desc->meta_h1) : null;
                 if (empty($meta)) {
-                    // TODO очень сранно что добавляеся singular - проверить
-                    if (! $this->isTopCateg && $this->inPath(self::ID_CABLEPROV) && ! empty($this->singular)) {
-                        $meta = '${categ.singular} . ${categ.name}';
-                    } else {
-                        $meta = '${categ.name}';
-                    }
+                    // генерируем H1 из полного названия категории
+                    $meta = '${categ.fullName}';
                 }
             }
 
@@ -716,17 +878,6 @@ class Categ extends ActiveRecord
         }
 
         return $this->_metaH1;
-    }
-
-    /**
-     * Проверяет наличие категории id в пути.
-     *
-     * @param int $category_id
-     * @return boolean
-     */
-    public function inPath(int $category_id)
-    {
-        return array_key_exists($category_id, $this->path);
     }
 
     /**
@@ -743,51 +894,79 @@ class Categ extends ActiveRecord
     }
 
     /**
+     * Добавляет номер страницы к метатегу.
+     *
+     * @param string $meta метатег
+     * @param int $page номер текущей страницы
+     * @return string метатег
+     */
+    protected static function addPage(string $meta, int $page)
+    {
+        if ($page > 1) {
+            $meta .= ', стр. №' . $page;
+        }
+
+        return $meta;
+    }
+
+    /**
      * Возвращает meta_title категории.
      *
      * @param array $args
      * @return string
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
-    public function metaTitle(array $args = [])
+    public function getMetaTitle(array $args = [])
     {
-        if ($this->_metaTitle === null) {
-            /** @var \app\models\UrlAlias|null $alias */
+        if (! isset($this->_metaTitle)) {
+            /** @var UrlAlias|null $alias */
             $alias = Yii::$app->get('urlAlias', false);
 
-            /** @var \app\models\ProdFilter $prodFilter */
+            /** @var ProdFilter $prodFilter */
             $prodFilter = $args['prodFilter'] ?? null;
-            $page = (int)Yii::$app->request->get('page', 1);
 
-            if ($page < 2 && isset($alias) && !empty($alias->meta_title)) {
+            /** @var CategDesc $desc */
+            $desc = $this->desc;
+
+            /** @var int $page */
+            $page = (int)($args['page'] ?? 1);
+
+            // прописано в ЧПУ
+            if ($alias !== null && ! empty($alias->meta_desc)) {
                 $meta = $alias->meta_title;
-            } elseif (isset($prodFilter) && ! empty($prodFilter->filterText)) {
-                // для фильтров
-                $meta = '${categ.name} | ${prodFilter.filterText} купить оптом ${city.name3}, цены';
-                if ($page > 1) {
-                    $meta .= ', стр. №' . $page;
-                }
-            } elseif ($page > 1) {
-                // для пагинаций
-                $meta = '${categ.name}, стр. №' . $page . ' - РТК «Новые технологии» ${city.name3}';
-            } elseif (! empty($this->desc) && ! empty($this->desc->meta_title)) {
-                // если имеется, то возвращаем оригинальный meta title
+                self::addPage($meta, $page);
+            }
+            //
+            // страницы фильтров
+            elseif ($prodFilter !== null && ! empty($prodFilter->filterText)) {
+                $meta = '${categ.fullName} | ${prodFilter.filterText} купить оптом ${city.name3}, цены';
+                self::addPage($meta, $page);
+            }
+            //
+            // прописано в категории
+            elseif ($desc !== null && ! empty($desc->meta_title)) {
                 $meta = $this->desc->meta_title;
-            } elseif ($this->isMarka) {
-                // генерируем для маркоразмеров
-                $meta =
-                    '${categ.name} ${categ.parentName}, купить оптом ${city.name3}, цены - РТК «Новые технологии»';
-            } elseif (! $this->isTopCateg && $this->topCategId !== self::ID_CABLEPROV) {
-                // для категорий более первого уровня не кабелей
-                $meta = '${categ.name}, купить ${city.name3}, цены - РТК «Новые технологии»';
-            } else {
-                // по-умолчанию
-                $meta = '${categ.name} купить оптом ${city.name3}, цены - РТК «Новые технологии»';
+                self::addPage($meta, $page);
+            }
+            //
+            // пагинация
+            elseif ($page > 1) {
+                $meta = '${categ.fullName}, стр. №' . $page . ' - РТК «Новые технологии» ${city.name3}';
+            }
+            //
+            // марки кабелей
+            elseif ($this->isMarka && $this->level > 2) {
+                $meta = '${categ.fullName} купить ${city.name3}, низкие цены на кабель/провод';
+            }
+            //
+            // по-умолчанию
+            else {
+                $meta = '${categ.fullName} купить оптом ${city.name3}, цены';
             }
 
             $meta = $this->replaceVars($meta);
             $meta = City::replaceVars($meta);
-            if (!empty($prodFilter)) {
+            if ($prodFilter !== null) {
                 $meta = $prodFilter->replaceVars($meta);
             }
 
@@ -802,64 +981,70 @@ class Categ extends ActiveRecord
      *
      * @param array $args
      * @return string
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
-    public function metaDesc(array $args = [])
+    public function getMetaDesc(array $args = [])
     {
-        if ($this->_metaDesc === null) {
-            /** @var \app\models\UrlAlias|null $alias */
+        if (! isset($this->_metaDesc)) {
+            /** @var UrlAlias|null $alias */
             $alias = Yii::$app->get('urlAlias', false);
 
-            /** @var \app\models\ProdFilter $prodFilter */
+            /** @var ProdFilter $prodFilter */
             $prodFilter = $args['prodFilter'] ?? null;
 
-            $page = (int)Yii::$app->request->get('page', 1);
+            /** @var CategDesc $desc */
+            $desc = $this->desc;
 
-            if ($page < 2 && isset($alias) && !empty($alias->meta_desc)) {
+            /** @var int $page */
+            $page = (int)($args['page'] ?? 1);
+
+            // прописано в ЧПУ
+            if ($alias !== null && ! empty($alias->meta_desc)) {
                 $meta = $alias->meta_desc;
-            } elseif (! empty($prodFilter) && ! empty($prodFilter->filterText)) {
-                // для фильтров
-                $meta = 'РТК «НТ» ${city.name3} предлагает: ✅Купить ${categ.name}, ${prodFilter.filterText} ✅Узнать цены ✆${city.firstPhone}';
-                if ($page > 1) {
-                    $meta .= ', стр. №' . $page;
-                }
-            } elseif ($page > 1) {
-                // для сраниц пагинаций
+                self::addPage($meta, $page);
+            }
+            //
+            // страницы фильтров
+            elseif ($prodFilter !== null && ! empty($prodFilter->filterText)) {
+                $meta = 'РТК «НТ» ${city.name3} предлагает: ✅Купить ' . StringHelper::mb_lcfirst($this->fullName) .
+                    ', ${prodFilter.filterText} ✅Узнать цены ✆${city.firstPhone}';
+                self::addPage($meta, $page);
+            }
+            //
+            // прописано в категории
+            elseif ($desc !== null && ! empty($desc->meta_description)) {
+                $meta = $this->desc->meta_description;
+                self::addPage($meta, $page);
+            }
+            //
+            // пагинация
+            elseif ($page > 1) {
+                // для марок кабелей
                 if ($this->isMarka) {
                     // для страниц маркоразмеров
-                    $meta = 'Доступные маркоразмеры ' . mb_strtolower((string)$this->parentName) .
-                            ' ${categ.name} - Каталог, стр. №' . $page . '. РТК «Новые технологии» ${city.name3}';
-                } else {
-                    // для остальных страниц
-                    $meta = '${categ.name}, стр. №' . $page .
-                            '. Полный каталог на сайте РТК «Новые технологии» ${city.name3}';
+                    $meta =
+                        'Доступные маркоразмеры ' . StringHelper::mb_lcfirst($this->fullName) . ' - Каталог, стр. №' .
+                        $page . '. РТК «Новые технологии» ${city.name3}';
                 }
-            } elseif (! empty($this->desc) && ! empty($this->desc->meta_description)) {
-                // искомое описание
-                $meta = $this->desc->meta_description;
-            } elseif ($this->isMarka) {
-                // генерируем новое описание для страниц маркоразмеров
-                $meta =
-                    'РТК Новые технологии ${city.name3} предлагает: ✅Купить ${categ.name} ${categ.parentName} ✅Узнать цены на ${categ.name} ✆${city.firstPhone}';
-            } elseif (! $this->isTopCateg && $this->topCategId !== self::ID_CABLEPROV) {
-                // для категорий второго уровня не кабелей
-                $meta =
-                    '${categ.name}: купить эту и другую продукцию из категории ${categ.parentName} вы можете в РТК Новые технологии ${city.name3} ✅Узнать цены и оформить заказ: ✆${city.firstPhone}';
-            } elseif ($this->level >= 4) {
-                // если глубина более 4
-                $pathName = array_values($this->path);
-                $meta = 'РТК Новые технологии ${city.name3} предлагает: ✅Купить ${categ.name} (категория ' .
-                        ($pathName[1] ?? '') . ') ✅Узнать цены на ' . ($pathName[1] ?? '') .
-                        ' и другое оборудование ✆${city.firstPhone}';
-            } else {
-                // по-умолчанию
-                $meta =
-                    'РТК Новые технологии ${city.name3} предлагает: ✅Купить ${categ.name} ✅Узнать цены на ${categ.name} ✆${city.firstPhone}';
+                //
+                // для остальных страниц
+                else {
+                    $meta = '${categ.fullName}, стр. №' . $page .
+                        '. Полный каталог на сайте РТК «Новые технологии» ${city.name3}';
+                }
+            }
+            //
+            // по-умолчанию
+            else {
+                $meta = '«РТК Новые технологии» ${city.name3} предлагает: ✅Купить ' .
+                    StringHelper::mb_lcfirst($this->fullName) .
+                    ' ✅Уточнить наличие и оптовые цены ✆${city.firstPhone}';
             }
 
             $meta = $this->replaceVars($meta);
             $meta = City::replaceVars($meta);
-            if (!empty($prodFilter)) {
+
+            if ($prodFilter !== null) {
                 $meta = $prodFilter->replaceVars($meta);
             }
 
@@ -873,10 +1058,16 @@ class Categ extends ActiveRecord
      * Возвращает признак каегории маркоразмеров кабелей.
      *
      * @return bool
+     * @noinspection PhpUnused
      */
     public function getIsMarka()
     {
+        if (! $this->isCable) {
+            return false;
+        }
+
         $desc = $this->desc;
+
         return isset($desc) ? (bool)$desc->marka : false;
     }
 
@@ -884,51 +1075,39 @@ class Categ extends ActiveRecord
      * Возвращает микроразметку категории.
      *
      * @return string html
+     * @noinspection PhpUnused
      */
     public function getMicrorazm()
     {
         $desc = $this->desc;
-        if (empty($desc)) {
-            return '';
-        }
 
-        $html = trim(Html::decode($desc->microrazm));
-        if (trim(Html::toText($html)) === '') {
-            return '';
-        }
-
-        return City::replaceVars($html);
+        return $desc ? City::replaceVars($desc->microrazm) : '';
     }
 
     /**
      * Возвращает текст применения.
      *
      * @return string
+     * @noinspection PhpUnused
      */
     public function getPrimen()
     {
         $desc = $this->desc;
-        if (empty($desc)) {
-            return '';
-        }
 
-        $html = trim(Html::decode($desc->primen));
-        if (trim(Html::toText($html)) === '') {
-            return '';
-        }
-
-        return City::replaceVars($html);
+        return $desc ? City::replaceVars($desc->primen) : '';
     }
 
     /**
      * Возвращает текс правой колонки.
      *
      * @return string
+     * @noinspection PhpUnused
      */
     public function getRightcol()
     {
         // нельзя применять проверку на пустой текст, потому как содержит олько svg
         $desc = $this->desc;
+
         return isset($desc) ? City::replaceVars($desc->rightcol) : '';
     }
 
@@ -936,64 +1115,29 @@ class Categ extends ActiveRecord
      * Каринки меню каегории.
      *
      * @return bool|string
+     * @noinspection PhpUnused
      */
     public function getCatmenimg()
     {
         $desc = $this->desc;
-        return ! empty($desc) ? $desc->catmenimg : '';
-    }
 
-    /**
-     * Возвращает ссылки на случайные соседние категории второго уровня.
-     *
-     * @param int $count
-     * @return \app\models\Categ[] заданное количество случайных соседних категорий второго уровня
-     */
-    public function randomL2(int $count = 6)
-    {
-        $categs = [];
-
-        // получаем категории второго уровня
-        $categsL2 = self::find()->where([
-            'parent_id' => $this->topCategId,
-            'status' => 1
-        ])->cache(true, new TagDependency([
-            'tags' => [self::class]
-        ]))->all();
-
-        // пока не наберем $count ссылок
-        while (! empty($categsL2) && count($categs) < $count) {
-            // обходим недостающее количесво случайных ключей
-            foreach (array_rand($categsL2, min(count($categsL2), $count - count($categs))) as $key) {
-                // удаляем выбранную из списка
-                /** @noinspection OffsetOperationsInspection */
-                $categ = $categsL2[$key];
-                /** @noinspection OffsetOperationsInspection */
-                unset($categsL2[$key]);
-
-                // если имя не равно мета H1, то забираем
-                if ($categ->name !== $this->desc->meta_h1) {
-                    $categs[] = $categ;
-                }
-            }
-        }
-
-        return $categs;
+        return $desc !== null ? $desc->catmenimg : '';
     }
 
     /**
      * Возвращает витринные товары категории.
      *
      * @param int $count
-     * @return \app\models\Prod[]
+     * @return Prod[]
+     * @noinspection PhpUnused
      */
-    public function getFrontProds(int $count = 4)
+    public function getFrontProds(int $count = 5)
     {
         $q = (new ProdFilter([
             'category_id' => $this->category_id,
             'recurse' => true,
             'status' => 1
-        ]))->query->orderBy(new Expression('if(p.[[price]]>0,0,1), p.[[sort_order]]'))
+        ]))->query->orderBy(new Expression('p.[[sort_order]], if(p.[[price]]>0,0,1)'))
             ->limit($count)
             ->cache(true, new TagDependency([
                 'tags' => [self::class, Prod::class]
@@ -1012,28 +1156,30 @@ class Categ extends ActiveRecord
      * Возвращает непонятно какую картинку для страницы товара.
      *
      * @return string|null
+     * @noinspection PhpUnused
      */
     public function getGlushImage()
     {
         /** @var string[] $map */
         $map = [
-            69 => 'armatura.svg',
             59 => 'gbi.svg',
-            66 => 'opori_gb.svg',
-            67 => 'opori_met.svg',
             62 => 'mufti_konc.svg',
             63 => 'mufti_soed.svg',
             64 => 'ogranich.svg',
             65 => 'opori_der.svg',
+            66 => 'opori_gb.svg',
+            67 => 'opori_met.svg',
             68 => 'transformatory.svg',
+            69 => 'armatura.svg',
             70 => 'nagrevat.svg',
+            5557 => 'mufti_soed.svg',
             5558 => 'mufti_konc.svg',
             5658 => 'ehz.svg',
             5703 => 'hangar.svg',
-            5557 => 'mufti_soed.svg',
         ];
 
         $img = $map[$this->category_id] ?? null;
+
         return ! empty($img) ? '/image/catalog/cat_glush/' . $img : null;
     }
 
@@ -1041,9 +1187,107 @@ class Categ extends ActiveRecord
      * Возвращает единицы измерения товаров.
      *
      * @return string
+     * @noinspection PhpUnused
      */
     public function getUnits()
     {
         return $this->isCable ? 'м' : 'шт';
+    }
+
+    /**
+     * Перекрестные ссылки на смежные категории.
+     *
+     * @param int $count
+     * @return array [label => '...", 'url' => '...']
+     * @noinspection PhpUnused
+     */
+    public function getCrossSib(int $count = 6)
+    {
+        if (empty($this->category_id)) {
+            return [];
+        }
+
+        $data = Yii::$app->cache->getOrSet([__METHOD__, (int)$this->category_id], function() use ($count) {
+            return Categ::find()->alias('c')
+                ->joinWith('desc cd', false)
+                ->select([
+                    'name' => 'cd.[[name]]',
+                    'category_id' => 'c.[[category_id]]',
+                ])
+                ->where([
+                    'c.[[parent_id]]' => $this->parent_id,
+                    'c.[[status]]' => 1
+                ])
+                ->andWhere([
+                    'not', [
+                        'c.[[category_id]]' => $this->category_id
+                    ]
+                ])
+                ->orderBy(new Expression('rand()'))
+                ->limit($count)
+                ->indexBy('category_id')
+                ->column();
+        }, null, new TagDependency([
+            'tags' => [self::class, CategDesc::class]
+        ]));
+
+        $links = [];
+        foreach ($data as $id => $name) {
+            $links[] = [
+                'label' => $name,
+                'url' => Registry::app()->url->link('product/category', ['category_id' => $id])
+            ];
+        }
+
+        return $links;
+    }
+
+    /**
+     * Перекрестные ссылки на уровень вверх.
+     *
+     * @param int $count
+     * @return array [label => '...', 'url' => '...']
+     * @noinspection PhpUnused
+     */
+    public function getCrossUp(int $count = 6)
+    {
+        if (empty($this->category_id)) {
+            return [];
+        }
+
+        $data = Yii::$app->cache->getOrSet([__METHOD__, (int)$this->category_id], function() use ($count) {
+            $parent = $this->parent;
+            if ($parent === null) {
+                return [];
+            }
+
+            /** @var Categ[] $categs */
+            return Categ::find()->alias('c')
+                ->joinWith('desc cd', false)
+                ->select([
+                    'name' => 'cd.[[name]]',
+                    'category_id' => 'c.[[category_id]]',
+                ])
+                ->where([
+                    'c.[[parent_id]]' => $parent->parent_id,
+                    'c.[[status]]' => 1
+                ])
+                ->orderBy(new Expression('rand()'))
+                ->limit($count)
+                ->indexBy('category_id')
+                ->column();
+        }, null, new TagDependency([
+            'tags' => [self::class, CategDesc::class]
+        ]));
+
+        $links = [];
+        foreach ($data as $id => $name) {
+            $links[] = [
+                'label' => $name,
+                'url' => Registry::app()->url->link('product/category', ['category_id' => $id])
+            ];
+        }
+
+        return $links;
     }
 }

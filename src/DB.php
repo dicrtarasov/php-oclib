@@ -1,12 +1,10 @@
 <?php
 /**
- * Copyright (c) 2019.
- *
- * @author Igor (Dicr) Tarasov, develop@dicr.org
+ * @copyright 2019-2020 Dicr http://dicr.org
+ * @author Igor A Tarasov <develop@dicr.org>
+ * @license proprietary
+ * @version 14.02.20 00:46:01
  */
-
-/** @noinspection PhpMethodMayBeStaticInspection */
-/** @noinspection PhpUnusedParameterInspection */
 
 declare(strict_types = 1);
 namespace dicr\oclib;
@@ -41,6 +39,7 @@ class DB
      * @param string $database
      * @param int $port
      * @throws \yii\base\InvalidConfigException
+     * @noinspection PhpUnusedParameterInspection
      */
     public function __construct(
         $adaptor = null,
@@ -82,6 +81,7 @@ class DB
      *
      * @param string $value
      * @return string
+     * @noinspection PhpMethodMayBeStaticInspection
      */
     public function escape($value)
     {

@@ -1,25 +1,30 @@
 <?php
 /**
- * Copyright (c) 2019.
- *
- * @author Igor (Dicr) Tarasov, develop@dicr.org
+ * @copyright 2019-2020 Dicr http://dicr.org
+ * @author Igor A Tarasov <develop@dicr.org>
+ * @license proprietary
+ * @version 13.02.20 22:28:12
  */
 
 declare(strict_types = 1);
 
 /**
- * Конфиг локальный для установки (не копируется с тестового на рабочий)
+ * Конфиг локальный для установки на хостинге.
+ * Используется разный для тестового и рабочего сайта.
  */
 
-// основной домен сайа
-const DOMAIN = 'test.ru';
+// протокол доступа к сайту
+const SCHEME = 'https';
 
-const APP_NAME = 'My Site';
+// основной домен сайта
+const DOMAIN = 'test.site.com';
 
 // DB
 const DB_HOSTNAME = 'localhost';
-const DB_USERNAME = 'user';
-const DB_PASSWORD = 'pass';
-const DB_DATABASE = 'dbname';
+const DB_USERNAME = 'myuser';
+const DB_PASSWORD = 'mypass';
+const DB_DATABASE = 'mydb';
 const DB_PREFIX = 'oc_';
 
+// для production должно быть 'prod'
+const ENV = 'dev';

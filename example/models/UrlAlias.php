@@ -14,17 +14,23 @@ use Yii;
 use yii\base\InvalidArgumentException;
 use yii\caching\TagDependency;
 use yii\db\ActiveRecord;
+use yii\db\Exception;
 use yii\db\Query;
+use function array_diff;
+use function array_map;
 use function array_slice;
 use function count;
+use function implode;
 use function is_array;
+use function preg_match;
+use function sprintf;
 use function strlen;
 
 /**
  * Алиас Url.
  *
  * @property-read int $url_alias_id
- * @property string $query
+ * @property string $query маршрут либо параметры (в зависимости от типа алиаса)
  * @property string $keyword
  * @property string $meta_h1
  * @property string $meta_title
@@ -100,24 +106,21 @@ class UrlAlias extends ActiveRecord
      */
     public function rules()
     {
-        // нельзя делать проверку на uique, иначе не проходит upsert
+        // нельзя делать проверку на unique, иначе не проходит upsert
 
         return [
             ['keyword', 'trim'],
             ['keyword', 'required'],
             ['keyword', 'string', 'max' => 144],
-            ['query', 'required'],
 
-            [
-                'query',
-                function($attribute) {
-                    if (empty($this->{$attribute})) {
-                        $this->addError($attribute, 'Требуется указать парамеры запроса');
-                    } elseif (is_array($this->{$attribute})) {
-                        $this->{$attribute} = Url::buildQuery($this->{$attribute});
-                    }
+            ['query', 'required'],
+            ['query', function ($attribute) {
+                if (empty($this->{$attribute})) {
+                    $this->addError($attribute, 'Требуется указать парамеры запроса');
+                } elseif (is_array($this->{$attribute})) {
+                    $this->{$attribute} = Url::buildQuery($this->{$attribute});
                 }
-            ],
+            }],
             ['query', 'string', 'max' => 128],
 
             [['meta_title', 'meta_desc', 'meta_h1'], 'trim'],
@@ -133,6 +136,7 @@ class UrlAlias extends ActiveRecord
      *
      * @param string $param
      * @return string|null
+     * @noinspection PhpUnused
      */
     public static function routeByParam(string $param)
     {
@@ -185,6 +189,7 @@ class UrlAlias extends ActiveRecord
      *
      * @param array $params список параметров
      * @return string|null название первого найденного id-параметра
+     * @noinspection PhpUnused
      */
     public static function idParam(array $params)
     {
@@ -216,6 +221,7 @@ class UrlAlias extends ActiveRecord
      * Установить значение типа.
      *
      * @param string $type
+     * @noinspection PhpUnused
      */
     public function setType(string $type)
     {
@@ -254,6 +260,7 @@ class UrlAlias extends ActiveRecord
 
     /**
      * Возвращает query как массив.
+     * query содержит либо route, либо параметры запроса (в зависимости от типа алиаса)
      *
      * @return array
      */
@@ -270,6 +277,7 @@ class UrlAlias extends ActiveRecord
      * Устанавливает query как массив.
      *
      * @param array $query
+     * @noinspection PhpUnused
      */
     public function setQuery(array $query)
     {
@@ -305,6 +313,7 @@ class UrlAlias extends ActiveRecord
      * Для алиаса параметров вернет null.
      *
      * @return array|null ссылка в формате [0 => route, ...params] или null если эо алиас парамеров.
+     * @noinspection PhpUnused
      */
     public function getLink()
     {
@@ -350,7 +359,7 @@ class UrlAlias extends ActiveRecord
      * Возвращает алиас для роута.
      *
      * @param string $route
-     * @return \app\models\UrlAlias|null
+     * @return UrlAlias|null
      */
     public static function findRouteAlias(string $route)
     {
@@ -363,7 +372,8 @@ class UrlAlias extends ActiveRecord
      * @param string $keyword
      * @param string $route
      * @return bool
-     * @throws \yii\db\Exception
+     * @throws Exception
+     * @noinspection PhpUnused
      */
     public static function setRouteAlias(string $keyword, string $route)
     {
@@ -375,7 +385,7 @@ class UrlAlias extends ActiveRecord
             throw new InvalidArgumentException('route');
         }
 
-        return (new static(['keyword' => $keyword, 'query' => $route]))->upsert(true);
+        return (new static(['keyword' => $keyword, 'query' => $route]))->upsert();
     }
 
     /**
@@ -384,7 +394,7 @@ class UrlAlias extends ActiveRecord
      *
      * @param bool $validate
      * @return bool
-     * @throws \yii\db\Exception
+     * @throws Exception
      */
     public function upsert(bool $validate = true)
     {
@@ -392,7 +402,6 @@ class UrlAlias extends ActiveRecord
             return false;
         }
 
-        /** @noinspection MissedFieldInspection */
         static::getDb()->createCommand()->upsert(static::tableName(), [
             'keyword' => $this->keyword,
             'query' => $this->query
@@ -411,7 +420,7 @@ class UrlAlias extends ActiveRecord
      *
      * @param string $route
      * @param array $params
-     * @return \app\models\UrlAlias|null
+     * @return UrlAlias|null
      */
     public static function findObjectAlias(string $route, array &$params)
     {
@@ -431,7 +440,7 @@ class UrlAlias extends ActiveRecord
         $alias = static::findOne(['query' => $idParam . '=' . $idValue]);
 
         // удаляем из парамеров id-параметр
-        if (! empty($alias)) {
+        if ($alias !== null) {
             unset($params[$idParam]);
         }
 
@@ -462,7 +471,8 @@ class UrlAlias extends ActiveRecord
      * @param string $route маршрут объекта
      * @param int $id ID объекта
      * @return bool
-     * @throws \yii\db\Exception
+     * @throws Exception
+     * @noinspection PhpUnused
      */
     public static function setObjectAlias(string $keyword, string $route, int $id)
     {
@@ -487,7 +497,7 @@ class UrlAlias extends ActiveRecord
         return (new static([
             'keyword' => $keyword,
             'query' => $idParam . '=' . $id
-        ]))->upsert(true);
+        ]))->upsert();
     }
 
     /**
@@ -495,12 +505,12 @@ class UrlAlias extends ActiveRecord
      * Подбирается алиас, у которого совпадает большее количество параметров в query.
      *
      * @param array $params
-     * @return \app\models\UrlAlias|null
+     * @return UrlAlias|null
      */
     public static function findMultiParamAlias(array &$params)
     {
         // получаем id алиаса из кэша
-        $alias_id = Yii::$app->cache->getOrSet([__METHOD__, $params], static function() use ($params) {
+        $alias_id = Yii::$app->cache->getOrSet([__METHOD__, $params], static function () use ($params) {
             // фильтруем параметры, делая копию параметров и удаляя те, которые не могут участвовать в построении алиаса
             $flatParams = Url::normalizeQuery(Url::filterQuery(array_slice($params, 0)));
             unset($flatParams['sort'], $flatParams['order'], $flatParams['page'], $flatParams['limit'], $flatParams['route'], $flatParams['_route_']);
@@ -517,29 +527,29 @@ class UrlAlias extends ActiveRecord
             if (count($flatParams) === 1) {
                 $alias = static::find()->select(['url_alias_id', 'query'])->where(['query' => $flatParams[0]])->one();
             } else {
-                /** @var array $maxParams парамеры найденного алиаса в одномерном виде */
-                $maxParams = null;
+                $maxParamsCount = 0;
 
                 // находим все алиасы, которые содержат хоть какие-то из парамеров
                 $query = static::find()->select(['url_alias_id', 'query'])->where('[[query]] rlike :regex', [
-                    ':regex' => '(^|&)(' . implode('|', array_map('preg_quote', $flatParams)) . ')($|&)'
+                    ':regex' => '(^|&)(' . implode('|', array_map('\preg_quote', $flatParams)) . ')($|&)'
                 ])->orderBy('length([[query]]) desc')->limit(1000);
 
                 // обходим все и выбираем тот, у которого совпадает больше параметров
                 foreach ($query->each() as $al) {
-                    /** @var \app\models\UrlAlias $al */
+                    /** @var UrlAlias $al */
 
                     $alParams = Url::flatQuery($al->query);
 
                     // проверяем чтобы в найденном алиасе не было парамеров, которые отсутствуют в запрошенных
+                    /** @noinspection NotOptimalIfConditionsInspection */
                     if (count($alParams) > count($flatParams) || ! empty(array_diff($alParams, $flatParams))) {
                         continue;
                     }
 
                     // если в данном алиасе больше совпадений чем прежде, то запоминаем его
-                    if (!isset($maxParams) || count($alParams) > count($maxParams)) {
+                    if ($alias === null || count($alParams) > $maxParamsCount) {
                         $alias = $al;
-                        $maxParams = $alParams;
+                        $maxParamsCount = count($alParams);
                     }
                 }
             }
@@ -547,7 +557,7 @@ class UrlAlias extends ActiveRecord
             return isset($alias) ? $alias->url_alias_id : 0;
         }, null, new TagDependency(['tags' => self::class]));
 
-        $alias = $alias_id > 0 ? UrlAlias::findOne(['url_alias_id' => $alias_id]) : null;
+        $alias = $alias_id > 0 ? self::findOne(['url_alias_id' => $alias_id]) : null;
 
         // если алиас найден, то удаляем его параметры и формируем новый query
         if (isset($alias)) {
@@ -568,7 +578,7 @@ class UrlAlias extends ActiveRecord
     {
         $aliases = [];
 
-        while (!empty($params)) {
+        while (! empty($params)) {
             $alias = static::findMultiParamAlias($params);
             if ($alias === null) {
                 break;
@@ -585,21 +595,22 @@ class UrlAlias extends ActiveRecord
      * Подбирается алиас по одному парамеру.
      *
      * @param array $params
-     * @return \app\models\UrlAlias[]
+     * @return UrlAlias[]
      */
     public static function findSingleParamAliases(array &$params)
     {
         // делаем копию параметров и фильтруем, удаляя те, которые не могут участвовать в построении алиаса
         $flatParams = Url::normalizeQuery(Url::filterQuery(array_slice($params, 0)));
+
         unset($flatParams['sort'], $flatParams['order'], $flatParams['page'], $flatParams['limit'], $flatParams['route'], $flatParams['_route_']);
         if (empty($flatParams)) {
             return [];
         }
 
-        /** @var string[] Для сравнения многомерных параметров переводим их в одномерный массив значений */
+        /* @var string[] Для сравнения многомерных параметров переводим их в одномерный массив значений */
         $flatParams = Url::flatQuery($flatParams);
 
-        // находим все алиасы, которые содержат хоть какие-то из парамеров
+        /* @var UrlAlias[] $aliases находим все алиасы, которые содержат хоть какие-то из парамеров */
         $aliases = static::find()->where([
             'query' => $flatParams
         ])->orderBy('query')->all();
@@ -618,7 +629,8 @@ class UrlAlias extends ActiveRecord
      * @param string $keyword
      * @param array $params
      * @return bool
-     * @throws \yii\db\Exception
+     * @throws Exception
+     * @noinspection PhpUnused
      */
     public static function setParamsAlias(string $keyword, array $params)
     {
@@ -633,7 +645,7 @@ class UrlAlias extends ActiveRecord
         return (new static([
             'keyword' => $keyword,
             'query' => Url::buildQuery(Url::normalizeQuery(Url::filterQuery($params)))
-        ]))->upsert(true);
+        ]))->upsert();
     }
 
     /**

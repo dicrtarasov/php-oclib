@@ -2,7 +2,7 @@
     "type": "library",
     "name": "dicr/php-oclib",
     "license": "Apache-2.0",
-    "description": "Улучшенная библиотека OpenCart",
+    "description": "Библиотека для подключения классов Yii к OpenCart",
     "homepage": "https://gitlab.com/dicr/php-oclib",
     "authors": [
         {
@@ -23,9 +23,11 @@
         "php": ">=7.1",
         "ext-mysqli": "*",
         "ext-json": "*",
-        "yiisoft/yii2": "~2.0.29", "ext-pdo": "*",
-        "dicr/yii2-helper": "~2.1.2",
-        "dicr/yii2-validate": "~1.5.4", "ext-mbstring": "*"
+        "ext-mbstring": "*",
+        "ext-pdo": "*",
+        "yiisoft/yii2": "~2.0.32",
+        "dicr/yii2-helper": "~2.1.9",
+        "dicr/yii2-validate": "~1.5.6"
     },
     "repositories": [
         {
@@ -44,7 +46,6 @@
     "autoload": {
         "psr-4": {
             "dicr\\oclib\\": "src/"
-        },
-        "exclude-from-classmap": ["/doc/", "/opencart/"]
+        }
     }
 }

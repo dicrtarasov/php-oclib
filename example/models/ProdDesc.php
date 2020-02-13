@@ -8,16 +8,18 @@
 
 namespace app\models;
 
+use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
+use function trim;
 
 /**
  * Описание товара.
  *
  * @property int $product_id
- * @property string $name
+ * @property string $name короткое название
+ * @property string $name_full полное название
  * @property string $description
  * @property string $short_description
- * @property bool $popular
  * @property string $primen
  * @property string $meta_title
  * @property string $meta_h1
@@ -29,7 +31,7 @@ use yii\db\ActiveRecord;
  * @property string $meta_keyword [varchar(255)]
  *
  * // связи
- * @property-read \app\models\Prod $prod
+ * @property-read Prod $prod
  *
  * @package app\models
  */
@@ -46,9 +48,36 @@ class ProdDesc extends ActiveRecord
     }
 
     /**
+     * @inheritDoc
+     */
+    public function rules()
+    {
+        return [
+            ['name', 'trim'],
+            ['name', 'required'],
+            ['name', 'string', 'max' => 255],
+
+            ['name_full', 'trim'],
+            ['name_full', function($attribute) {
+                $val = trim($this->{$attribute});
+                if (empty($val)) {
+                    $val = $this->name;
+                }
+
+                $this->{$attribute} = $val;
+            }],
+            ['name_full', 'string', 'max' => 255],
+
+            ['primen', 'trim'],
+            ['primen', 'string', 'max' => 2 ** 15]
+        ];
+    }
+
+    /**
      * Связь с товаром.
      *
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery
+     * @noinspection PhpUnused
      */
     public function getProd()
     {

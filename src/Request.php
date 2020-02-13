@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright (c) 2019.
- *
- * @author Igor (Dicr) Tarasov, develop@dicr.org
+ * @copyright 2019-2020 Dicr http://dicr.org
+ * @author Igor A Tarasov <develop@dicr.org>
+ * @license proprietary
+ * @version 14.02.20 00:46:01
  */
 
 declare(strict_types = 1);
@@ -59,7 +60,7 @@ class Request
                 $params[(string)$this->clean($key)] = $this->clean($value);
             }
         } else {
-            $params = htmlspecialchars($params, ENT_COMPAT, 'UTF-8');
+            $params = htmlspecialchars($params, ENT_COMPAT);
         }
 
         return $params;

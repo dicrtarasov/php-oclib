@@ -5,7 +5,7 @@
  * @author Igor (Dicr) Tarasov, develop@dicr.org
  */
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 /**
  * Общий конфиг Yii
@@ -13,12 +13,9 @@ declare(strict_types = 1);
 
 require_once(__DIR__ . '/common.php');
 
-defined('YII_ENV') or define('YII_ENV', 'dev');
-defined('YII_DEBUG') or define('YII_DEBUG', DEBUG);
-
 return [
     'id' => DOMAIN,
-    'name' => APP_NAME,
+    'name' => 'РТК-НТ',
     'language' => 'ru',
     'sourceLanguage' => 'ru',
     'basePath' => DIR_HOME,
@@ -26,14 +23,9 @@ return [
 
     'components' => [
         'cache' => [
-            //'class' => yii\caching\DummyCache::class,
             'class' => yii\caching\FileCache::class,
-            //'class' => yii\caching\ApcCache::class,
-            //'useApcu' => true,
-            //'class' => yii\caching\MemCache::class,
-            //'useMemcached' => false,
-            'defaultDuration' => 86400,
-            //'keyPrefix' => DOMAIN,
+            'directoryLevel' => 2,
+            'defaultDuration' => 2592000,
         ],
 
         'db' => [
@@ -44,26 +36,63 @@ return [
             'charset' => 'utf8',
             'tablePrefix' => DB_PREFIX,
             'enableSchemaCache' => true,
-            'schemaCache' => 'cache',
             'schemaCacheDuration' => 2592000,
             'enableQueryCache' => true,
-            'queryCache' => 'cache',
-            'queryCacheDuration' => 86400
+            'queryCacheDuration' => 2592000
         ],
 
         'log' => [
             'class' => yii\log\Dispatcher::class,
-            'traceLevel' => YII_DEBUG ? 3 : 0,
+            'traceLevel' => YII_DEBUG ? 5 : 0,
             'targets' => [
                 'file' => [
                     'class' => yii\log\FileTarget::class,
-                    'levels' => ['error', 'warning', /*'info', 'trace', 'profile'*/]
+                    'levels' => ['error', 'warning', /*'info'*/]
                 ]
             ]
         ],
 
         'formatter' => [
             'class' => app\components\Formatter::class
+        ],
+
+        'mailer' => [
+            'class' => yii\swiftmailer\Mailer::class,
+            'useFileTransport' => false,
+            'enableSwiftMailerLogging' => true,
+            'transport' => [
+                'class' => Swift_SmtpTransport::class,
+                'host' => 'localhost',
+                'port' => '25'
+            ]
+        ],
+
+        'urlManager' => [
+            'class' => yii\web\UrlManager::class,
+            'enablePrettyUrl' => true,
+            'showScriptName' => false,
+            'routeParam' => 'route',
+            'rules' => [
+                '' => 'common/home',
+                'search' => 'product/search',
+                'cart' => 'checkout/cart',
+                'price' => 'tool/price',
+                'account' => 'account/account',
+                'register' => 'account/register',
+                'login' => 'account/login',
+                'logout' => 'account/logout',
+                'news' => 'information/news',
+                'review' => 'information/review',
+                'catalogue' => 'product/catalogue',
+                'categories' => 'common/categs',
+                'contacts' => 'information/contact',
+                'posts' => 'information/posts',
+                'brands' => 'product/manufacturer',
+                'services' => 'service/service',
+                [
+                    'class' => app\components\UrlAliasRule::class
+                ]
+            ]
         ]
     ],
 

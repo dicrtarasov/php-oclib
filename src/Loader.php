@@ -1,13 +1,10 @@
 <?php
 /**
- * Copyright (c) 2019.
- *
- * @author Igor (Dicr) Tarasov, develop@dicr.org
+ * @copyright 2019-2020 Dicr http://dicr.org
+ * @author Igor A Tarasov <develop@dicr.org>
+ * @license proprietary
+ * @version 14.02.20 00:46:01
  */
-
-/** @noinspection PhpMethodMayBeStaticInspection */
-/** @noinspection PhpUnusedParameterInspection */
-/** @noinspection ParameterDefaultValueIsNotNullInspection */
 
 declare(strict_types = 1);
 namespace dicr\oclib;
@@ -18,42 +15,40 @@ use function is_callable;
 
 /**
  * Загрузчик OpenCart.
- *
- * @author Igor (Dicr) Tarasov <develop@dicr.org>
- * @version 2019
  */
 class Loader extends BaseObject
 {
-    /** @var \dicr\oclib\Registry */
-    private $registry;
-
     /**
      * Loader constructor.
-     *
-     * @param null $registry
      */
-    public function __construct($registry = null)
+    public function __construct()
     {
-        parent::__construct([]);
+        parent::__construct();
     }
 
     /**
-     * Инициализация.
+     * Реестр OpenCart.
+     *
+     * @return \dicr\oclib\Registry
      */
-    public function init()
+    protected function registry()
     {
-        $this->registry = Registry::app();
+        return Registry::app();
     }
 
     /**
      * Вызов контроллера.
      *
      * @param string $route
-     * @param mixed $args аргументы контроллера
-     * @return bool|string|null
+     * @param array $args аргументы контроллера
+     * @return mixed
      */
-    public function controller(string $route, $args = [])
+    public function controller(string $route, $args = null)
     {
+        if ($args === null) {
+            $args = [];
+        }
+
         $parts = explode('/', str_replace('../', '', $route));
 
         // Break apart the route
@@ -70,7 +65,7 @@ class Loader extends BaseObject
         }
 
         $class = 'Controller' . preg_replace('/[^a-zA-Z0-9]/', '', implode('/', $parts));
-        $controller = new $class($this->registry);
+        $controller = new $class($this->registry());
 
         if (! isset($method)) {
             $method = 'index';
@@ -101,7 +96,7 @@ class Loader extends BaseObject
     public function model(string $route, string $path = '')
     {
         $key = 'model_' . str_replace('/', '_', $route);
-        $model = $this->registry->get($key);
+        $model = $this->registry()->get($key);
         if (! empty($model)) {
             return $model;
         }
@@ -113,8 +108,8 @@ class Loader extends BaseObject
             /** @noinspection PhpIncludeInspection */
             include_once($file);
             $class = 'Model' . preg_replace('/[^a-zA-Z0-9]/', '', $route);
-            $model = new $class($this->registry);
-            $this->registry->set($key, $model);
+            $model = new $class($this->registry());
+            $this->registry()->set($key, $model);
         } else {
             throw new Exception('Error: Could not load model ' . $route . '!');
         }
@@ -127,11 +122,11 @@ class Loader extends BaseObject
      *
      * @param string $route
      * @param array $data данные для темплейта
-     * @param string $path
      * @return string
      * @throws \yii\base\InvalidConfigException
+     * @noinspection PhpMethodMayBeStaticInspection
      */
-    public function view(string $route, array $data = [], string $path = '')
+    public function view(string $route, array $data = [])
     {
         return Template::render($route, $data);
     }
@@ -140,10 +135,9 @@ class Loader extends BaseObject
      * Загрузка библиотеки.
      *
      * @param string $route
-     * @param array $config
      * @throws \yii\base\Exception
      */
-    public function library(string $route, $config = [])
+    public function library(string $route)
     {
         // Sanitize the call
         $route = preg_replace('/[^a-zA-Z0-9_\/]/', '', $route);
@@ -155,7 +149,7 @@ class Loader extends BaseObject
         if (is_file($file)) {
             /** @noinspection PhpIncludeInspection */
             include_once($file);
-            $this->registry->set(basename($route), new $class($this->registry));
+            $this->registry()->set(basename($route), new $class($this->registry()));
         } else {
             throw new Exception('Error: Could not load library ' . $route . '!');
         }
@@ -163,8 +157,8 @@ class Loader extends BaseObject
 
     /**
      * @param $helper
-     * @throws \yii\db\Exception
      * @throws \yii\base\Exception
+     * @noinspection PhpMethodMayBeStaticInspection
      */
     public function helper($helper)
     {
@@ -184,7 +178,7 @@ class Loader extends BaseObject
      */
     public function config($config)
     {
-        $this->registry->get('config')->load($config);
+        $this->registry()->get('config')->load($config);
     }
 
     /**
@@ -193,6 +187,6 @@ class Loader extends BaseObject
      */
     public function language($language)
     {
-        return $this->registry->get('language')->load($language);
+        return $this->registry()->get('language')->load($language);
     }
 }

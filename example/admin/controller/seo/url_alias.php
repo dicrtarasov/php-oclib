@@ -14,12 +14,6 @@ use yii\caching\TagDependency;
 use yii\web\NotFoundHttpException;
 
 /**
- * Copyright (c) 2019.
- *
- * @author Igor (Dicr) Tarasov, develop@dicr.org
- */
-
-/**
  * Редактор алиасов.
  */
 class ControllerSeoUrlAlias extends Controller

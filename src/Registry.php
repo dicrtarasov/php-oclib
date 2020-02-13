@@ -1,11 +1,10 @@
 <?php
 /**
- * Copyright (c) 2019.
- *
- * @author Igor (Dicr) Tarasov, develop@dicr.org
+ * @copyright 2019-2020 Dicr http://dicr.org
+ * @author Igor A Tarasov <develop@dicr.org>
+ * @license proprietary
+ * @version 14.02.20 00:46:01
  */
-
-/** @noinspection PhpUndefinedClassInspection */
 
 declare(strict_types = 1);
 namespace dicr\oclib;
@@ -103,7 +102,7 @@ class Registry implements RegistryProps
      * Проверить наличие.
      *
      * @param string $key
-     * @return boolean
+     * @return bool
      */
     public function __isset($key)
     {

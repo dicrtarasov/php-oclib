@@ -6,17 +6,26 @@
  */
 
 declare(strict_types = 1);
+
 namespace app\models;
 
+use Yii;
 use yii\base\Model;
+use yii\caching\TagDependency;
 use yii\data\ActiveDataProvider;
+use yii\db\ActiveQuery;
+use function array_merge;
+use function asort;
+use const SORT_ASC;
+use const SORT_DESC;
+use const SORT_NATURAL;
 
 /**
  * Фильтр характеристик.
  *
  * @package app\models
- * @property-read \yii\db\ActiveQuery $query
- * @property-read \yii\data\ActiveDataProvider $provider
+ * @property-read ActiveQuery $query
+ * @property-read ActiveDataProvider $provider
  */
 class AttrFilter extends Model
 {
@@ -40,14 +49,14 @@ class AttrFilter extends Model
      * Возвращает провайдер данных.
      *
      * @param array $config
-     * @return \yii\data\ActiveDataProvider
+     * @return ActiveDataProvider
      */
     public function getProvider(array $config = [])
     {
         return new ActiveDataProvider(array_merge([
             'query' => $this->getQuery(),
             'sort' => [
-                'route' => \Yii::$app->requestedRoute,
+                'route' => Yii::$app->requestedRoute,
                 'attributes' => [
                     'name' => [
                         'asc' => ['a.[[name]]' => SORT_ASC],
@@ -65,7 +74,7 @@ class AttrFilter extends Model
                 ]
             ],
             'pagination' => [
-                'route' => \Yii::$app->requestedRoute
+                'route' => Yii::$app->requestedRoute
             ]
         ], $config));
     }
@@ -73,7 +82,7 @@ class AttrFilter extends Model
     /**
      * Возвращает запрос характеристик.
      *
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery
      */
     public function getQuery()
     {
@@ -86,5 +95,34 @@ class AttrFilter extends Model
         $query->andFilterWhere(['like', 'a.[[name]]', $this->name]);
 
         return $query;
+    }
+
+    /**
+     * Возвращает все названия характеристик.
+     *
+     * @return string[] id => name
+     */
+    public static function listNames()
+    {
+        /** @var string[] $names */
+        static $names;
+
+        if (! isset($names)) {
+            $names = Yii::$app->cache->getOrSet([__METHOD__], static function () {
+                $names = [];
+
+                /** @var Attr $attr */
+                foreach (Attr::find()->all() as $attr) {
+                    $names[(int)$attr->attribute_id] = $attr->name;
+                }
+
+                asort($names, SORT_NATURAL);
+                return $names;
+            }, null, new TagDependency([
+                'tags' => [Attr::class]
+            ]));
+        }
+
+        return $names;
     }
 }

@@ -71,8 +71,47 @@ class Currency extends ActiveRecord
         ];
     }
 
+    /**
+     * Форматирует значение валюты.
+     *
+     * @param float $value
+     * @return string
+     */
     public function format(float $value)
     {
+        // рассчитываем по текущему курсу
+        if (! empty($this->value)) {
+            $value *= $this->value;
+        }
 
+        $string = '';
+
+        if ((string)$this->symbol_left !== '') {
+            $string .= $this->symbol_left;
+        }
+
+        $string .= number_format($value, (int)$this->decimal_place, '.', ' ');
+
+        if ((string)$this->symbol_right !== '') {
+            $string .= $this->symbol_right;
+        }
+
+        return $string;
+    }
+
+    /**
+     * Возвращает текущую валюту.
+     *
+     * @return \app\models\Currency
+     */
+    public static function current()
+    {
+        static $current;
+
+        if (! isset($current)) {
+            $current = Country::current()->currency;
+        }
+
+        return $current;
     }
 }
