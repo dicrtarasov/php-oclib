@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 14.02.20 00:46:01
+ * @version 20.02.20 19:13:19
  */
 
 /** @noinspection PhpUnusedParameterInspection */
@@ -89,6 +89,11 @@ abstract class Controller extends BaseObject implements RegistryProps
         }
 
         $etag = md5($id . $timestamp);
+
+        // удаляем заголовки, которые устанавливает php session
+        header_remove('Cache-Control');
+        header_remove('Pragma');
+        header_remove('Expires');
 
         // устанавливаем заголовки
         header(sprintf('ETag: "%s"', $etag));
