@@ -1,0 +1,45 @@
+{
+    "type": "project",
+    "name": "dicr/autopartner-perm.ru",
+    "description": "АвтоПартнер",
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Igor Tarasov",
+            "email": "develop@dicr.org",
+            "homepage": "http://dicr.org",
+            "role": "developer"
+        }
+    ],
+    "keywords": ["dicr", "php", "site", "opencart", "autopartner"],
+    "homepage": "https://autopartner-perm.ru",
+    "support": {
+        "source": "https://dicr@bitbucket.org/autopartner/autopartner-perm.ru.git"
+    },
+    "autoload": {
+        "classmap": [
+            "system/engine/", "system/library/"
+        ],
+        "files": [
+            "system/helper/general.php", "system/helper/json.php", "system/helper/utf8.php"
+        ]
+    },
+    "minimum-stability": "stable",
+    "require": {
+        "php": ">=7.1",
+        "ext-mbstring": "*",
+        "ext-simplexml": "*",
+        "ext-json": "*",
+        "dicr/php-oclib": "1.2.0"
+    },
+    "repositories": [
+        {
+            "type": "git",
+            "url":"https://gitlab.com/dicr/php-oclib.git",
+        },
+        {
+            "type": "composer",
+            "url": "https://asset-packagist.org"
+        }
+    ]
+}

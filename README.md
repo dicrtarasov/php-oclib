@@ -1,5 +1,5 @@
 # oc-yii2
-**Адаптер Yii2 для OpenCart** позволяет подключить и использоваь в OpenCart библиотеку компонентов Yii методом перенаправления сандартных функций OpenCart в вызовы функций Yii (кроме контроллеров).
+** Адаптер Yii2 для OpenCart** позволяет подключить и использоваь в OpenCart библиотеку компонентов Yii методом перенаправления сандартных функций OpenCart в вызовы функций Yii (кроме контроллеров).
 
 ## Подключение библиотек Yii2
 Автозагрузка классов как сторонних библиотек, так и папки `system` выполняется через composer.
@@ -11,8 +11,9 @@
     "dicr/php-oclib": "~3.1.5",
 },
 "autoload": {
-    "classmap": ["system/"]
-}
+    "classmap": ["system/engine/", "system/library/"],
+    "files": ["system/helper/general.php", "system/helper/json.php", "system/helper/utf8.php"]
+},
 ```
 
 ### Конфиги
@@ -28,17 +29,17 @@
 - `/config/yii.console.php` - конфиг для Yii для Console
 
 ### Инициализация
-Web-контроллеры оставлены OpenCart, поэтому приложении Yii создается, настраивается и используются его компоненты.
+Yii Application создается и используется как контейнер компонентов и сервисов без `run`, а Web-контроллеры оставлены OpenCart.
 
 ##### /system/startup.php
-```php
-// Подключаем автозагрузчик Composer
-require(__DIR__ . '/../vendor/autoload.php');
-
 // удаляем автозагрузчик OpenCart
 // spl_autoload_register('library');
 // spl_autoload_register('vendor');
 // spl_autoload_extensions('.php');
+
+```php
+// Подключаем автозагрузчик Composer
+require(__DIR__ . '/../vendor/autoload.php');
 
 // константы YII_ENV и YII_DEBUG должны быть установлены до загрузки Yii
 defined('YII_ENV') or define('YII_ENV', 'dev');

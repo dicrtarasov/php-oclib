@@ -8,6 +8,7 @@
     </unboundedVersionInspectionSettings>
     <customRepositories>
       <file path="$PROJECT_DIR$/composer.json" enabled="true" />
+      <file path="$PROJECT_DIR$/example/composer.json" enabled="false" />
     </customRepositories>
     <composerUpdateOptions />
   </component>
