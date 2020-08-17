@@ -1,9 +1,9 @@
 <?php
-/**
+/*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 14.02.20 00:46:01
+ * @version 17.08.20 15:51:19
  */
 
 declare(strict_types = 1);
@@ -23,7 +23,7 @@ class Template implements RegistryProps
     /** все обращения к $this в темплейте перенаправляются к Registry */
     use RegistryProxy;
 
-    /** @var string роут или полный путь файла */
+    /** @var string маршрут или полный путь файла */
     private $pathRoute;
 
     /** @var array переменные */
@@ -34,7 +34,7 @@ class Template implements RegistryProps
      *
      * @param string $pathRoute маршрут или полный путь файла
      * @param array $vars переменные шаблона
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
     public function __construct(string $pathRoute, array $vars = [])
     {
@@ -49,7 +49,7 @@ class Template implements RegistryProps
     }
 
     /**
-     * Возвращаеть путь файла.
+     * Путь файла.
      *
      * @return string полный путь файла для выполнения
      */
@@ -75,6 +75,7 @@ class Template implements RegistryProps
         }
 
         // полный путь
+
         /** @noinspection PhpUndefinedConstantInspection */
         return rtrim(DIR_TEMPLATE, '/') . '/' . ltrim($path, '/');
     }
@@ -103,7 +104,7 @@ class Template implements RegistryProps
     }
 
     /**
-     * омпилирует в текст
+     * Компилирует в текст
      *
      * @return string
      */
@@ -115,8 +116,6 @@ class Template implements RegistryProps
             /** @noinspection PhpUndefinedConstantInspection */
             trigger_error(DEBUG ? (string)$ex : $ex->getMessage(), E_USER_ERROR);
         }
-
-        return '';
     }
 
     /**
@@ -125,7 +124,7 @@ class Template implements RegistryProps
      * @param string $pathRoute маршрут или полный путь файла
      * @param array $vars переменные
      * @return string результат рендеринга
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
     public static function render(string $pathRoute, array $vars = [])
     {
@@ -135,9 +134,9 @@ class Template implements RegistryProps
     /**
      * Делает дамп данных
      *
-     * @param string $var переменная
+     * @param ?string $var переменная
      */
-    public function dump(string $var = null)
+    public function dump(?string $var = null): void
     {
         echo '<!--suppress HtmlDeprecatedTag --><xmp>';
         /** @noinspection ForgottenDebugOutputInspection */

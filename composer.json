@@ -2,8 +2,8 @@
     "type": "library",
     "name": "dicr/php-oclib",
     "license": "Apache-2.0",
-    "description": "Библиотека для подключения классов Yii к OpenCart",
     "homepage": "https://gitlab.com/dicr/php-oclib",
+    "description": "Библиотека для подключения классов Yii к OpenCart",
     "authors": [
         {
             "name": "Igor Tarasov",
@@ -12,36 +12,25 @@
             "role": "developer"
         }
     ],
-    "keywords": [
-        "dicr opencart library"
-    ],
+    "keywords": ["dicr", "opencart", "yii"],
     "support": {
         "source": "https://gitlab.com/dicr/php-oclib.git"
     },
     "minimum-stability": "stable",
     "require": {
-        "php": ">=7.1",
+        "php": "~7.2",
         "ext-mysqli": "*",
         "ext-json": "*",
         "ext-mbstring": "*",
         "ext-pdo": "*",
-        "yiisoft/yii2": "~2.0.32",
+        "yiisoft/yii2": "~2.0",
         "dicr/yii2-helper": "~2.1.9",
         "dicr/yii2-validate": "~1.5.6"
     },
     "repositories": [
-        {
-            "type": "composer",
-            "url": "https://asset-packagist.org"
-        },
-        {
-            "type": "git",
-            "url": "https://gitlab.com/dicr/yii2-helper.git"
-        },
-        {
-            "type": "git",
-            "url": "https://gitlab.com/dicr/yii2-validate.git"
-        }
+        {"type": "git", "url": "https://gitlab.com/dicr/yii2-helper.git"},
+        {"type": "git", "url": "https://gitlab.com/dicr/yii2-validate.git"},
+        {"type": "composer", "url": "https://asset-packagist.org"}
     ],
     "autoload": {
         "psr-4": {

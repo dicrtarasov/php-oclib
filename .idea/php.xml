@@ -2,17 +2,17 @@
 <project version="4">
   <component name="MessDetector">
     <phpmd_settings>
-      <MessDetectorConfiguration tool_path="$PROJECT_DIR$/../../phpmd.phar" />
+      <MessDetectorConfiguration tool_path="$USER_HOME$/phpmd.phar" />
     </phpmd_settings>
   </component>
   <component name="PhpCSFixer">
     <phpcsfixer_settings>
-      <PhpCSFixerConfiguration tool_path="$PROJECT_DIR$/../../php-cs-fixer-v2.phar" />
+      <PhpCSFixerConfiguration tool_path="$USER_HOME$/php-cs-fixer-v2.phar" />
     </phpcsfixer_settings>
   </component>
   <component name="PhpCodeSniffer">
     <phpcs_settings>
-      <PhpCSConfiguration tool_path="$PROJECT_DIR$/../../phpcs.phar" />
+      <PhpCSConfiguration tool_path="$USER_HOME$/phpcs.phar" />
     </phpcs_settings>
   </component>
   <component name="PhpIncludePathManager">
@@ -30,7 +30,7 @@
       <path value="$PROJECT_DIR$/vendor/dicr/yii2-validate" />
     </include_path>
   </component>
-  <component name="PhpProjectSharedConfiguration" php_language_level="7.1" />
+  <component name="PhpProjectSharedConfiguration" php_language_level="7.2" />
   <component name="PhpRuntimeConfiguration">
     <extensions>
       <extension name="FFI" enabled="true" />
@@ -61,7 +61,7 @@
   <component name="PhpUnit">
     <phpunit_settings>
       <PhpUnitSettings load_method="CUSTOM_LOADER" custom_loader_path="$PROJECT_DIR$/vendor/autoload.php" />
-      <PhpUnitSettings load_method="PHPUNIT_PHAR" custom_loader_path="" phpunit_phar_path="$PROJECT_DIR$/../../phpunit.phar" />
+      <PhpUnitSettings load_method="PHPUNIT_PHAR" custom_loader_path="" phpunit_phar_path="$USER_HOME$/phpunit.phar" />
     </phpunit_settings>
   </component>
 </project>
