@@ -3,18 +3,21 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 24.08.20 16:50:59
+ * @version 24.08.20 17:01:45
  */
 
 declare(strict_types = 1);
+namespace dicr\oclib;
 
+use PDO;
 use yii\base\BaseObject;
 use yii\db\Command;
+use yii\db\Exception;
+
+use function count;
 
 /**
  * Результат запроса к базе данных OpenCart.
- *
- * @noinspection PhpIllegalPsrClassPathInspection
  */
 class DBResult extends BaseObject
 {
@@ -46,7 +49,7 @@ class DBResult extends BaseObject
      *
      * @param Command $cmd
      * @return self
-     * @throws \yii\db\Exception
+     * @throws Exception
      */
     public static function fromCommand(Command $cmd): self
     {
