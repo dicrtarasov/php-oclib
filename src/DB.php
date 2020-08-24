@@ -3,13 +3,12 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 24.08.20 16:57:33
+ * @version 24.08.20 17:03:48
  */
 
 declare(strict_types = 1);
 namespace dicr\oclib;
 
-use DBResult;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\db\Connection;
