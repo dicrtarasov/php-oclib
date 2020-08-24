@@ -1,19 +1,21 @@
 <?php
-/**
+/*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 14.02.20 00:46:01
+ * @version 24.08.20 16:57:33
  */
 
 declare(strict_types = 1);
 namespace dicr\oclib;
 
-use PDO;
-use stdClass;
+use DBResult;
+use Yii;
+use yii\base\InvalidConfigException;
 use yii\db\Connection;
+use yii\db\Exception;
 use yii\di\Instance;
-use function count;
+
 use function is_string;
 
 /**
@@ -23,7 +25,7 @@ use function is_string;
  */
 class DB
 {
-    /** @var \yii\db\Connection */
+    /** @var Connection */
     public $db = 'db';
 
     /** @var int */
@@ -32,13 +34,13 @@ class DB
     /**
      * Constructor
      *
-     * @param string $adaptor
-     * @param string $hostname
-     * @param string $username
-     * @param string $password
-     * @param string $database
-     * @param int $port
-     * @throws \yii\base\InvalidConfigException
+     * @param ?string $adaptor
+     * @param ?string $hostname
+     * @param ?string $username
+     * @param ?string $password
+     * @param ?string $database
+     * @param ?string $port
+     * @throws InvalidConfigException
      * @noinspection PhpUnusedParameterInspection
      */
     public function __construct(
@@ -47,8 +49,8 @@ class DB
         $username = null,
         $password = null,
         $database = null,
-        $port = null)
-    {
+        $port = null
+    ) {
         $this->db = Instance::ensure($this->db, Connection::class);
     }
 
@@ -56,36 +58,55 @@ class DB
      * Запрос данных.
      *
      * @param string $sql
-     * @return \stdClass|int|bool
-     * @throws \yii\db\Exception
+     * @return DBResult|int
+     * @throws Exception
      */
     public function query(string $sql)
     {
         $cmd = $this->db->createCommand($sql);
 
         if (! preg_match('~^\s*(select|show)\s+~uim', $sql)) {
-            return $this->affectedRows = $cmd->execute();
+            $this->affectedRows = (int)$cmd->execute();
+
+            return $this->affectedRows;
         }
 
-        $ret = new stdClass();
-        $ret->rows = $cmd->queryAll(PDO::FETCH_ASSOC);
-        $ret->row = reset($ret->rows);
-        $ret->num_rows = count($ret->rows);
         $this->affectedRows = 0;
 
-        return $ret;
+        return DBResult::fromCommand($cmd);
     }
 
     /**
      * Экранирование строки.
      *
-     * @param string $value
-     * @return string
-     * @noinspection PhpMethodMayBeStaticInspection
+     * @param string|float|null $value
+     * @return string|float|null
      */
     public function escape($value)
     {
-        return is_string($value) ? addcslashes(str_replace("'", "''", $value), "\000\n\r\\\032") : $value;
+        $value = Yii::$app->db->quoteValue($value);
+
+        if (is_string($value)) {
+            $value = (string)$value;
+
+            // удаляем кавычки по краям
+            if (mb_strpos($value, "'") === 0 && mb_substr($value, -1, 1) === "'") {
+                $value = mb_substr($value, 1, -1);
+            }
+        }
+
+        return $value;
+    }
+
+    /**
+     * Синоним escape.
+     *
+     * @param mixed $value
+     * @return mixed
+     */
+    public function esc($value)
+    {
+        return $this->escape($value);
     }
 
     /**
@@ -93,7 +114,7 @@ class DB
      *
      * @return int
      */
-    public function countAffected()
+    public function countAffected(): int
     {
         return $this->affectedRows;
     }
@@ -103,7 +124,7 @@ class DB
      *
      * @return string
      */
-    public function getLastId()
+    public function getLastId(): string
     {
         return $this->db->lastInsertID;
     }
@@ -113,7 +134,7 @@ class DB
      *
      * @return bool
      */
-    public function isConnected()
+    public function isConnected(): bool
     {
         return $this->db->isActive;
     }
