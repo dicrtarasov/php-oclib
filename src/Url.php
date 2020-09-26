@@ -3,14 +3,16 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 14.02.20 00:46:01
+ * @version 26.09.20 22:47:53
  */
 
 declare(strict_types = 1);
 namespace dicr\oclib;
 
 use yii\base\InvalidArgumentException;
+
 use function is_string;
+
 use const PREG_SPLIT_NO_EMPTY;
 
 /**
@@ -25,27 +27,28 @@ class Url extends \dicr\helper\Url
      */
     public function __construct(string $url)
     {
-
+        // noop
     }
 
     /** @noinspection PhpMethodMayBeStaticInspection */
 
     /**
-     * Добавляе обработчики ЧПУ.
+     * Добавляем обработчики ЧПУ.
      *
      * @param object $rewrite
+     * @noinspection PhpMissingParamTypeInspection
      */
-    public function addRewrite($rewrite)
+    public function addRewrite($rewrite) : void
     {
-
+        // noop
     }
 
     /**
-     * Редиректит на канонический адрес если екущий оличается.
+     * Переадресует на канонический адрес если текущий отличается.
      *
      * @param string $url
      */
-    public static function redirectToCanonical(string $url)
+    public static function redirectToCanonical(string $url) : void
     {
         $urlInfo = parse_url($url);
 
@@ -68,13 +71,9 @@ class Url extends \dicr\helper\Url
      * @return string
      * @noinspection PhpMethodMayBeStaticInspection
      */
-    public function link(string $route, $args = null)
+    public function link(string $route, $args = []) : string
     {
-        if (empty($route)) {
-            throw new InvalidArgumentException('route');
-        }
-
-        if ($args === null) {
+        if (empty($args)) {
             $args = [];
         } elseif (is_string($args)) {
             $args = static::parseQuery($args);
@@ -93,7 +92,7 @@ class Url extends \dicr\helper\Url
      * @param array $params
      * @return array
      */
-    public static function filterParams(array $params)
+    public static function filterParams(array $params) : array
     {
         $params = static::filterQuery($params);
 
@@ -107,27 +106,27 @@ class Url extends \dicr\helper\Url
     }
 
     /**
-     * Парсит роут.
+     * Парсит маршрут.
      *
      * @param string $route
      * @return string[]
      */
-    public static function parseRoute(string $route)
+    public static function parseRoute(string $route) : array
     {
         if (empty($route)) {
             throw new InvalidArgumentException('route');
         }
 
-        return preg_split('~/+~u', $route, - 1, PREG_SPLIT_NO_EMPTY);
+        return preg_split('~/+~u', $route, -1, PREG_SPLIT_NO_EMPTY);
     }
 
     /**
-     * Собирает роут.
+     * Собирает маршрут.
      *
      * @param array $parts
      * @return string
      */
-    public static function buildRoute(array $parts)
+    public static function buildRoute(array $parts) : string
     {
         if (empty($parts)) {
             throw new InvalidArgumentException('parts');
@@ -142,9 +141,8 @@ class Url extends \dicr\helper\Url
      * @param string $route
      * @return string
      */
-    public static function controllerByRoute(string $route)
+    public static function controllerByRoute(string $route) : string
     {
         return $route;
     }
-
 }

@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 20.02.20 19:13:19
+ * @version 26.09.20 22:16:14
  */
 
 /** @noinspection PhpUnusedParameterInspection */
@@ -13,9 +13,8 @@ namespace dicr\oclib;
 
 use Throwable;
 use Yii;
-use yii\base\BaseObject;
-use yii\base\ExitException;
 use yii\base\InvalidArgumentException;
+
 use function gmdate;
 use function header;
 use function in_array;
@@ -26,11 +25,11 @@ use function sprintf;
 use function strtotime;
 
 /**
- * Конроллер OpenCart.
+ * Контроллер OpenCart.
  */
-abstract class Controller extends BaseObject implements RegistryProps
+abstract class Controller implements RegistryProps
 {
-    /** все обращения к $this в конроллере перенаправляюся к Registry */
+    /** все обращения к $this в контроллере перенаправляются к Registry */
     use RegistryProxy;
 
     /**
@@ -40,30 +39,32 @@ abstract class Controller extends BaseObject implements RegistryProps
      */
     public function __construct($registry = null)
     {
-        parent::__construct();
+        //
     }
 
     /**
      * Возвращает ответ как JSON.
      *
      * @param mixed $data
-     * @return void
-     * @throws ExitException
-     * @noinspection PhpUnused
      */
-    public static function asJson($data)
+    public static function asJson($data) : void
     {
         $response = Yii::$app->response;
         $response->format = \yii\web\Response::FORMAT_JSON;
         $response->data = $data;
 
-        return Yii::$app->end(0, $response);
+        try {
+            Yii::$app->end(0, $response);
+        } catch (Throwable $ex) {
+            Yii::error($ex, __METHOD__);
+            exit;
+        }
     }
 
     /**
      * Очищает выходной буфер.
      */
-    public static function cleanOutput()
+    public static function cleanOutput() : void
     {
         while (ob_get_level() > 0) {
             ob_end_clean();
@@ -71,13 +72,12 @@ abstract class Controller extends BaseObject implements RegistryProps
     }
 
     /**
-     * Проверяет и устанавливает заголовки кэшировния.
+     * Проверяет и устанавливает заголовки кэширования.
      *
      * @param int $id id объекта
      * @param string $modified дата изменения
-     * @noinspection PhpUnused
      */
-    protected static function ifModifiedSince(int $id, string $modified)
+    protected static function ifModifiedSince(int $id, string $modified) : void
     {
         if ($id < 1) {
             throw new InvalidArgumentException('id');
@@ -110,7 +110,6 @@ abstract class Controller extends BaseObject implements RegistryProps
                 in_array('"' . $etag . '"', Yii::$app->request->getETags(), true)) ||
             (Yii::$app->request->headers->has('If-Modified-Since') &&
                 @strtotime(Yii::$app->request->headers->get('If-Modified-Since')) >= $timestamp)) {
-
             $response = Yii::$app->response;
             $response->clear();
             $response->statusCode = 304;

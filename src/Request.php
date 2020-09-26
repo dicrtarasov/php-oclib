@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 14.02.20 00:46:01
+ * @version 26.09.20 22:47:53
  */
 
 declare(strict_types = 1);
@@ -13,22 +13,26 @@ use function is_array;
 
 /**
  * Запрос.
- *
- * @package dicr\oclib
  */
 class Request
 {
-    public $get = [];
+    /** @var array */
+    public $get;
 
-    public $post = [];
+    /** @var array */
+    public $post;
 
-    public $request = [];
+    /** @var array */
+    public $request;
 
-    public $cookie = [];
+    /** @var array */
+    public $cookie;
 
-    public $files = [];
+    /** @var array */
+    public $files;
 
-    public $server = [];
+    /** @var array */
+    public $server;
 
     /**
      * Инициализация.
@@ -43,13 +47,12 @@ class Request
         $this->server = &$_SERVER;
     }
 
-    /** @noinspection PhpMethodMayBeStaticInspection */
-
     /**
      * Экранирование парамеров.
      *
-     * @param $params
+     * @param string|array $params
      * @return array|string
+     * @noinspection PhpMethodMayBeStaticInspection
      */
     public function clean($params)
     {

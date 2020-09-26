@@ -4,14 +4,14 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "75a158d4d203f7039d475fff49ccc413",
+    "content-hash": "d94a0fa57029a0fc85185050630bed0a",
     "packages": [
         {
             "name": "bower-asset/inputmask",
             "version": "3.3.11",
             "source": {
                 "type": "git",
-                "url": "https://github.com/RobinHerbots/Inputmask.git",
+                "url": "git@github.com:RobinHerbots/Inputmask.git",
                 "reference": "5e670ad62f50c738388d4dcec78d2888505ad77b"
             },
             "dist": {
@@ -143,23 +143,27 @@
         },
         {
             "name": "dicr/yii2-helper",
-            "version": "2.1.11",
+            "version": "3.7.8",
             "source": {
                 "type": "git",
                 "url": "https://gitlab.com/dicr/yii2-helper.git",
-                "reference": "14b242bc686915abb66b9b974e7025a378f26cac"
+                "reference": "38be1bb6fc5fe31efa3dd714f3aebb2872109d64"
             },
             "require": {
                 "ext-intl": "*",
                 "ext-mbstring": "*",
-                "php": ">=7.2",
-                "yiisoft/yii2": "~2.0.32"
+                "php": "~7.2",
+                "yiisoft/yii2": "~2.0",
+                "yiisoft/yii2-bootstrap4": "~2.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "~8.5.2",
+                "phpunit/phpunit": "~9.3",
                 "roave/security-advisories": "dev-master"
             },
             "type": "yii2-extension",
+            "extra": {
+                "bootstrap": "\\dicr\\helper\\Bootstrap"
+            },
             "autoload": {
                 "psr-4": {
                     "dicr\\helper\\": "src/"
@@ -186,39 +190,41 @@
             "keywords": [
                 "dicr",
                 "helper",
-                "php",
-                "utilities",
                 "yii2"
             ],
             "support": {
                 "source": "https://gitlab.com/dicr/yii2-helper.git"
             },
-            "time": "2020-05-04T09:57:18+00:00"
+            "time": "2020-09-15T05:03:31+00:00"
         },
         {
             "name": "dicr/yii2-validate",
-            "version": "1.5.6",
+            "version": "2.1.4",
             "source": {
                 "type": "git",
                 "url": "https://gitlab.com/dicr/yii2-validate.git",
-                "reference": "bfdf15c2d1bb0466cfe6cb67e7f700c7cb41ad88"
+                "reference": "f11cb904d90119059f444b2b890567a8b72d58d9"
             },
             "require": {
-                "php": ">=7.0",
+                "php": "~7.2",
                 "yiisoft/yii2": "~2.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "~8.2",
-                "roave/security-advisories": "dev-master"
+                "phpunit/phpunit": "~9.3"
             },
             "type": "yii2-extension",
             "autoload": {
                 "psr-4": {
-                    "dicr\\validate\\": "src"
+                    "dicr\\validate\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "dicr\\tests\\": "tests/"
                 }
             },
             "license": [
-                "Apache-2.0"
+                "MIT"
             ],
             "authors": [
                 {
@@ -228,15 +234,17 @@
                     "role": "developer"
                 }
             ],
-            "description": "Validation components for Yii2",
+            "description": "Компоненты валидации for Yii2",
             "homepage": "https://gitlab.com/dicr/yii2-validate",
             "keywords": [
-                "php yii2 validate"
+                "dicr",
+                "validate",
+                "yii2"
             ],
             "support": {
                 "source": "https://gitlab.com/dicr/yii2-validate.git"
             },
-            "time": "2019-11-29T11:15:16+00:00"
+            "time": "2020-09-10T19:06:14+00:00"
         },
         {
             "name": "ezyang/htmlpurifier",
@@ -289,17 +297,29 @@
             "time": "2020-06-29T00:56:53+00:00"
         },
         {
+            "name": "npm-asset/bootstrap",
+            "version": "4.5.2",
+            "dist": {
+                "type": "tar",
+                "url": "https://registry.npmjs.org/bootstrap/-/bootstrap-4.5.2.tgz"
+            },
+            "type": "npm-asset",
+            "license": [
+                "MIT"
+            ]
+        },
+        {
             "name": "yiisoft/yii2",
-            "version": "2.0.37",
+            "version": "2.0.38",
             "source": {
                 "type": "git",
                 "url": "https://github.com/yiisoft/yii2-framework.git",
-                "reference": "e8094d1aa9e807fbea970bc1360ab836ffb1b738"
+                "reference": "fd01e747cc66a049ec105048f0ab8dfbdf60bf4b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/yiisoft/yii2-framework/zipball/e8094d1aa9e807fbea970bc1360ab836ffb1b738",
-                "reference": "e8094d1aa9e807fbea970bc1360ab836ffb1b738",
+                "url": "https://api.github.com/repos/yiisoft/yii2-framework/zipball/fd01e747cc66a049ec105048f0ab8dfbdf60bf4b",
+                "reference": "fd01e747cc66a049ec105048f0ab8dfbdf60bf4b",
                 "shasum": ""
             },
             "require": {
@@ -400,7 +420,76 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2020-08-07T20:11:56+00:00"
+            "time": "2020-09-14T21:52:10+00:00"
+        },
+        {
+            "name": "yiisoft/yii2-bootstrap4",
+            "version": "2.0.8",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/yiisoft/yii2-bootstrap4.git",
+                "reference": "c67ae3f3624c35d977841f6b18d0d752ebed6420"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/yiisoft/yii2-bootstrap4/zipball/c67ae3f3624c35d977841f6b18d0d752ebed6420",
+                "reference": "c67ae3f3624c35d977841f6b18d0d752ebed6420",
+                "shasum": ""
+            },
+            "require": {
+                "npm-asset/bootstrap": "^4.3",
+                "yiisoft/yii2": "~2.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "<7",
+                "yiisoft/yii2-coding-standards": "~2.0"
+            },
+            "type": "yii2-extension",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "yii\\bootstrap4\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Qiang Xue",
+                    "email": "qiang.xue@gmail.com",
+                    "homepage": "http://www.yiiframework.com/"
+                },
+                {
+                    "name": "Alexander Makarov",
+                    "email": "sam@rmcreative.ru",
+                    "homepage": "http://rmcreative.ru/"
+                },
+                {
+                    "name": "Antonio Ramirez",
+                    "email": "amigo.cobos@gmail.com"
+                },
+                {
+                    "name": "Paul Klimov",
+                    "email": "klimov.paul@gmail.com"
+                },
+                {
+                    "name": "Simon Karlen",
+                    "email": "simi.albi@outlook.com"
+                }
+            ],
+            "description": "The Twitter Bootstrap extension for the Yii framework",
+            "keywords": [
+                "bootstrap",
+                "bootstrap4",
+                "yii2"
+            ],
+            "time": "2019-10-08T11:01:37+00:00"
         },
         {
             "name": "yiisoft/yii2-composer",

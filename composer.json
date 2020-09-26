@@ -16,6 +16,11 @@
     "support": {
         "source": "https://gitlab.com/dicr/php-oclib.git"
     },
+    "autoload": {
+        "psr-4": {
+            "dicr\\oclib\\": "src/"
+        }
+    },
     "minimum-stability": "stable",
     "require": {
         "php": "~7.2",
@@ -24,17 +29,12 @@
         "ext-mbstring": "*",
         "ext-pdo": "*",
         "yiisoft/yii2": "~2.0",
-        "dicr/yii2-helper": "~2.1.9",
-        "dicr/yii2-validate": "~1.5.6"
+        "dicr/yii2-helper": "~3.7",
+        "dicr/yii2-validate": "~2.1"
     },
     "repositories": [
         {"type": "git", "url": "https://gitlab.com/dicr/yii2-helper.git"},
         {"type": "git", "url": "https://gitlab.com/dicr/yii2-validate.git"},
         {"type": "composer", "url": "https://asset-packagist.org"}
-    ],
-    "autoload": {
-        "psr-4": {
-            "dicr\\oclib\\": "src/"
-        }
-    }
+    ]
 }

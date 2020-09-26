@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 14.02.20 00:46:01
+ * @version 26.09.20 21:24:21
  */
 
 declare(strict_types = 1);
@@ -11,7 +11,10 @@ namespace dicr\oclib;
 
 use yii\base\BaseObject;
 use yii\base\Exception;
+
 use function is_callable;
+use function is_file;
+use function str_replace;
 
 /**
  * Загрузчик OpenCart.
@@ -29,9 +32,9 @@ class Loader extends BaseObject
     /**
      * Реестр OpenCart.
      *
-     * @return \dicr\oclib\Registry
+     * @return Registry
      */
-    protected function registry()
+    private static function registry() : Registry
     {
         return Registry::app();
     }
@@ -40,10 +43,11 @@ class Loader extends BaseObject
      * Вызов контроллера.
      *
      * @param string $route
-     * @param array $args аргументы контроллера
+     * @param ?array $args аргументы контроллера
      * @return mixed
+     * @noinspection PhpMethodMayBeStaticInspection
      */
-    public function controller(string $route, $args = null)
+    public function controller(string $route, ?array $args = null)
     {
         if ($args === null) {
             $args = [];
@@ -64,8 +68,10 @@ class Loader extends BaseObject
             $method = array_pop($parts);
         }
 
-        $class = 'Controller' . preg_replace('/[^a-zA-Z0-9]/', '', implode('/', $parts));
-        $controller = new $class($this->registry());
+        $class = 'Controller' .
+            preg_replace('/[^a-zA-Z0-9]/', '', implode('/', $parts));
+
+        $controller = new $class(static::registry());
 
         if (! isset($method)) {
             $method = 'index';
@@ -90,28 +96,27 @@ class Loader extends BaseObject
      *
      * @param string $route
      * @param string $path
-     * @return object модель
-     * @throws \yii\base\Exception
+     * @return Model модель
+     * @throws Exception
      */
-    public function model(string $route, string $path = '')
+    public function model(string $route, string $path = '') : Model
     {
         $key = 'model_' . str_replace('/', '_', $route);
-        $model = $this->registry()->get($key);
-        if (! empty($model)) {
-            return $model;
-        }
 
-        /** @noinspection PhpUndefinedConstantInspection */
-        $file = ($path ?: DIR_APPLICATION . 'model/') . $route . '.php';
-
-        if (is_file($file)) {
-            /** @noinspection PhpIncludeInspection */
-            include_once($file);
-            $class = 'Model' . preg_replace('/[^a-zA-Z0-9]/', '', $route);
-            $model = new $class($this->registry());
-            $this->registry()->set($key, $model);
-        } else {
-            throw new Exception('Error: Could not load model ' . $route . '!');
+        // проверяем в кеше
+        $model = static::registry()->get($key);
+        if ($model === null) {
+            /** @noinspection PhpUndefinedConstantInspection */
+            $file = ($path ?: DIR_APPLICATION . 'model/') . $route . '.php';
+            if (is_file($file)) {
+                /** @noinspection PhpIncludeInspection */
+                include_once($file);
+                $class = 'Model' . preg_replace('/[^a-zA-Z0-9]/', '', $route);
+                $model = new $class(static::registry());
+                static::registry()->set($key, $model);
+            } else {
+                throw new Exception('Error: Could not load model ' . $route . '!');
+            }
         }
 
         return $model;
@@ -122,50 +127,49 @@ class Loader extends BaseObject
      *
      * @param string $route
      * @param array $data данные для темплейта
-     * @return string
-     * @throws \yii\base\InvalidConfigException
+     * @return Template
      * @noinspection PhpMethodMayBeStaticInspection
      */
-    public function view(string $route, array $data = [])
+    public function view(string $route, array $data = []) : Template
     {
-        return Template::render($route, $data);
+        return new Template($route, $data);
     }
 
     /**
      * Загрузка библиотеки.
      *
      * @param string $route
-     * @throws \yii\base\Exception
+     * @throws Exception
      */
-    public function library(string $route)
+    public function library(string $route) : void
     {
         // Sanitize the call
         $route = preg_replace('/[^a-zA-Z0-9_\/]/', '', $route);
 
         /** @noinspection PhpUndefinedConstantInspection */
         $file = DIR_SYSTEM . 'library/' . $route . '.php';
-
-        $class = str_replace('/', '\\', $route);
         if (is_file($file)) {
             /** @noinspection PhpIncludeInspection */
             include_once($file);
-            $this->registry()->set(basename($route), new $class($this->registry()));
+
+            $class = str_replace('/', '\\', $route);
+            static::registry()->set(basename($route), new $class(static::registry()));
         } else {
             throw new Exception('Error: Could not load library ' . $route . '!');
         }
     }
 
     /**
-     * @param $helper
-     * @throws \yii\base\Exception
+     * @param $name
+     * @throws Exception
      * @noinspection PhpMethodMayBeStaticInspection
      */
-    public function helper($helper)
+    public function helper(string $name) : void
     {
         /** @noinspection PhpUndefinedConstantInspection */
-        $file = DIR_SYSTEM . 'helper/' . str_replace('../', '', (string)$helper) . '.php';
+        $file = DIR_SYSTEM . 'helper/' . str_replace('../', '', $name) . '.php';
 
-        if (file_exists($file)) {
+        if (is_file($file)) {
             /** @noinspection PhpIncludeInspection */
             include_once($file);
         } else {
@@ -174,19 +178,30 @@ class Loader extends BaseObject
     }
 
     /**
-     * @param $config
+     * @param $name
+     * @return Config
      */
-    public function config($config)
+    public function config($name) : Config
     {
-        $this->registry()->get('config')->load($config);
+        /** @var Config $config */
+        $config = static::registry()->get('config');
+        $config->load($name);
+
+        return $config;
     }
 
     /**
-     * @param $language
-     * @return mixed
+     * Загрузка языка
+     *
+     * @param string $route
+     * @return Language
      */
-    public function language($language)
+    public function language(string $route) : Language
     {
-        return $this->registry()->get('language')->load($language);
+        /** @var Language $language */
+        $language = static::registry()->get('language');
+        $language->load($route);
+
+        return $language;
     }
 }

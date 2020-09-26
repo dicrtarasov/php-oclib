@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 14.02.20 00:46:01
+ * @version 26.09.20 19:39:05
  */
 
 declare(strict_types = 1);
@@ -11,6 +11,7 @@ declare(strict_types = 1);
 namespace dicr\oclib;
 
 use dicr\helper\Html;
+use dicr\helper\StringHelper;
 use Yii;
 use yii\base\BaseObject;
 use yii\data\Sort;
@@ -18,33 +19,30 @@ use yii\data\Sort;
 /**
  * Страница сайта.
  *
- * @property string $title
- * @property string $description
- * @property string $keywords
- * @property string $ogImage
- * @property string $ogUrl
+ * @property ?string $title
+ * @property ?string $description
+ * @property ?string $keywords
+ * @property ?string $ogImage
+ * @property ?string $ogUrl
  * @property-read array $links
- * @property array $styles
+ * @property ?array $styles
  * @property-read array $scripts
- *
- * @package dicr\oclib
- * @noinspection PhpUnused
  */
 class Document extends BaseObject
 {
-    /** @var string|null meta title */
+    /** @var ?string meta title */
     private $_title;
 
-    /** @var string|null meta description */
+    /** @var ?string meta description */
     private $_description;
 
-    /** @var string|null meta keywords */
+    /** @var ?string meta keywords */
     private $_keywords;
 
-    /** @var string|null OG Image Url */
+    /** @var ?string OG Image Url */
     private $_ogImage = '';
 
-    /** @var string|null PG Page Url */
+    /** @var ?string PG Page Url */
     private $_ogUrl;
 
     /** @var array */
@@ -53,16 +51,16 @@ class Document extends BaseObject
     /** @var array */
     private $_scripts = [];
 
-    /** @var \yii\data\Sort|false */
+    /** @var Sort|false */
     public $sort;
 
     /** @var \yii\data\Pagination|false */
     public $pager;
 
     /**
-     * Инициализация.
+     * @inheritDoc
      */
-    public function init()
+    public function init() : void
     {
         parent::init();
 
@@ -78,9 +76,9 @@ class Document extends BaseObject
     /**
      * Возвращает заголовок.
      *
-     * @return string|null
+     * @return ?string
      */
-    public function getTitle()
+    public function getTitle() : ?string
     {
         return $this->_title;
     }
@@ -88,20 +86,23 @@ class Document extends BaseObject
     /**
      * Установить заголовок.
      *
-     * @param string|null $title
+     * @param ?string $title
      */
-    public function setTitle(string $title = null)
+    public function setTitle(?string $title) : void
     {
-        $this->_title = isset($title) ?
-            Html::decode(mb_strtoupper(mb_substr($title, 0, 1)) . mb_substr($title, 1)) : null;
+        if ($title !== null) {
+            $title = StringHelper::mb_ucfirst(Html::decode($title));
+        }
+
+        $this->_title = $title;
     }
 
     /**
      * Возвращает meta description.
      *
-     * @return string|null
+     * @return ?string
      */
-    public function getDescription()
+    public function getDescription() : ?string
     {
         return $this->_description;
     }
@@ -109,19 +110,23 @@ class Document extends BaseObject
     /**
      * Устанавливает meta description.
      *
-     * @param string|null $description
+     * @param ?string $description
      */
-    public function setDescription(string $description = null)
+    public function setDescription(?string $description) : void
     {
-        $this->_description = isset($description) ? Html::decode($description) : null;
+        if ($description !== null) {
+            $description = Html::decode($description);
+        }
+
+        $this->_description = $description;
     }
 
     /**
      * Возвращает meta keywords.
      *
-     * @return string|null
+     * @return ?string
      */
-    public function getKeywords()
+    public function getKeywords() : ?string
     {
         return $this->_keywords;
     }
@@ -129,19 +134,23 @@ class Document extends BaseObject
     /**
      * Устанавливает meta keywords.
      *
-     * @param string|null $keywords
+     * @param ?string $keywords
      */
-    public function setKeywords(string $keywords = null)
+    public function setKeywords(?string $keywords) : void
     {
-        $this->_keywords = isset($keywords) ? Html::decode($keywords) : null;
+        if ($keywords !== null) {
+            $keywords = Html::decode($keywords);
+        }
+
+        $this->_keywords = $keywords;
     }
 
     /**
      * Возвращает OG Url.
      *
-     * @return string|null
+     * @return ?string
      */
-    public function getOgUrl()
+    public function getOgUrl() : ?string
     {
         return $this->_ogUrl;
     }
@@ -149,40 +158,48 @@ class Document extends BaseObject
     /**
      * Устанавливает OG Url
      *
-     * @param $ogurl
+     * @param ?string $ogUrl
      */
-    public function setOgUrl(string $ogurl = null)
+    public function setOgUrl(?string $ogUrl) : void
     {
-        $this->_ogUrl = isset($ogurl) ? Html::decode($ogurl) : null;
+        if ($ogUrl !== null) {
+            $ogUrl = Html::decode($ogUrl);
+        }
+
+        $this->_ogUrl = $ogUrl;
     }
 
     /**
      * Возвращает OG Image.
      *
-     * @return string|null
+     * @return ?string
      */
-    public function getOgImage()
+    public function getOgImage() : ?string
     {
         return $this->_ogImage;
     }
 
     /**
-     * Усанавливает OG Image.
+     * Устанавливает OG Image.
      *
-     * @param string|null $image
+     * @param ?string $image
      */
-    public function setOgImage(string $image = null)
+    public function setOgImage(?string $image) : void
     {
-        $this->_ogImage = isset($image) ? Html::decode($image) : null;
+        if ($image !== null) {
+            $image = Html::decode($image);
+        }
+
+        $this->_ogImage = $image;
     }
 
     /**
-     * Добавляе ссылку link.
+     * Добавляет ссылку link.
      *
      * @param string $href
      * @param string $rel
      */
-    public function addLink(string $href, string $rel)
+    public function addLink(string $href, string $rel) : void
     {
         $this->_links[$href] = [
             'href' => $href,
@@ -193,9 +210,9 @@ class Document extends BaseObject
     /**
      * Возвращает ссылки link.
      *
-     * @return mixed
+     * @return array
      */
-    public function getLinks()
+    public function getLinks() : array
     {
         return $this->_links;
     }
@@ -207,7 +224,7 @@ class Document extends BaseObject
      * @param string $rel
      * @param string $media
      */
-    public function addStyle(string $href, string $rel = 'stylesheet', string $media = 'screen')
+    public function addStyle(string $href, string $rel = 'stylesheet', string $media = 'screen') : void
     {
         $this->_links[$href] = [
             'href' => $href,
@@ -217,13 +234,13 @@ class Document extends BaseObject
     }
 
     /**
-     * Возвращает пусой массив, так как стили хранятся в links.
+     * Возвращает пустой массив, так как стили хранятся в links.
      *
      * @return array
      * @deprecated используйте getLinks()
      * @noinspection PhpMethodMayBeStaticInspection
      */
-    public function getStyles()
+    public function getStyles() : array
     {
         return [];
     }
@@ -234,7 +251,7 @@ class Document extends BaseObject
      * @param string $href
      * @param string $position
      */
-    public function addScript(string $href, string $position = 'header')
+    public function addScript(string $href, string $position = 'header') : void
     {
         $this->_scripts[$href] = $position;
     }
@@ -245,7 +262,7 @@ class Document extends BaseObject
      * @param string $position
      * @return array
      */
-    public function getScripts(string $position = 'header')
+    public function getScripts(string $position = 'header') : array
     {
         if (empty($position)) {
             return $this->_scripts;
@@ -253,5 +270,4 @@ class Document extends BaseObject
 
         return array_values($this->_scripts[$position] ?? []);
     }
-
 }

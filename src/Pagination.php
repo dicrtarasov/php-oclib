@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 14.02.20 00:46:01
+ * @version 26.09.20 22:47:53
  */
 
 declare(strict_types = 1);
@@ -13,15 +13,17 @@ use dicr\helper\Html;
 use yii\base\InvalidArgumentException;
 use yii\base\InvalidConfigException;
 use yii\data\DataProviderInterface;
+
 use function is_array;
+use function ob_get_clean;
+use function ob_start;
+
 use const ENT_QUOTES;
 
 /**
- * Виджет паринации Opencart.
+ * Виджет пагинации Opencart.
  *
- * @property-read int $numPages кол-во сраниц
- * @package dicr\oclib
- * @noinspection PhpUnused
+ * @property-read int $numPages кол-во страниц
  */
 class Pagination extends Widget
 {
@@ -31,22 +33,22 @@ class Pagination extends Widget
     /** @var int номер страницы, начиная с 1 */
     public $page;
 
-    /** @var int лимит записей на сраницу */
+    /** @var int лимит записей на страницу */
     public $limit;
 
     /** @var int количество ссылок на страницы */
     public $num_links;
 
-    /** @var string шаблон URL сраницы, где номер сраницы помечен как "{page}" */
+    /** @var string шаблон URL страницы, где номер страницы помечен как "{page}" */
     public $url = '';
 
     /** @var string непонятно зачем */
     public $text;
 
-    /** @var string|false символ первой сраницы */
+    /** @var string|false символ первой страницы */
     public $text_first = '|&lt;';
 
-    /** @var string|false символ последней сраницы */
+    /** @var string|false символ последней страницы */
     public $text_last = '&gt;|';
 
     /** @var string|false символ следующей страницы */
@@ -56,19 +58,19 @@ class Pagination extends Widget
     public $text_prev = '&lt;';
 
     /**
-     * @var \yii\data\Pagination|null пейджер
+     * @var ?\yii\data\Pagination пейджер
      * Внимание ! Если пагинация берется у DataProvider, то для начала нужно инициировать его пейджер
      * методом вызова $provider->totalCount, иначе у пейджера будет total = 0
      */
     public $pager;
 
-    /** @var \yii\data\DataProviderInterface|null провайдер данных у которого возьмется пейджер и totalCount */
+    /** @var ?DataProviderInterface провайдер данных у которого возьмется пейджер и totalCount */
     public $provider;
 
     /**
      * Конструктор.
      *
-     * @param array|\yii\data\Pagination|\yii\data\DataProviderInterface|null $params
+     * @param array|\yii\data\Pagination|DataProviderInterface|null $params
      */
     public function __construct($params = null)
     {
@@ -88,10 +90,9 @@ class Pagination extends Widget
     /**
      * Инициализация.
      *
-     * @throws \yii\base\InvalidConfigException
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
-    public function init()
+    public function init() : void
     {
         parent::init();
 
@@ -132,7 +133,6 @@ class Pagination extends Widget
             if (empty($this->url)) {
                 $this->url = str_replace('999999999', '{page}', $this->pager->createUrl(999999998));
             }
-
         }
 
         Html::addCssClass($this->options, 'dicr-oclib-pagination pagination');
@@ -141,9 +141,9 @@ class Pagination extends Widget
     /**
      * @inheritDoc
      *
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
-    public function run()
+    public function run() : string
     {
         if (empty($this->url)) {
             throw new InvalidConfigException('url');
@@ -154,9 +154,10 @@ class Pagination extends Widget
         $num_pages = $this->getNumPages();
 
         if ($num_pages < 2) {
-            return;
+            return '';
         }
 
+        ob_start();
         echo Html::beginTag('ul', $this->options);
 
         if ($this->page > 1) {
@@ -188,7 +189,7 @@ class Pagination extends Widget
                 }
             }
 
-            for ($i = $start; $i <= $end; $i ++) {
+            for ($i = $start; $i <= $end; $i++) {
                 if ($this->page === $i) {
                     echo Html::tag('li', Html::tag('span', $i), ['class' => 'active']);
                 } else {
@@ -208,14 +209,16 @@ class Pagination extends Widget
         }
 
         echo Html::endTag('li');
+
+        return ob_get_clean();
     }
 
     /**
      * Валидация параметров.
      *
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
-    protected function validate()
+    protected function validate() : void
     {
         $this->page = (int)$this->page;
         if ($this->page < 0) {
@@ -257,11 +260,11 @@ class Pagination extends Widget
     }
 
     /**
-     * Возвращает кол-во сраниц.
+     * Возвращает кол-во страниц.
      *
      * @return int
      */
-    public function getNumPages()
+    public function getNumPages() : int
     {
         return $this->limit > 0 ? (int)ceil($this->total / $this->limit) : 0;
     }
@@ -269,17 +272,20 @@ class Pagination extends Widget
     /**
      * Возвращает ссылку на заданную страницу.
      *
-     * @param int|null $page номер страницы. Если пустая, то текущая.
+     * @param ?int $page номер страницы. Если пустая, то текущая.
      * @return string
      */
-    public function getUrl(int $page = null)
+    public function getUrl(int $page = null) : string
     {
-        if (empty($page)) {
+        if ($page === null) {
             $page = $this->page;
         }
 
-        return rtrim($page > 1 ? str_replace('{page}', $page, $this->url) : str_replace('page={page}', '', $this->url),
-            '?&');
+        return rtrim($page > 1 ?
+            str_replace('{page}', $page, $this->url) :
+            str_replace('page={page}', '', $this->url),
+            '?&'
+        );
     }
 
     /**
@@ -287,7 +293,7 @@ class Pagination extends Widget
      *
      * @return string
      */
-    public function render()
+    public function render() : string
     {
         return (string)$this;
     }

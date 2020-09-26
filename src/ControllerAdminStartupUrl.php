@@ -3,34 +3,29 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 14.02.20 00:46:01
+ * @version 26.09.20 22:14:51
  */
 
 declare(strict_types = 1);
-
 namespace dicr\oclib;
 
-use Action;
-use Debug;
 use Yii;
 
 /**
  * Контроллер маршрутизации.
- * Предназначен для переопределеия Action при старте обработки запроса.
+ * Предназначен для переопределения Action при старте обработки запроса.
  *
  * Нужно создать подкласс и разместить его в /admin/controller/startup/url.php, а также
  * добавить этот контроллер как preAction.
- *
- * @package dicr\oclib
  */
 class ControllerAdminStartupUrl extends Controller
 {
     /**
      * Индекс.
      *
-     * @return \Action
+     * @return ?Action
      */
-    public function index()
+    public function index() : ?Action
     {
         // устанавливаем маршрут в Yii
         Yii::$app->requestedRoute = $this->resolveRoute();
@@ -41,7 +36,7 @@ class ControllerAdminStartupUrl extends Controller
         // сохраняем парамеры в Yii
         Yii::$app->request->queryParams = $this->request->get;
 
-        // создаем конроллер Yii
+        // создаем контроллер Yii
         Yii::$app->controller = new \yii\web\Controller(Url::controllerByRoute(Yii::$app->requestedRoute), Yii::$app);
 
         // возвращаем действие
@@ -53,7 +48,7 @@ class ControllerAdminStartupUrl extends Controller
      *
      * @return string
      */
-    protected function resolveRoute()
+    protected function resolveRoute() : string
     {
         Yii::$app->defaultRoute = 'common/dashboard';
 

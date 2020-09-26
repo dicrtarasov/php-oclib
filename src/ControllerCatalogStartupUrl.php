@@ -3,38 +3,35 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 14.02.20 00:52:59
+ * @version 26.09.20 22:43:29
  */
 
 declare(strict_types = 1);
 
 namespace dicr\oclib;
 
-use Action;
+use Throwable;
 use Yii;
 use yii\helpers\ArrayHelper;
 use yii\web\UrlNormalizerRedirectException;
+
 use function is_array;
 
 /**
  * Контроллер маршрутизации.
- * Предназначен для переопределеия Action при старте обработки запроса.
+ * Предназначен для переопределения Action при старте обработки запроса.
  *
  * Нужно создать подкласс и разместить его в /catalog/controller/startup/url.php, а также
  * добавить этот контроллер как preAction.
- *
- * @package dicr\oclib
- * @noinspection PhpUnused
  */
 class ControllerCatalogStartupUrl extends Controller
 {
     /**
      * Декодирование ЧПУ.
      *
-     * @return \Action
-     * @throws \yii\base\ExitException
+     * @return ?Action
      */
-    public function index()
+    public function index() : ?Action
     {
         // устанавливаем маршрут в Yii
         Yii::$app->requestedRoute = $this->resolveRoute();
@@ -45,7 +42,7 @@ class ControllerCatalogStartupUrl extends Controller
         // сохраняем парамеры в Yii
         Yii::$app->request->queryParams = $this->request->get;
 
-        // создаем конроллер Yii
+        // создаем контроллер Yii
         Yii::$app->controller = new \yii\web\Controller(Url::controllerByRoute(Yii::$app->requestedRoute), Yii::$app);
 
         // возвращаем действие
@@ -56,9 +53,8 @@ class ControllerCatalogStartupUrl extends Controller
      * Получение маршрута.
      *
      * @return string
-     * @throws \yii\base\ExitException
      */
-    protected function resolveRoute()
+    protected function resolveRoute() : string
     {
         // маршрут Yii по-умолчанию
         Yii::$app->defaultRoute = 'common/home';
@@ -68,7 +64,7 @@ class ControllerCatalogStartupUrl extends Controller
             return $this->request->get['route'];
         }
 
-        // поддержка prettyUrl-маршрутов и ЧПУ, переадресаванных через .htaccess, пример: /catalog/product
+        // поддержка prettyUrl-маршрутов и ЧПУ, переадресованных через .htaccess, пример: /catalog/product
         if (! empty($this->request->get['_route_'])) {
             // восстанавливаем путь переадресации
             Yii::$app->request->pathInfo = $this->request->get['_route_'];
@@ -76,12 +72,12 @@ class ControllerCatalogStartupUrl extends Controller
             /** @var array|false $result */
             $result = false;
 
-            // пытаемся резолвить как ЧПУ
+            // пытаемся разрешить как ЧПУ
             try {
                 $result = Yii::$app->urlManager->parseRequest(Yii::$app->request);
             } /** @noinspection PhpRedundantCatchClauseInspection */
             catch (UrlNormalizerRedirectException $ex) {
-                // переадресация от нормализаора Url
+                // переадресация от нормализатора Url
                 $url = $ex->url;
 
                 // сроим ссылку переадресации
@@ -97,9 +93,17 @@ class ControllerCatalogStartupUrl extends Controller
                 }
 
                 // делаем переадресацию
-                Yii::$app->end(0,
-                    Yii::$app->response->redirect($ex->scheme ? Yii::$app->urlManager->createAbsoluteUrl($url) :
-                        Yii::$app->urlManager->createUrl($url), $ex->statusCode));
+                try {
+                    Yii::$app->end(0,
+                        Yii::$app->response->redirect($ex->scheme ?
+                            Yii::$app->urlManager->createAbsoluteUrl($url) :
+                            Yii::$app->urlManager->createUrl($url), $ex->statusCode
+                        )
+                    );
+                } catch (Throwable $ex) {
+                    Yii::error($ex, __METHOD__);
+                    exit;
+                }
             }
 
             // если ЧПУ решен

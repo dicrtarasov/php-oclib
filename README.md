@@ -1,5 +1,6 @@
 # oc-yii2
-** Адаптер Yii2 для OpenCart** позволяет подключить и использоваь в OpenCart библиотеку компонентов Yii методом перенаправления сандартных функций OpenCart в вызовы функций Yii (кроме контроллеров).
+** Адаптер Yii2 для OpenCart** позволяет подключить и использовать в OpenCart библиотеку компонентов Yii 
+методом реализации функций OpenCart функциями Yii (кроме контроллеров).
 
 ## Подключение библиотек Yii2
 Автозагрузка классов как сторонних библиотек, так и папки `system` выполняется через composer.
@@ -29,16 +30,16 @@
 - `/config/yii.console.php` - конфиг для Yii для Console
 
 ### Инициализация
-Yii Application создается и используется как контейнер компонентов и сервисов без `run`, а Web-контроллеры оставлены OpenCart.
+Yii Application создаётся и используется как контейнер компонентов и сервисов без `run`, а Web-контроллеры оставлены OpenCart.
 
 ##### /system/startup.php
-// удаляем автозагрузчик OpenCart
+// удаляем авто-загрузчик OpenCart
 // spl_autoload_register('library');
 // spl_autoload_register('vendor');
 // spl_autoload_extensions('.php');
 
 ```php
-// Подключаем автозагрузчик Composer
+// Подключаем авто-загрузчик Composer
 require(__DIR__ . '/../vendor/autoload.php');
 
 // константы YII_ENV и YII_DEBUG должны быть установлены до загрузки Yii
@@ -51,7 +52,7 @@ require(__DIR__ . '/../vendor/yiisoft/yii2/Yii.php');
 // создаем приложение Yii
 new yii\web\Application(require(__DIR__ . '/../config/yii.web.php'));
 ```
-## Маршруизация
+## Маршрутизация
 ##### `/.htaccess` и `/admin/.htaccess`
 
 ```htaccess

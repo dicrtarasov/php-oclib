@@ -3,20 +3,20 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 14.02.20 00:46:01
+ * @version 26.09.20 22:45:43
  */
 
 declare(strict_types = 1);
 namespace dicr\oclib;
 
+use Throwable;
 use Yii;
+use yii\base\InvalidConfigException;
 use yii\db\Exception;
 use yii\di\Instance;
 
 /**
  * Class Response
- *
- * @package dicr\oclib
  */
 class Response
 {
@@ -26,7 +26,7 @@ class Response
     /**
      * Конструктор.
      *
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
     public function __construct()
     {
@@ -37,7 +37,7 @@ class Response
      * Добавление заголовка.
      *
      * @param $header
-     * @throws \yii\db\Exception
+     * @throws Exception
      */
     public function addHeader($header)
     {
@@ -52,28 +52,32 @@ class Response
     }
 
     /**
-     * Редирект.
+     * Переадресация.
      *
      * @param array|string $url
-     * @param int $status
-     * @return void|\yii\web\Response
-     * @throws \yii\base\ExitException
+     * @param ?int $status
      */
-    public function redirect($url, $status = null)
+    public function redirect($url, ?int $status = null) : void
     {
         $url = str_replace(['&amp;', "\n", "\r"], ['&', '', ''], $url);
-        Yii::$app->end(0, $this->response->redirect($url, $status ?: 302));
+
+        try {
+            Yii::$app->end(0, $this->response->redirect($url, $status ?: 302));
+        } catch (Throwable $ex) {
+            Yii::error($ex, __METHOD__);
+            exit;
+        }
     }
 
     /**
-     * Усановить уровнь компрессии.
+     * Установить уровень компрессии.
      *
-     * @param $level
+     * @param int $level
      * @noinspection PhpMethodMayBeStaticInspection
      */
-    public function setCompression($level)
+    public function setCompression(int $level) : void
     {
-
+        // noop
     }
 
     /**
@@ -81,25 +85,25 @@ class Response
      *
      * @return string
      */
-    public function getOutput()
+    public function getOutput() : string
     {
-        return $this->response->content;
+        return (string)$this->response->content;
     }
 
     /**
      * Устанавливает выходные данные.
      *
-     * @param $output
+     * @param mixed $output
      */
     public function setOutput($output)
     {
-        $this->response->content = $output;
+        $this->response->content = (string)$output;
     }
 
     /**
-     * Отправка овета.
+     * Отправка ответа.
      */
-    public function output()
+    public function output() : void
     {
         $this->response->send();
     }

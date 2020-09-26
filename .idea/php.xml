@@ -28,6 +28,8 @@
       <path value="$PROJECT_DIR$/vendor/ezyang/htmlpurifier" />
       <path value="$PROJECT_DIR$/vendor/dicr/yii2-helper" />
       <path value="$PROJECT_DIR$/vendor/dicr/yii2-validate" />
+      <path value="$PROJECT_DIR$/vendor/npm-asset/bootstrap" />
+      <path value="$PROJECT_DIR$/vendor/yiisoft/yii2-bootstrap4" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="7.2" />
@@ -60,7 +62,7 @@
   </component>
   <component name="PhpUnit">
     <phpunit_settings>
-      <PhpUnitSettings load_method="CUSTOM_LOADER" custom_loader_path="$PROJECT_DIR$/vendor/autoload.php" />
+      <PhpUnitSettings custom_loader_path="$PROJECT_DIR$/vendor/autoload.php" />
       <PhpUnitSettings load_method="PHPUNIT_PHAR" custom_loader_path="" phpunit_phar_path="$USER_HOME$/phpunit.phar" />
     </phpunit_settings>
   </component>

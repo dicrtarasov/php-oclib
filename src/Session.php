@@ -3,18 +3,17 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 14.02.20 00:46:01
+ * @version 26.09.20 21:59:21
  */
 
 declare(strict_types = 1);
 namespace dicr\oclib;
 
+use yii\base\InvalidConfigException;
 use yii\di\Instance;
 
 /**
  * Прокси сессии OpeCart на Yii.
- *
- * @package dicr\oclib
  */
 class Session
 {
@@ -22,20 +21,16 @@ class Session
     public $session = 'session';
 
     /** @var array */
-    public $data = [];
+    public $data;
 
     /**
      * Session constructor.
      *
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
     public function __construct()
     {
         $this->session = Instance::ensure($this->session, \yii\web\Session::class);
-
-        $this->start();
-
-        $this->data = &$_SESSION;
     }
 
     /**
@@ -43,9 +38,10 @@ class Session
      *
      * @return string ID сессии
      */
-    public function start()
+    public function start() : string
     {
         $this->session->open();
+        $this->data = &$_SESSION;
 
         return $this->getId();
     }
@@ -55,7 +51,7 @@ class Session
      *
      * @return string
      */
-    public function getId()
+    public function getId() : string
     {
         return $this->session->id;
     }
@@ -63,7 +59,7 @@ class Session
     /**
      * Закрытие сессии.
      */
-    public function close()
+    public function close() : void
     {
         $this->session->close();
     }
@@ -71,7 +67,7 @@ class Session
     /**
      * Удаление сессии.
      */
-    public function destroy()
+    public function destroy() : void
     {
         $this->session->destroy();
     }

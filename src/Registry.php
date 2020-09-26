@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 14.02.20 00:46:01
+ * @version 26.09.20 19:49:57
  */
 
 declare(strict_types = 1);
@@ -34,35 +34,37 @@ class Registry implements RegistryProps
      *
      * @return self
      */
-    public static function app()
+    public static function app() : self
     {
         return self::$_instance;
     }
 
-    /*** Сандартные методы opencart *****************************************/
+    /** Волшебные методы ****************************************************/
 
     /**
      * Получить значение.
      *
      * @param string $key
-     * @return mixed
+     * @return ?mixed
      */
-    public function get($key)
+    public function __get(string $key)
     {
         return $this->data[$key] ?? null;
     }
 
-    /*** Волшебные методы ****************************************************/
-
     /**
      * Установить значение.
      *
      * @param string $key
      * @param mixed $value
      */
-    public function set($key, $value)
+    public function __set(string $key, $value) : void
     {
-        $this->data[$key] = $value;
+        if ($value === null) {
+            unset($this->data[$key]);
+        } else {
+            $this->data[$key] = $value;
+        }
     }
 
     /**
@@ -71,10 +73,13 @@ class Registry implements RegistryProps
      * @param string $key
      * @return bool
      */
-    public function has($key)
+    public function __isset(string $key) : bool
     {
         return isset($this->data[$key]);
     }
+
+
+    /** Стандартные методы opencart *****************************************/
 
     /**
      * Получить значение.
@@ -82,9 +87,9 @@ class Registry implements RegistryProps
      * @param string $key
      * @return mixed
      */
-    public function __get($key)
+    public function get(string $key)
     {
-        return $this->get($key);
+        return $this->__get($key);
     }
 
     /**
@@ -93,9 +98,9 @@ class Registry implements RegistryProps
      * @param string $key
      * @param mixed $value
      */
-    public function __set($key, $value)
+    public function set(string $key, $value) : void
     {
-        $this->set($key, $value);
+        $this->__set($key, $value);
     }
 
     /**
@@ -104,8 +109,8 @@ class Registry implements RegistryProps
      * @param string $key
      * @return bool
      */
-    public function __isset($key)
+    public function has(string $key) : bool
     {
-        return $this->has($key);
+        return $this->__isset($key);
     }
 }
