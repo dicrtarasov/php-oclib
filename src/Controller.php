@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 26.09.20 22:16:14
+ * @version 26.09.20 22:51:11
  */
 
 /** @noinspection PhpUnusedParameterInspection */
@@ -11,9 +11,9 @@ declare(strict_types = 1);
 
 namespace dicr\oclib;
 
+use InvalidArgumentException;
 use Throwable;
 use Yii;
-use yii\base\InvalidArgumentException;
 
 use function gmdate;
 use function header;
@@ -35,9 +35,9 @@ abstract class Controller implements RegistryProps
     /**
      * BaseController constructor.
      *
-     * @param null $registry
+     * @param ?Registry $registry
      */
-    public function __construct($registry = null)
+    public function __construct(?Registry $registry = null)
     {
         //
     }
