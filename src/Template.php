@@ -3,29 +3,28 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 27.09.20 17:25:41
+ * @version 27.09.20 17:44:02
  */
 
 declare(strict_types = 1);
 namespace dicr\oclib;
 
 use function extract;
+use function ob_get_clean;
 use function ob_implicit_flush;
 use function ob_start;
+use function pathinfo;
 use function preg_match;
 use function rtrim;
 use function trim;
 
 use const EXTR_REFS;
 use const EXTR_SKIP;
+use const PATHINFO_EXTENSION;
 
 /**
  * Темплейт для OpenCart с проксированием к Registry.
  * Требует DIR_TEMPLATE.
- *
- * @property-read string $route
- * @property-read array $vars
- * @property-read string $filePath
  */
 class Template extends Widget implements RegistryProps
 {
@@ -63,26 +62,6 @@ class Template extends Widget implements RegistryProps
     }
 
     /**
-     * Маршрут
-     *
-     * @return string
-     */
-    public function getRoute() : string
-    {
-        return $this->_route;
-    }
-
-    /**
-     * Параметры.
-     *
-     * @return array
-     */
-    public function getVars() : array
-    {
-        return $this->_vars;
-    }
-
-    /**
      * Директория темплейтов.
      *
      * @return string
@@ -101,18 +80,18 @@ class Template extends Widget implements RegistryProps
      *
      * @return string полный путь файла для выполнения
      */
-    public function getFilePath() : string
+    public function filePath() : string
     {
         if ($this->_filePath === null) {
-            $this->_filePath = $this->_route;
+            $path = $this->_route;
 
             // добавляем расширение
-            $ext = pathinfo($this->_filePath, PATHINFO_EXTENSION);
+            $ext = pathinfo($path, PATHINFO_EXTENSION);
             if (empty($ext)) {
-                $this->_filePath .= '.' . self::EXT_DEFAULT;
+                $path .= '.' . self::EXT_DEFAULT;
             }
 
-            $this->_filePath = rtrim(static::dirTemplate(), '/') . '/' . $this->_filePath;
+            $this->_filePath = rtrim(static::dirTemplate(), '/') . '/' . $path;
         }
 
         return $this->_filePath;
@@ -130,8 +109,10 @@ class Template extends Widget implements RegistryProps
             // распаковываем данные
             extract($this->_vars, EXTR_REFS | EXTR_SKIP);
 
+            $path = $this->filePath();
+
             /** @noinspection PhpIncludeInspection */
-            require($this->filePath);
+            require($path);
         };
 
         try {

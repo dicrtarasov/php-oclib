@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 26.09.20 22:47:53
+ * @version 27.09.20 18:48:30
  */
 
 declare(strict_types = 1);
@@ -11,7 +11,11 @@ namespace dicr\oclib;
 
 use yii\base\InvalidArgumentException;
 
+use function header;
+use function implode;
 use function is_string;
+use function parse_url;
+use function preg_split;
 
 use const PREG_SPLIT_NO_EMPTY;
 
@@ -23,22 +27,10 @@ class Url extends \dicr\helper\Url
     /**
      * Конструктор.
      *
-     * @param string $url
+     * @param ?string $url
+     * @param ?string $ssl
      */
-    public function __construct(string $url)
-    {
-        // noop
-    }
-
-    /** @noinspection PhpMethodMayBeStaticInspection */
-
-    /**
-     * Добавляем обработчики ЧПУ.
-     *
-     * @param object $rewrite
-     * @noinspection PhpMissingParamTypeInspection
-     */
-    public function addRewrite($rewrite) : void
+    public function __construct(?string $url = null, ?string $ssl = null)
     {
         // noop
     }
@@ -46,11 +38,13 @@ class Url extends \dicr\helper\Url
     /**
      * Переадресует на канонический адрес если текущий отличается.
      *
-     * @param string $url
+     * @param string $route
+     * @param array|string $params
      */
-    public static function redirectToCanonical(string $url) : void
+    public function redirectToCanonical(string $route, $params) : void
     {
-        $urlInfo = parse_url($url);
+        $url = $this->link($route, $params);
+        $urlInfo = (array)parse_url($url);
 
         $canonical = $urlInfo['path'];
         if (! empty($urlInfo['query'])) {

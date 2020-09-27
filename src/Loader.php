@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 26.09.20 21:24:21
+ * @version 27.09.20 18:01:35
  */
 
 declare(strict_types = 1);
@@ -23,8 +23,11 @@ class Loader extends BaseObject
 {
     /**
      * Loader constructor.
+     *
+     * @noinspection PhpUnusedParameterInspection
+     * @param ?Registry $registry
      */
-    public function __construct()
+    public function __construct(?Registry $registry = null)
     {
         parent::__construct();
     }

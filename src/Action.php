@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 26.09.20 22:44:23
+ * @version 27.09.20 18:09:42
  */
 
 declare(strict_types = 1);
@@ -11,6 +11,7 @@ namespace dicr\oclib;
 
 use ReflectionClass;
 use ReflectionException;
+use Yii;
 use yii\base\Exception;
 
 use function call_user_func_array;
@@ -95,6 +96,12 @@ class Action
             return new Exception('Error: Could not call ' . $this->route . '/' . $this->method . '!');
         }
 
+        // инициализируем параметры Yii
+        Yii::$app->requestedRoute = $this->id;
+        Yii::$app->request->queryParams = Registry::app()->request->get;
+        Yii::$app->controller = new \yii\web\Controller(Url::controllerByRoute($this->id), Yii::$app);
+
+        // выполняем метод контроллера
         $reflection = new ReflectionClass($class);
         if ($reflection->hasMethod($this->method) &&
             $reflection->getMethod($this->method)->getNumberOfRequiredParameters() <= count($args)) {
