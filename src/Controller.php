@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 27.09.20 17:12:14
+ * @version 27.09.20 19:01:07
  */
 
 declare(strict_types = 1);
@@ -31,9 +31,6 @@ abstract class Controller implements RegistryProps
     /** все обращения к $this в контроллере перенаправляются к Registry */
     use RegistryProxy;
 
-    /** @var Registry */
-    protected $registry;
-
     /**
      * BaseController constructor.
      *
@@ -41,7 +38,21 @@ abstract class Controller implements RegistryProps
      */
     public function __construct(?Registry $registry = null)
     {
-        $this->registry = $registry ?? Registry::app();
+        // noop
+    }
+
+    /**
+     * Рендерит темплейт.
+     *
+     * @param string $route
+     * @param array $params
+     * @return null
+     */
+    public function render(string $route, array $params)
+    {
+        $this->response->setOutput(new Template($route, $params));
+
+        return null;
     }
 
     /**
@@ -60,10 +71,9 @@ abstract class Controller implements RegistryProps
             Yii::$app->end(0, $response);
         } catch (Throwable $ex) {
             Yii::error($ex, __METHOD__);
-            exit;
         }
 
-        return null;
+        exit;
     }
 
     /**
