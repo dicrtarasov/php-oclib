@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 26.09.20 19:44:52
+ * @version 27.09.20 19:22:23
  */
 
 /** @noinspection PhpUndefinedClassInspection */
@@ -39,6 +39,7 @@ use User;
  * @property-read Cache $cache
  * @property-read DB $db
  * @property-read Loader $load
+ * @property-read Log $log
  * @property-read Url $url
  * @property-read Request $request
  * @property-read Response $response
@@ -47,9 +48,10 @@ use User;
  * @property-read ModelCatalogProduct $model_catalog_product
  * @property-read ModelCatalogCategory $model_catalog_category
  * @property-read ModelCatalogManufacturer $model_catalog_manufacturer
- * @property-read ModelToolImage $model_tool_image
  * @property-read ModelCatalogAttribute $model_catalog_attribute
+ * @property-read ModelExtensionExtension $model_extension_extension
  * @property-read ModelLocalisationLanguage $model_localisation_language
+ * @property-read ModelToolImage $model_tool_image
  *
  * @property-read ?UrlAlias $urlAlias ЧПУ-алиас текущей страницы (устанавливается в UrlAliasRule при парсинге url)
  */

@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 27.09.20 18:01:35
+ * @version 27.09.20 19:28:11
  */
 
 declare(strict_types = 1);
@@ -130,12 +130,12 @@ class Loader extends BaseObject
      *
      * @param string $route
      * @param array $data данные для темплейта
-     * @return Template
+     * @return string
      * @noinspection PhpMethodMayBeStaticInspection
      */
-    public function view(string $route, array $data = []) : Template
+    public function view(string $route, array $data = []) : string
     {
-        return new Template($route, $data);
+        return (string)(new Template($route, $data));
     }
 
     /**
