@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 27.09.20 19:54:10
+ * @version 27.09.20 20:17:47
  */
 
 declare(strict_types = 1);
@@ -18,32 +18,14 @@ use function gmdate;
 use function header;
 use function in_array;
 use function md5;
-use function ob_end_clean;
-use function ob_get_level;
 use function sprintf;
 use function strtotime;
 
 /**
  * Контроллер OpenCart.
  */
-abstract class Controller implements RegistryProps
+abstract class Controller extends RegistryProxy
 {
-    /** все обращения к $this в контроллере перенаправляются к Registry */
-    use RegistryProxy;
-
-    /** @var Registry используется в наследниках */
-    protected $registry;
-
-    /**
-     * BaseController constructor.
-     *
-     * @param ?Registry $registry
-     */
-    public function __construct(?Registry $registry = null)
-    {
-        $this->registry = $registry ?: Registry::app();
-    }
-
     /**
      * Рендерит темплейт.
      *
@@ -88,27 +70,8 @@ abstract class Controller implements RegistryProps
      */
     public function redirect(string $url, int $code = 303)
     {
-        static::cleanOutput();
-
-        $response = Yii::$app->response->redirect($url, $code);
-
-        try {
-            Yii::$app->end(0, $response);
-        } catch (Throwable $ex) {
-            Yii::error($ex, __METHOD__);
-        }
-
+        $this->response->redirect($url, $code);
         exit;
-    }
-
-    /**
-     * Очищает выходной буфер.
-     */
-    public static function cleanOutput() : void
-    {
-        while (ob_get_level() > 0) {
-            ob_end_clean();
-        }
     }
 
     /**

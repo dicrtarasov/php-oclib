@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 26.09.20 22:45:43
+ * @version 27.09.20 20:17:20
  */
 
 declare(strict_types = 1);
@@ -14,6 +14,9 @@ use Yii;
 use yii\base\InvalidConfigException;
 use yii\db\Exception;
 use yii\di\Instance;
+
+use function ob_end_clean;
+use function ob_get_level;
 
 /**
  * Class Response
@@ -52,21 +55,34 @@ class Response
     }
 
     /**
+     * Очищает выходной буфер.
+     */
+    public static function cleanOutput() : void
+    {
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+    }
+
+    /**
      * Переадресация.
      *
      * @param array|string $url
-     * @param ?int $status
+     * @param int $status
      */
-    public function redirect($url, ?int $status = null) : void
+    public function redirect($url, int $status = 303) : void
     {
         $url = str_replace(['&amp;', "\n", "\r"], ['&', '', ''], $url);
 
+        static::cleanOutput();
+
         try {
-            Yii::$app->end(0, $this->response->redirect($url, $status ?: 302));
+            Yii::$app->end(0, $this->response->redirect($url, $status));
         } catch (Throwable $ex) {
             Yii::error($ex, __METHOD__);
-            exit;
         }
+
+        exit;
     }
 
     /**

@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 27.09.20 19:35:42
+ * @version 27.09.20 20:06:29
  */
 
 /** @noinspection PhpUndefinedClassInspection */
@@ -11,14 +11,13 @@ declare(strict_types = 1);
 namespace dicr\oclib;
 
 use Cart;
-use Config;
 use Currency;
 use Customer;
-use Language;
 use ModelCatalogAttribute;
 use ModelCatalogCategory;
 use ModelCatalogManufacturer;
 use ModelCatalogProduct;
+use ModelExtensionExtension;
 use ModelLocalisationLanguage;
 use ModelToolImage;
 use Tax;
@@ -27,7 +26,7 @@ use User;
 /**
  * Интерфейс динамических свойств объектов Registry и RegistryProxy.
  *
- * @property-read \Document $document
+ * @property-read Document $document
  * @property-read Config $config
  * @property-read Language $language
  * @property-read Currency $currency
@@ -51,12 +50,11 @@ use User;
  * @property-read ModelCatalogAttribute $model_catalog_attribute
  * @property-read ModelExtensionExtension $model_extension_extension
  * @property-read ModelLocalisationLanguage $model_localisation_language
- * @property-read ModelLocalisationLocation $model_localisation_location
  * @property-read ModelToolImage $model_tool_image
  *
  * @property-read ?UrlAlias $urlAlias ЧПУ-алиас текущей страницы (устанавливается в UrlAliasRule при парсинге url)
  */
 interface RegistryProps
 {
-
+    // noop
 }

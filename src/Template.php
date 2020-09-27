@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 27.09.20 19:51:52
+ * @version 27.09.20 20:12:00
  */
 
 declare(strict_types = 1);
@@ -30,11 +30,8 @@ use const PATHINFO_EXTENSION;
  * Темплейт для OpenCart с проксированием к Registry.
  * Требует DIR_TEMPLATE.
  */
-class Template implements RegistryProps
+class Template extends RegistryProxy
 {
-    /** все обращения к $this в темплейте перенаправляются к Registry */
-    use RegistryProxy;
-
     /** @var string расширение по-умолчанию */
     public const EXT_DEFAULT = 'tpl';
 
@@ -146,7 +143,7 @@ class Template implements RegistryProps
     }
 
     /**
-     * Рендерит темлпейт.
+     * Рендерит шаблон.
      *
      * @param string $route
      * @param array $params

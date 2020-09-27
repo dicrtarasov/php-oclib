@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 26.09.20 22:50:31
+ * @version 27.09.20 20:13:07
  */
 
 declare(strict_types = 1);
@@ -12,17 +12,7 @@ namespace dicr\oclib;
 /**
  * Class Model.
  */
-abstract class Model implements RegistryProps
+abstract class Model extends RegistryProxy
 {
-    use RegistryProxy;
-
-    /**
-     * Model constructor.
-     *
-     * @param ?Registry $registry
-     */
-    public function __construct(?Registry $registry = null)
-    {
-        // noop
-    }
+    // noop
 }

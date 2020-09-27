@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 27.09.20 17:11:41
+ * @version 27.09.20 20:01:24
  */
 
 declare(strict_types = 1);
@@ -136,5 +136,55 @@ class DB
     public function isConnected() : bool
     {
         return $this->db->isActive;
+    }
+
+    /**
+     * Возвращает все строки результата.
+     *
+     * @param string $sql
+     * @return array
+     * @throws Exception
+     */
+    public function queryAll(string $sql) : array
+    {
+        return $this->db->createCommand($sql)->queryAll() ?: [];
+    }
+
+    /**
+     * Возвращает одну сроку результата.
+     *
+     * @param string $sql
+     * @return ?array
+     * @throws Exception
+     */
+    public function queryOne(string $sql)
+    {
+        return $this->db->createCommand($sql)->queryOne() ?: null;
+    }
+
+    /**
+     * Возвращает колонку данных
+     *
+     * @param string $sql
+     * @return array
+     * @throws Exception
+     */
+    public function queryCol(string $sql) : array
+    {
+        return $this->db->createCommand($sql)->queryColumn() ?: [];
+    }
+
+    /**
+     * Возвращает скалярное значение колонки первой строки
+     *
+     * @param string $sql
+     * @return ?mixed
+     * @throws Exception
+     */
+    public function queryScalar(string $sql)
+    {
+        $ret = $this->db->createCommand($sql)->queryScalar();
+
+        return $ret === false ? null : $ret;
     }
 }
