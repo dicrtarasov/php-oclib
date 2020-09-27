@@ -3,14 +3,16 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 27.09.20 20:06:29
+ * @version 27.09.20 20:27:03
  */
 
 /** @noinspection PhpUndefinedClassInspection */
+/** @noinspection PhpUndefinedNamespaceInspection */
 declare(strict_types = 1);
+
 namespace dicr\oclib;
 
-use Cart;
+use Cart\Cart;
 use Currency;
 use Customer;
 use ModelCatalogAttribute;
