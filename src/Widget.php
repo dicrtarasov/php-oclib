@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 26.09.20 21:31:26
+ * @version 27.09.20 17:02:34
  */
 
 declare(strict_types = 1);
@@ -12,6 +12,10 @@ namespace dicr\oclib;
 use dicr\helper\Html;
 use Throwable;
 use yii\base\BaseObject;
+
+use function trigger_error;
+
+use const E_USER_ERROR;
 
 /**
  * Виджет.
@@ -44,28 +48,6 @@ abstract class Widget extends BaseObject
     }
 
     /**
-     * Конвертирует в строку.
-     *
-     * @return string
-     */
-    public function __toString() : string
-    {
-        ob_start();
-        ob_implicit_flush(0);
-
-        try {
-            echo $this->run();
-        } catch (Throwable $ex) {
-            /** @noinspection PhpUndefinedConstantInspection */
-            trigger_error(DEBUG ? (string)$ex : $ex->getMessage(), E_USER_ERROR);
-        } finally {
-            $ret = ob_get_clean();
-        }
-
-        return trim($ret);
-    }
-
-    /**
      * Рендерит плагин.
      *
      * Функция должна выводить методом echo или возвращать string.
@@ -92,5 +74,20 @@ abstract class Widget extends BaseObject
     public function plugin(string $name) : string
     {
         return Html::plugin('#' . $this->id, $name, $this->pluginOptions);
+    }
+
+    /**
+     * Конвертирует в строку.
+     *
+     * @return string
+     */
+    public function __toString() : string
+    {
+        try {
+            return $this->run();
+        } catch (Throwable $ex) {
+            /** @noinspection PhpUndefinedConstantInspection */
+            trigger_error(DEBUG ? (string)$ex : $ex->getMessage(), E_USER_ERROR);
+        }
     }
 }

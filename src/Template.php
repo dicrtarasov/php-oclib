@@ -3,30 +3,31 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 26.09.20 21:30:57
+ * @version 27.09.20 17:11:02
  */
 
 declare(strict_types = 1);
 namespace dicr\oclib;
-
-use Throwable;
-use Yii;
 
 use function extract;
 use function ob_implicit_flush;
 use function ob_start;
 use function preg_match;
 use function rtrim;
+use function trim;
 
 use const EXTR_REFS;
 use const EXTR_SKIP;
 
 /**
  * Темплейт для OpenCart с проксированием к Registry.
+ * Требует DIR_TEMPLATE.
  *
- * Требует DIR_TEMPLATE
+ * @property-read string $route
+ * @property-read array $vars
+ * @property-read string $filePath
  */
-class Template implements RegistryProps
+class Template extends Widget
 {
     /** все обращения к $this в темплейте перенаправляются к Registry */
     use RegistryProxy;
@@ -35,27 +36,50 @@ class Template implements RegistryProps
     public const EXT_DEFAULT = 'tpl';
 
     /** @var string маршрут или полный путь файла */
-    private $route;
+    private $_route;
 
     /** @var array переменные */
-    private $vars;
+    private $_vars;
 
     /**
      * Конструктор.
      *
-     * @param string $pathRoute маршрут или полный путь файла
+     * @param string $route маршрут или полный путь файла
      * @param array $vars переменные шаблона
      */
-    public function __construct(string $pathRoute, array $vars = [])
+    public function __construct(string $route, array $vars = [])
     {
+        parent::__construct();
+
         // удаляем тему вначале
         $matches = null;
-        if (preg_match('~^(.+?/)?template/([^/]+/.+)$~uism', $pathRoute, $matches)) {
-            $pathRoute = $matches[2];
+        if (preg_match('~^(.+?/)?template/([^/]+/.+)$~uism', $route, $matches)) {
+            $route = $matches[2];
         }
 
-        $this->route = trim($pathRoute, '/');
-        $this->vars = $vars;
+        $this->_route = trim($route, '/');
+
+        $this->_vars = $vars;
+    }
+
+    /**
+     * Маршрут
+     *
+     * @return string
+     */
+    public function getRoute() : string
+    {
+        return $this->_route;
+    }
+
+    /**
+     * Параметры.
+     *
+     * @return array
+     */
+    public function getVars() : array
+    {
+        return $this->_vars;
     }
 
     /**
@@ -77,10 +101,10 @@ class Template implements RegistryProps
      *
      * @return string полный путь файла для выполнения
      */
-    public function filePath() : string
+    public function getFilePath() : string
     {
         if ($this->_filePath === null) {
-            $this->_filePath = $this->route;
+            $this->_filePath = $this->_route;
 
             // добавляем расширение
             $ext = pathinfo($this->_filePath, PATHINFO_EXTENSION);
@@ -104,10 +128,10 @@ class Template implements RegistryProps
         // функция для сокрытия локальных переменных
         $run = function () {
             // распаковываем данные
-            extract($this->vars, EXTR_REFS | EXTR_SKIP);
+            extract($this->_vars, EXTR_REFS | EXTR_SKIP);
 
             /** @noinspection PhpIncludeInspection */
-            require($this->filePath());
+            require($this->filePath);
         };
 
         try {
@@ -119,32 +143,5 @@ class Template implements RegistryProps
         }
 
         return $ret;
-    }
-
-    /**
-     * Компилирует в текст
-     *
-     * @return string
-     */
-    public function __toString() : string
-    {
-        try {
-            return trim($this->run());
-        } catch (Throwable $ex) {
-            Yii::error($ex, __METHOD__);
-            trigger_error(YII_DEBUG ? (string)$ex : $ex->getMessage(), E_USER_ERROR);
-        }
-    }
-
-    /**
-     * Рендерит темплейт.
-     *
-     * @param string $pathRoute маршрут или полный путь файла
-     * @param array $vars переменные
-     * @return string результат рендеринга
-     */
-    public static function render(string $pathRoute, array $vars = []) : string
-    {
-        return (string)(new static($pathRoute, $vars));
     }
 }

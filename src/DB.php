@@ -1,9 +1,9 @@
 <?php
-/*
+/**
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 24.08.20 17:03:48
+ * @version 27.09.20 17:11:41
  */
 
 declare(strict_types = 1);
@@ -113,7 +113,7 @@ class DB
      *
      * @return int
      */
-    public function countAffected(): int
+    public function countAffected() : int
     {
         return $this->affectedRows;
     }
@@ -123,7 +123,7 @@ class DB
      *
      * @return string
      */
-    public function getLastId(): string
+    public function getLastId() : string
     {
         return $this->db->lastInsertID;
     }
@@ -133,7 +133,7 @@ class DB
      *
      * @return bool
      */
-    public function isConnected(): bool
+    public function isConnected() : bool
     {
         return $this->db->isActive;
     }
