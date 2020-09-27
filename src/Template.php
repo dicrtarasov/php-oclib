@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 27.09.20 20:12:00
+ * @version 28.09.20 02:00:28
  */
 
 declare(strict_types = 1);
@@ -110,10 +110,8 @@ class Template extends RegistryProxy
             // распаковываем данные
             extract($this->_vars, EXTR_REFS | EXTR_SKIP);
 
-            $path = $this->filePath();
-
             /** @noinspection PhpIncludeInspection */
-            require($path);
+            require($this->filePath());
         };
 
         try {
