@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 27.09.20 06:12:06
+ * @version 27.09.20 06:24:48
  */
 
 /** @noinspection PhpUnusedParameterInspection */
@@ -62,6 +62,21 @@ abstract class Controller implements RegistryProps
         }
 
         return null;
+    }
+
+    /**
+     * Переадресация на URL.
+     *
+     * @param string $url
+     * @noinspection PhpMethodMayBeStaticInspection
+     */
+    public function redirect(string $url)
+    {
+        static::cleanOutput();
+
+        header('HTTP/1.0 303 See Other');
+        header('Location: ' . $url);
+        exit;
     }
 
     /**
