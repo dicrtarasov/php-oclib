@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 27.09.20 20:27:03
+ * @version 27.09.20 20:28:17
  */
 
 /** @noinspection PhpUndefinedClassInspection */
@@ -19,6 +19,7 @@ use ModelCatalogAttribute;
 use ModelCatalogCategory;
 use ModelCatalogManufacturer;
 use ModelCatalogProduct;
+use ModelCheckoutOrder;
 use ModelExtensionExtension;
 use ModelLocalisationLanguage;
 use ModelToolImage;
@@ -50,6 +51,7 @@ use User;
  * @property-read ModelCatalogCategory $model_catalog_category
  * @property-read ModelCatalogManufacturer $model_catalog_manufacturer
  * @property-read ModelCatalogAttribute $model_catalog_attribute
+ * @property-read ModelCheckoutOrder $model_checkout_order
  * @property-read ModelExtensionExtension $model_extension_extension
  * @property-read ModelLocalisationLanguage $model_localisation_language
  * @property-read ModelToolImage $model_tool_image
