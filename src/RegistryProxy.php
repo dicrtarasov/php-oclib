@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 26.09.20 22:47:53
+ * @version 27.09.20 17:26:10
  */
 
 declare(strict_types = 1);
@@ -25,12 +25,14 @@ trait RegistryProxy
     }
 
     /**
+     * @inheritDoc
      * Проверка наличия свойства в Registry.
      *
      * @param string $name
      * @return bool
+     * @noinspection PhpMissingParamTypeInspection
      */
-    public function __isset(string $name)
+    public function __isset($name)
     {
         return static::registry()->has($name);
     }

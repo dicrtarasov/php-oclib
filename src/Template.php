@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 27.09.20 17:11:02
+ * @version 27.09.20 17:25:41
  */
 
 declare(strict_types = 1);
@@ -27,7 +27,7 @@ use const EXTR_SKIP;
  * @property-read array $vars
  * @property-read string $filePath
  */
-class Template extends Widget
+class Template extends Widget implements RegistryProps
 {
     /** все обращения к $this в темплейте перенаправляются к Registry */
     use RegistryProxy;
