@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 26.09.20 22:51:11
+ * @version 27.09.20 06:12:06
  */
 
 /** @noinspection PhpUnusedParameterInspection */
@@ -46,8 +46,9 @@ abstract class Controller implements RegistryProps
      * Возвращает ответ как JSON.
      *
      * @param mixed $data
+     * @return null
      */
-    public static function asJson($data) : void
+    public function asJson($data)
     {
         $response = Yii::$app->response;
         $response->format = \yii\web\Response::FORMAT_JSON;
@@ -59,6 +60,8 @@ abstract class Controller implements RegistryProps
             Yii::error($ex, __METHOD__);
             exit;
         }
+
+        return null;
     }
 
     /**
