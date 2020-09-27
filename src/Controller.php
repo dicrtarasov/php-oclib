@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 27.09.20 06:24:48
+ * @version 27.09.20 06:32:59
  */
 
 /** @noinspection PhpUnusedParameterInspection */
@@ -32,6 +32,9 @@ abstract class Controller implements RegistryProps
     /** все обращения к $this в контроллере перенаправляются к Registry */
     use RegistryProxy;
 
+    /** @var Registry */
+    protected $registry;
+
     /**
      * BaseController constructor.
      *
@@ -39,7 +42,7 @@ abstract class Controller implements RegistryProps
      */
     public function __construct(?Registry $registry = null)
     {
-        //
+        $this->registry = $registry ?? Registry::app();
     }
 
     /**
