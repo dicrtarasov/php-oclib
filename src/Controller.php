@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 27.09.20 19:06:01
+ * @version 27.09.20 19:54:10
  */
 
 declare(strict_types = 1);
@@ -53,7 +53,7 @@ abstract class Controller implements RegistryProps
      */
     public function render(string $route, array $params)
     {
-        $this->response->setOutput(new Template($route, $params));
+        $this->response->setOutput(Template::render($route, $params));
 
         return null;
     }
@@ -83,14 +83,21 @@ abstract class Controller implements RegistryProps
      * Переадресация на URL.
      *
      * @param string $url
-     * @noinspection PhpMethodMayBeStaticInspection
+     * @param int $code
+     * @return null
      */
-    public function redirect(string $url)
+    public function redirect(string $url, int $code = 303)
     {
         static::cleanOutput();
 
-        header('HTTP/1.0 303 See Other');
-        header('Location: ' . $url);
+        $response = Yii::$app->response->redirect($url, $code);
+
+        try {
+            Yii::$app->end(0, $response);
+        } catch (Throwable $ex) {
+            Yii::error($ex, __METHOD__);
+        }
+
         exit;
     }
 

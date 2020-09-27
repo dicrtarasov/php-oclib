@@ -3,11 +3,13 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 27.09.20 17:44:02
+ * @version 27.09.20 19:51:52
  */
 
 declare(strict_types = 1);
 namespace dicr\oclib;
+
+use Throwable;
 
 use function extract;
 use function ob_get_clean;
@@ -16,8 +18,10 @@ use function ob_start;
 use function pathinfo;
 use function preg_match;
 use function rtrim;
+use function trigger_error;
 use function trim;
 
+use const E_USER_ERROR;
 use const EXTR_REFS;
 use const EXTR_SKIP;
 use const PATHINFO_EXTENSION;
@@ -26,7 +30,7 @@ use const PATHINFO_EXTENSION;
  * Темплейт для OpenCart с проксированием к Registry.
  * Требует DIR_TEMPLATE.
  */
-class Template extends Widget implements RegistryProps
+class Template implements RegistryProps
 {
     /** все обращения к $this в темплейте перенаправляются к Registry */
     use RegistryProxy;
@@ -124,5 +128,34 @@ class Template extends Widget implements RegistryProps
         }
 
         return $ret;
+    }
+
+    /**
+     * Конвертирует в строку.
+     *
+     * @return string
+     */
+    public function __toString() : string
+    {
+        try {
+            return $this->run();
+        } catch (Throwable $ex) {
+            /** @noinspection PhpUndefinedConstantInspection */
+            trigger_error(DEBUG ? (string)$ex : $ex->getMessage(), E_USER_ERROR);
+        }
+    }
+
+    /**
+     * Рендерит темлпейт.
+     *
+     * @param string $route
+     * @param array $params
+     * @return string
+     */
+    public static function render(string $route, array $params = []) : string
+    {
+        $tpl = new static($route, $params);
+
+        return (string)$tpl;
     }
 }

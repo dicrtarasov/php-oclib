@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 26.09.20 22:36:19
+ * @version 27.09.20 19:55:16
  */
 
 declare(strict_types = 1);
@@ -144,6 +144,14 @@ class Mail
 
         if ($this->reply_to !== null) {
             $message->setReplyTo($this->reply_to);
+        }
+
+        if ($this->text !== null) {
+            $message->setTextBody($this->text);
+        }
+
+        if ($this->html !== null) {
+            $message->setHtmlBody($this->html);
         }
 
         return $message->send();

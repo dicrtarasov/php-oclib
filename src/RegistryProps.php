@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 27.09.20 19:22:23
+ * @version 27.09.20 19:35:42
  */
 
 /** @noinspection PhpUndefinedClassInspection */
@@ -51,6 +51,7 @@ use User;
  * @property-read ModelCatalogAttribute $model_catalog_attribute
  * @property-read ModelExtensionExtension $model_extension_extension
  * @property-read ModelLocalisationLanguage $model_localisation_language
+ * @property-read ModelLocalisationLocation $model_localisation_location
  * @property-read ModelToolImage $model_tool_image
  *
  * @property-read ?UrlAlias $urlAlias ЧПУ-алиас текущей страницы (устанавливается в UrlAliasRule при парсинге url)
