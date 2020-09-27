@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 27.09.20 20:17:47
+ * @version 28.09.20 01:17:18
  */
 
 declare(strict_types = 1);
@@ -31,22 +31,18 @@ abstract class Controller extends RegistryProxy
      *
      * @param string $route
      * @param array $params
-     * @return null
      */
-    public function render(string $route, array $params)
+    public function render(string $route, array $params) : void
     {
         $this->response->setOutput(Template::render($route, $params));
-
-        return null;
     }
 
     /**
      * Возвращает ответ как JSON.
      *
      * @param mixed $data
-     * @return null
      */
-    public function asJson($data)
+    public function asJson($data) : void
     {
         $response = Yii::$app->response;
         $response->format = \yii\web\Response::FORMAT_JSON;
@@ -66,12 +62,10 @@ abstract class Controller extends RegistryProxy
      *
      * @param string $url
      * @param int $code
-     * @return null
      */
-    public function redirect(string $url, int $code = 303)
+    public function redirect(string $url, int $code = 303) : void
     {
         $this->response->redirect($url, $code);
-        exit;
     }
 
     /**

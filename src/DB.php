@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 27.09.20 20:01:24
+ * @version 28.09.20 01:16:40
  */
 
 declare(strict_types = 1);
@@ -157,7 +157,7 @@ class DB
      * @return ?array
      * @throws Exception
      */
-    public function queryOne(string $sql)
+    public function queryOne(string $sql) : ?array
     {
         return $this->db->createCommand($sql)->queryOne() ?: null;
     }

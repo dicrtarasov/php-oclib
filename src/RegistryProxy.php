@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 27.09.20 20:10:43
+ * @version 28.09.20 01:16:40
  */
 
 declare(strict_types = 1);
@@ -33,7 +33,7 @@ abstract class RegistryProxy implements RegistryProps
      * @param string $name
      * @return bool
      */
-    public function __isset(string $name)
+    public function __isset(string $name) : bool
     {
         return $this->registry->has($name);
     }

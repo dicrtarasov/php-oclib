@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 27.09.20 20:17:20
+ * @version 28.09.20 01:18:20
  */
 
 declare(strict_types = 1);
@@ -42,7 +42,7 @@ class Response
      * @param $header
      * @throws Exception
      */
-    public function addHeader($header)
+    public function addHeader($header) : void
     {
         $matches = null;
         if (preg_match('~^\s*([^:]+)\s*:\s*(.+)\s*$~usm', $header, $matches)) {
@@ -111,7 +111,7 @@ class Response
      *
      * @param mixed $output
      */
-    public function setOutput($output)
+    public function setOutput($output) : void
     {
         $this->response->content = (string)$output;
     }

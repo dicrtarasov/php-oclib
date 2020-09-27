@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 26.09.20 19:00:07
+ * @version 28.09.20 01:16:40
  */
 
 /** @noinspection PhpUnusedParameterInspection */
@@ -44,7 +44,7 @@ class Cache
      * Возвращает данные по ключу.
      *
      * @param string $key
-     * @return mixed|false
+     * @return mixed
      */
     public function get(string $key)
     {

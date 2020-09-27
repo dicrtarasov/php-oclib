@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 27.09.20 18:09:42
+ * @version 28.09.20 01:16:40
  */
 
 declare(strict_types = 1);
@@ -76,8 +76,9 @@ class Action
     /**
      * @param ?Registry $registry
      * @param array $args
-     * @return Exception|mixed
+     * @return mixed
      * @throws ReflectionException
+     * @noinspection PhpMissingReturnTypeInspection
      */
     public function execute(?Registry $registry = null, array $args = [])
     {

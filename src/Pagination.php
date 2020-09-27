@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 26.09.20 22:47:53
+ * @version 28.09.20 01:04:03
  */
 
 declare(strict_types = 1);
@@ -275,7 +275,7 @@ class Pagination extends Widget
      * @param ?int $page номер страницы. Если пустая, то текущая.
      * @return string
      */
-    public function getUrl(int $page = null) : string
+    public function getUrl(?int $page = null) : string
     {
         if ($page === null) {
             $page = $this->page;
@@ -292,9 +292,10 @@ class Pagination extends Widget
      * Рендер.
      *
      * @return string
+     * @throws InvalidConfigException
      */
     public function render() : string
     {
-        return (string)$this;
+        return $this->run();
     }
 }
