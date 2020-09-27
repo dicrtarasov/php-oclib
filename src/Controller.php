@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 27.09.20 19:01:07
+ * @version 27.09.20 19:06:01
  */
 
 declare(strict_types = 1);
@@ -31,6 +31,9 @@ abstract class Controller implements RegistryProps
     /** все обращения к $this в контроллере перенаправляются к Registry */
     use RegistryProxy;
 
+    /** @var Registry используется в наследниках */
+    protected $registry;
+
     /**
      * BaseController constructor.
      *
@@ -38,7 +41,7 @@ abstract class Controller implements RegistryProps
      */
     public function __construct(?Registry $registry = null)
     {
-        // noop
+        $this->registry = $registry ?: Registry::app();
     }
 
     /**
