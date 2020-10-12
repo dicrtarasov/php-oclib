@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 28.09.20 01:16:40
+ * @version 12.10.20 14:10:00
  */
 
 declare(strict_types = 1);
@@ -64,7 +64,7 @@ class DB
     {
         $cmd = $this->db->createCommand($sql);
 
-        if (! preg_match('~^\s*(select|show)\s+~uim', $sql)) {
+        if (! preg_match('~^\s*(select|show)\s+~ui', $sql)) {
             $this->affectedRows = (int)$cmd->execute();
 
             return $this->affectedRows;

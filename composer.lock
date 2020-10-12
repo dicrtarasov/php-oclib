@@ -32,7 +32,7 @@
             "version": "3.5.1",
             "source": {
                 "type": "git",
-                "url": "https://github.com/jquery/jquery-dist.git",
+                "url": "git@github.com:jquery/jquery-dist.git",
                 "reference": "4c0e4becb8263bb5b3e6dadc448d8e7305ef8215"
             },
             "dist": {
@@ -199,18 +199,18 @@
         },
         {
             "name": "dicr/yii2-validate",
-            "version": "2.1.4",
+            "version": "2.1.5",
             "source": {
                 "type": "git",
                 "url": "https://gitlab.com/dicr/yii2-validate.git",
-                "reference": "f11cb904d90119059f444b2b890567a8b72d58d9"
+                "reference": "faab72bb297f0afd6e180945f77d99ec891820a4"
             },
             "require": {
                 "php": "~7.2",
                 "yiisoft/yii2": "~2.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "~9.3"
+                "phpunit/phpunit": "~9.4"
             },
             "type": "yii2-extension",
             "autoload": {
@@ -244,7 +244,7 @@
             "support": {
                 "source": "https://gitlab.com/dicr/yii2-validate.git"
             },
-            "time": "2020-09-10T19:06:14+00:00"
+            "time": "2020-10-08T03:39:51+00:00"
         },
         {
             "name": "ezyang/htmlpurifier",
