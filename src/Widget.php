@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 27.09.20 17:02:34
+ * @version 06.11.20 16:58:26
  */
 
 declare(strict_types = 1);
@@ -49,8 +49,9 @@ abstract class Widget extends BaseObject
 
     /**
      * Рендерит плагин.
-     *
      * Функция должна выводить методом echo или возвращать string.
+     *
+     * @return string
      */
     abstract public function run() : string;
 

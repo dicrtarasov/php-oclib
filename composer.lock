@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "87a5e6551fb62460b790e550e109c6ee",
+    "content-hash": "a00c035e9f1ec9cc1e63879895df9b97",
     "packages": [
         {
             "name": "bower-asset/inputmask",
@@ -65,7 +65,7 @@
             "version": "2.0.7.1",
             "source": {
                 "type": "git",
-                "url": "https://github.com/yiisoft/jquery-pjax.git",
+                "url": "git@github.com:yiisoft/jquery-pjax.git",
                 "reference": "aef7b953107264f00234902a3880eb50dafc48be"
             },
             "dist": {
@@ -143,21 +143,21 @@
         },
         {
             "name": "dicr/yii2-helper",
-            "version": "3.7.8",
+            "version": "4.0.0",
             "source": {
                 "type": "git",
                 "url": "https://gitlab.com/dicr/yii2-helper.git",
-                "reference": "38be1bb6fc5fe31efa3dd714f3aebb2872109d64"
+                "reference": "27d40125c0d8833971c804d2b14fc2eea2230b97"
             },
             "require": {
                 "ext-intl": "*",
                 "ext-mbstring": "*",
-                "php": "~7.2",
+                "php": "~7.3",
                 "yiisoft/yii2": "~2.0",
                 "yiisoft/yii2-bootstrap4": "~2.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "~9.3",
+                "phpunit/phpunit": "~9.4",
                 "roave/security-advisories": "dev-master"
             },
             "type": "yii2-extension",
@@ -195,18 +195,18 @@
             "support": {
                 "source": "https://gitlab.com/dicr/yii2-helper.git"
             },
-            "time": "2020-09-15T05:03:31+00:00"
+            "time": "2020-10-28T22:37:34+00:00"
         },
         {
             "name": "dicr/yii2-validate",
-            "version": "2.1.5",
+            "version": "2.2.3",
             "source": {
                 "type": "git",
                 "url": "https://gitlab.com/dicr/yii2-validate.git",
-                "reference": "faab72bb297f0afd6e180945f77d99ec891820a4"
+                "reference": "d821586ebe1595742214b0821ed9a82aa7b1124d"
             },
             "require": {
-                "php": "~7.2",
+                "php": "~7.3",
                 "yiisoft/yii2": "~2.0"
             },
             "require-dev": {
@@ -234,7 +234,7 @@
                     "role": "developer"
                 }
             ],
-            "description": "Компоненты валидации for Yii2",
+            "description": "Компоненты парсинга и валидации данных для Yii2",
             "homepage": "https://gitlab.com/dicr/yii2-validate",
             "keywords": [
                 "dicr",
@@ -244,7 +244,7 @@
             "support": {
                 "source": "https://gitlab.com/dicr/yii2-validate.git"
             },
-            "time": "2020-10-08T03:39:51+00:00"
+            "time": "2020-10-31T12:36:34+00:00"
         },
         {
             "name": "ezyang/htmlpurifier",
@@ -298,10 +298,10 @@
         },
         {
             "name": "npm-asset/bootstrap",
-            "version": "4.5.2",
+            "version": "4.5.3",
             "dist": {
                 "type": "tar",
-                "url": "https://registry.npmjs.org/bootstrap/-/bootstrap-4.5.2.tgz"
+                "url": "https://registry.npmjs.org/bootstrap/-/bootstrap-4.5.3.tgz"
             },
             "type": "npm-asset",
             "license": [
@@ -568,7 +568,7 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": "~7.4",
+        "php": "~7.3",
         "ext-mysqli": "*",
         "ext-json": "*",
         "ext-mbstring": "*",

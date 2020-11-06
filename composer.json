@@ -23,14 +23,16 @@
     },
     "minimum-stability": "stable",
     "require": {
-        "php": "~7.4",
+        "php": "~7.3",
         "ext-mysqli": "*",
         "ext-json": "*",
         "ext-mbstring": "*",
         "ext-pdo": "*",
+
         "yiisoft/yii2": "~2.0",
-        "dicr/yii2-helper": "~3.7",
-        "dicr/yii2-validate": "~2.1"
+
+        "dicr/yii2-helper": "~4.0",
+        "dicr/yii2-validate": "~2.2"
     },
     "repositories": [
         {"type": "git", "url": "https://gitlab.com/dicr/yii2-helper.git"},
