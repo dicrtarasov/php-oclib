@@ -2,8 +2,8 @@
 /**
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license proprietary
- * @version 27.09.20 18:48:30
+ * @license MIT
+ * @version 22.12.20 23:22:31
  */
 
 declare(strict_types = 1);
@@ -41,7 +41,7 @@ class Url extends \dicr\helper\Url
      * @param string $route
      * @param array|string $params
      */
-    public function redirectToCanonical(string $route, $params) : void
+    public function redirectToCanonical(string $route, $params = []) : void
     {
         $url = $this->link($route, $params);
         $urlInfo = (array)parse_url($url);
