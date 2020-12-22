@@ -3,19 +3,22 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 22.12.20 21:17:31
+ * @version 23.12.20 00:50:20
  */
 
 declare(strict_types = 1);
 namespace dicr\oclib;
 
-use ReflectionClass;
-use ReflectionException;
 use Yii;
 use yii\base\Exception;
 
-use function call_user_func_array;
-use function count;
+use function array_pop;
+use function explode;
+use function implode;
+use function is_file;
+use function preg_replace;
+use function rtrim;
+use function strncmp;
 
 /**
  * Class Action.
@@ -83,7 +86,6 @@ class Action
      * @param ?Registry $registry
      * @param ?array $args
      * @return mixed
-     * @throws ReflectionException
      * @noinspection PhpMissingReturnTypeInspection
      */
     public function execute(?Registry $registry = null, ?array $args = null)
@@ -109,12 +111,6 @@ class Action
         Yii::$app->controller = new \yii\web\Controller(Url::controllerByRoute($this->id), Yii::$app);
 
         // выполняем метод контроллера
-        $reflection = new ReflectionClass($class);
-        if ($reflection->hasMethod($this->method) &&
-            $reflection->getMethod($this->method)->getNumberOfRequiredParameters() <= count($args)) {
-            return call_user_func_array([$controller, $this->method], $args ?? $this->args ?? []);
-        }
-
-        return new Exception('Error: Could not call ' . $this->route . '/' . $this->method . '!');
+        return $controller->{$this->method}($args ?? $this->args ?? []);
     }
 }
