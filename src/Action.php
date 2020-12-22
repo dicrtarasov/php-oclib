@@ -2,8 +2,8 @@
 /**
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license proprietary
- * @version 28.09.20 01:16:40
+ * @license MIT
+ * @version 22.12.20 21:17:31
  */
 
 declare(strict_types = 1);
@@ -31,20 +31,26 @@ class Action
     /** @var string */
     private $method = 'index';
 
+    /** @var ?array */
+    private $args;
+
     /**
      * Action constructor.
      *
-     * @param $route
+     * @param string $route
+     * @param ?array $args
      */
-    public function __construct(string $route)
+    public function __construct(string $route, ?array $args = null)
     {
         $this->id = $route;
+        $this->args = $args;
 
         $parts = explode('/', preg_replace('/[^a-zA-Z0-9_\/]/', '', $route));
 
         // Break apart the route
         while ($parts) {
             $file = static::dirApplication() . '/controller/' . implode('/', $parts) . '.php';
+
             if (is_file($file)) {
                 $this->route = implode('/', $parts);
                 break;
@@ -75,12 +81,12 @@ class Action
 
     /**
      * @param ?Registry $registry
-     * @param array $args
+     * @param ?array $args
      * @return mixed
      * @throws ReflectionException
      * @noinspection PhpMissingReturnTypeInspection
      */
-    public function execute(?Registry $registry = null, array $args = [])
+    public function execute(?Registry $registry = null, ?array $args = null)
     {
         // Stop any magical methods being called
         if (strncmp($this->method, '__', 2) === 0) {
@@ -106,7 +112,7 @@ class Action
         $reflection = new ReflectionClass($class);
         if ($reflection->hasMethod($this->method) &&
             $reflection->getMethod($this->method)->getNumberOfRequiredParameters() <= count($args)) {
-            return call_user_func_array([$controller, $this->method], $args);
+            return call_user_func_array([$controller, $this->method], $args ?? $this->args ?? []);
         }
 
         return new Exception('Error: Could not call ' . $this->route . '/' . $this->method . '!');

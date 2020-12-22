@@ -2,8 +2,8 @@
 /**
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license proprietary
- * @version 28.09.20 02:00:28
+ * @license MIT
+ * @version 22.12.20 21:25:19
  */
 
 declare(strict_types = 1);
@@ -13,7 +13,6 @@ use Throwable;
 
 use function extract;
 use function ob_get_clean;
-use function ob_implicit_flush;
 use function ob_start;
 use function pathinfo;
 use function preg_match;
@@ -114,9 +113,9 @@ class Template extends RegistryProxy
             require($this->filePath());
         };
 
+        ob_start();
+
         try {
-            ob_start();
-            ob_implicit_flush(0);
             $run();
         } finally {
             $ret = ob_get_clean();
