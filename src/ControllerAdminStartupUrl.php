@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.12.20 03:21:30
+ * @version 23.12.20 04:08:06
  */
 
 declare(strict_types = 1);
@@ -29,7 +29,7 @@ class ControllerAdminStartupUrl extends Controller
     {
         // если маршрут задан непосредственно в параметре
         $route = (string)Yii::$app->request->get('route', '');
-        if ($route !== '') {
+        if ($route === '') {
             // если была переадресация с ЧПУ маршрута
             $route = (string)Yii::$app->request->get('_route_', '');
         }

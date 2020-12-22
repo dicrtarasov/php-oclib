@@ -2,8 +2,8 @@
 /**
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license proprietary
- * @version 26.09.20 22:43:29
+ * @license MIT
+ * @version 23.12.20 04:06:00
  */
 
 declare(strict_types = 1);
@@ -16,6 +16,7 @@ use yii\helpers\ArrayHelper;
 use yii\web\UrlNormalizerRedirectException;
 
 use function is_array;
+use function ltrim;
 
 /**
  * Контроллер маршрутизации.
@@ -33,32 +34,22 @@ class ControllerCatalogStartupUrl extends Controller
      */
     public function index() : ?Action
     {
-        // устанавливаем маршрут в Yii
-        Yii::$app->requestedRoute = $this->resolveRoute();
+        $route = $this->resolveRoute();
 
         // очищаем параметры
         unset($this->request->get['route'], $this->request->get['_route_']);
 
-        // сохраняем парамеры в Yii
-        Yii::$app->request->queryParams = $this->request->get;
-
-        // создаем контроллер Yii
-        Yii::$app->controller = new \yii\web\Controller(Url::controllerByRoute(Yii::$app->requestedRoute), Yii::$app);
-
         // возвращаем действие
-        return Yii::$app->requestedRoute !== Yii::$app->defaultRoute ? new Action(Yii::$app->requestedRoute) : null;
+        return $route === null ? null : new Action($route);
     }
 
     /**
      * Получение маршрута.
      *
-     * @return string
+     * @return ?string
      */
-    protected function resolveRoute() : string
+    protected function resolveRoute() : ?string
     {
-        // маршрут Yii по-умолчанию
-        Yii::$app->defaultRoute = 'common/home';
-
         // поддержка ссылок с прямым указанием маршрута, пример: /index.php?route=catalog/product
         if (! empty($this->request->get['route'])) {
             return $this->request->get['route'];
@@ -123,7 +114,6 @@ class ControllerCatalogStartupUrl extends Controller
             return $this->request->get['_route_'];
         }
 
-        // маршрут по-умолчанию
-        return Yii::$app->defaultRoute;
+        return null;
     }
 }
