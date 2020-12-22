@@ -2,8 +2,8 @@
 /**
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license proprietary
- * @version 26.09.20 22:14:51
+ * @license MIT
+ * @version 23.12.20 03:21:30
  */
 
 declare(strict_types = 1);
@@ -27,39 +27,17 @@ class ControllerAdminStartupUrl extends Controller
      */
     public function index() : ?Action
     {
-        // устанавливаем маршрут в Yii
-        Yii::$app->requestedRoute = $this->resolveRoute();
+        // если маршрут задан непосредственно в параметре
+        $route = (string)Yii::$app->request->get('route', '');
+        if ($route !== '') {
+            // если была переадресация с ЧПУ маршрута
+            $route = (string)Yii::$app->request->get('_route_', '');
+        }
 
         // очищаем параметры
         unset($this->request->get['route'], $this->request->get['_route_']);
 
-        // сохраняем парамеры в Yii
-        Yii::$app->request->queryParams = $this->request->get;
-
-        // создаем контроллер Yii
-        Yii::$app->controller = new \yii\web\Controller(Url::controllerByRoute(Yii::$app->requestedRoute), Yii::$app);
-
-        // возвращаем действие
-        return Yii::$app->requestedRoute === Yii::$app->defaultRoute ? null : new Action(Yii::$app->requestedRoute);
-    }
-
-    /**
-     * Возвращает маршрут.
-     *
-     * @return string
-     */
-    protected function resolveRoute() : string
-    {
-        Yii::$app->defaultRoute = 'common/dashboard';
-
-        if (! empty($this->request->get['route'])) {
-            return $this->request->get['route'];
-        }
-
-        if (! empty($this->request->get['_route_'])) {
-            return $this->request->get['_route_'];
-        }
-
-        return Yii::$app->defaultRoute;
+        // возвращаем акцию
+        return $route === '' ? null : new Action($route);
     }
 }

@@ -3,22 +3,28 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.12.20 00:50:20
+ * @version 23.12.20 03:08:24
  */
 
 declare(strict_types = 1);
 namespace dicr\oclib;
 
+use Throwable;
 use Yii;
-use yii\base\Exception;
+use yii\web\NotFoundHttpException;
 
 use function array_pop;
+use function class_exists;
+use function constant;
 use function explode;
 use function implode;
 use function is_file;
+use function method_exists;
+use function preg_match;
 use function preg_replace;
-use function rtrim;
 use function strncmp;
+use function trim;
+use function ucfirst;
 
 /**
  * Class Action.
@@ -26,91 +32,95 @@ use function strncmp;
 class Action
 {
     /** @var string */
-    private $id;
-
-    /** @var string */
-    private $route;
-
-    /** @var string */
-    private $method = 'index';
+    public $route;
 
     /** @var ?array */
-    private $args;
+    public $args;
 
     /**
-     * Action constructor.
-     *
      * @param string $route
-     * @param ?array $args
+     * @param array $args
      */
-    public function __construct(string $route, ?array $args = null)
+    public function __construct(string $route, array $args = [])
     {
-        $this->id = $route;
+        $this->route = trim($route, '/');
         $this->args = $args;
+    }
 
-        $parts = explode('/', preg_replace('/[^a-zA-Z0-9_\/]/', '', $route));
+    /**
+     * @return mixed
+     * @throws NotFoundHttpException
+     * @noinspection PhpMissingReturnTypeInspection
+     */
+    public function execute()
+    {
+        // проверяем маршрут
+        if (! preg_match('~^[a-z0-9_/]+$~u', $this->route)) {
+            return new NotFoundHttpException('route=' . $this->route);
+        }
 
-        // Break apart the route
-        while ($parts) {
-            $file = static::dirApplication() . '/controller/' . implode('/', $parts) . '.php';
+        $controllerPath = null;
+        $method = null;
 
+        // разбиваем маршрут на части
+        $parts = (array)explode('/', $this->route);
+        while (! empty($parts)) {
+            $file = constant('DIR_APPLICATION') . 'controller/' . implode('/', $parts) . '.php';
             if (is_file($file)) {
-                $this->route = implode('/', $parts);
+                /** @noinspection PhpIncludeInspection */
+                include_once($file);
+                $controllerPath = $parts;
                 break;
             }
 
-            $this->method = array_pop($parts);
-        }
-    }
-
-    /**
-     * Директория приложения.
-     *
-     * @return string
-     */
-    private static function dirApplication() : string
-    {
-        /** @noinspection PhpUndefinedConstantInspection */
-        return rtrim(DIR_APPLICATION, '/');
-    }
-
-    /**
-     * @return string
-     */
-    public function getId() : string
-    {
-        return $this->id;
-    }
-
-    /**
-     * @param ?Registry $registry
-     * @param ?array $args
-     * @return mixed
-     * @noinspection PhpMissingReturnTypeInspection
-     */
-    public function execute(?Registry $registry = null, ?array $args = null)
-    {
-        // Stop any magical methods being called
-        if (strncmp($this->method, '__', 2) === 0) {
-            return new Exception('Error: Calls to magic methods are not allowed!');
+            $method = array_pop($parts);
         }
 
-        $file = static::dirApplication() . '/controller/' . $this->route . '.php';
-        if (is_file($file)) {
-            /** @noinspection PhpIncludeInspection */
-            include_once($file);
-            $class = 'Controller' . preg_replace('/[^a-zA-Z0-9]/', '', $this->route);
-            $controller = new $class($registry ?? Registry::app());
-        } else {
-            return new Exception('Error: Could not call ' . $this->route . '/' . $this->method . '!');
+        // если контроллер не найден
+        if ($controllerPath === null) {
+            throw new NotFoundHttpException('route=' . $this->route);
         }
 
-        // инициализируем параметры Yii
-        Yii::$app->requestedRoute = $this->id;
+        // строим класс
+        $class = 'Controller';
+        foreach ($controllerPath as $part) {
+            $class .= ucfirst(preg_replace('~[^a-z0-9]+~', '', $part));
+        }
+
+        // проверяем наличие класса
+        if (! class_exists($class)) {
+            throw new NotFoundHttpException('class=' . $class);
+        }
+
+        // пытаемся создать контроллер
+        try {
+            $controller = new $class(Registry::app());
+        } catch (Throwable $ex) {
+            throw new NotFoundHttpException('class=' . $class, 0, $ex);
+        }
+
+        // проверяем метод
+        if ($method === null) {
+            $method = 'index';
+        } elseif (strncmp($method, '__', 2) === 0) {
+            throw new NotFoundHttpException('method=' . $method);
+        }
+
+        // проверяем наличие метода
+        if (! method_exists($controller, $method)) {
+            throw new NotFoundHttpException('class=' . $class . ', method=' . $method);
+        }
+
+        // устанавливаем маршрут в Yii
+        Yii::$app->requestedRoute = $this->route;
+
+        // сохраняем парамеры в Yii
         Yii::$app->request->queryParams = Registry::app()->request->get;
-        Yii::$app->controller = new \yii\web\Controller(Url::controllerByRoute($this->id), Yii::$app);
+
+        // создаем контроллер Yii
+        Yii::$app->controller = new \yii\web\Controller(implode('/', $controllerPath), Yii::$app);
 
         // выполняем метод контроллера
-        return $controller->{$this->method}($args ?? $this->args ?? []);
+        return $controller->{$method}($this->args ?? []);
     }
 }

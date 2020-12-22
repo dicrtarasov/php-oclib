@@ -2,8 +2,8 @@
 /**
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license proprietary
- * @version 27.09.20 19:28:11
+ * @license MIT
+ * @version 23.12.20 03:08:24
  */
 
 declare(strict_types = 1);
@@ -11,8 +11,8 @@ namespace dicr\oclib;
 
 use yii\base\BaseObject;
 use yii\base\Exception;
+use yii\web\NotFoundHttpException;
 
-use function is_callable;
 use function is_file;
 use function str_replace;
 
@@ -46,52 +46,17 @@ class Loader extends BaseObject
      * Вызов контроллера.
      *
      * @param string $route
-     * @param ?array $args аргументы контроллера
+     * @param array $args аргументы контроллера
      * @return mixed
-     * @noinspection PhpMethodMayBeStaticInspection
+     * @throws NotFoundHttpException
      */
-    public function controller(string $route, ?array $args = null)
+    public function controller(string $route, array $args = [])
     {
-        if ($args === null) {
-            $args = [];
-        }
+        // создаем акцию
+        $action = new Action($route, $args);
 
-        $parts = explode('/', str_replace('../', '', $route));
-
-        // Break apart the route
-        while ($parts) {
-            /** @noinspection PhpUndefinedConstantInspection */
-            $file = DIR_APPLICATION . 'controller/' . implode('/', $parts) . '.php';
-            if (is_file($file)) {
-                /** @noinspection PhpIncludeInspection */
-                include_once($file);
-                break;
-            }
-
-            $method = array_pop($parts);
-        }
-
-        $class = 'Controller' .
-            preg_replace('/[^a-zA-Z0-9]/', '', implode('/', $parts));
-
-        $controller = new $class(static::registry());
-
-        if (! isset($method)) {
-            $method = 'index';
-        }
-
-        // Stop any magical methods being called
-        if (strncmp($method, '__', 2) === 0) {
-            return false;
-        }
-
-        $output = '';
-
-        if (is_callable([$controller, $method])) {
-            $output = $controller->$method($args);
-        }
-
-        return $output;
+        // возвращаем результат
+        return $action->execute();
     }
 
     /**

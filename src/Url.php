@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.12.20 01:02:22
+ * @version 23.12.20 02:58:06
  */
 
 declare(strict_types = 1);
@@ -129,16 +129,5 @@ class Url extends \dicr\helper\Url
         }
 
         return implode('/', $parts);
-    }
-
-    /**
-     * Возвращает идентификатор контроллера по маршруту.
-     *
-     * @param string $route
-     * @return string
-     */
-    public static function controllerByRoute(string $route) : string
-    {
-        return $route;
     }
 }
