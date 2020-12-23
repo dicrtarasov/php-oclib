@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.12.20 20:03:42
+ * @version 23.12.20 20:13:29
  */
 
 declare(strict_types = 1);
@@ -12,30 +12,18 @@ namespace dicr\oclib;
 /**
  * Прокси обращений объекта к OpenCart Registry.
  */
-abstract class RegistryProxy implements RegistryProps
+trait RegistryProxy
 {
-    /** Registry */
-    protected $registry;
-
-    /**
-     * RegistryProxy constructor.
-     *
-     * @param ?Registry $registry
-     */
-    public function __construct(?Registry $registry = null)
-    {
-        $this->registry = $registry ?: Registry::app();
-    }
-
     /**
      * Проверка наличия свойства в Registry.
      *
      * @param string $name
      * @return bool
+     * @noinspection PhpMissingParamTypeInspection
      */
-    public function __isset(string $name) : bool
+    public function __isset($name) : bool
     {
-        return $this->registry->has($name);
+        return Registry::app()->has($name);
     }
 
     /**
@@ -43,10 +31,11 @@ abstract class RegistryProxy implements RegistryProps
      *
      * @param string $name
      * @return ?mixed
+     * @noinspection PhpMissingParamTypeInspection
      */
-    public function __get(string $name)
+    public function __get($name)
     {
-        return $this->registry->get($name);
+        return Registry::app()->get($name);
     }
 
     /**
@@ -54,9 +43,10 @@ abstract class RegistryProxy implements RegistryProps
      *
      * @param string $name
      * @param mixed $value
+     * @noinspection PhpMissingParamTypeInspection
      */
-    public function __set(string $name, $value) : void
+    public function __set($name, $value) : void
     {
-        $this->registry->set($name, $value);
+        Registry::app()->set($name, $value);
     }
 }

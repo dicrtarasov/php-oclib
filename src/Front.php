@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.12.20 20:03:42
+ * @version 23.12.20 20:13:29
  */
 
 declare(strict_types = 1);
@@ -11,6 +11,8 @@ declare(strict_types = 1);
 namespace dicr\oclib;
 
 use RuntimeException;
+use Throwable;
+use Yii;
 use yii\base\BaseObject;
 use yii\web\NotFoundHttpException;
 
@@ -37,6 +39,7 @@ class Front extends BaseObject
      * @param Action $action
      * @param ?Action $errorAction
      * @throws NotFoundHttpException
+     * @throws Throwable
      */
     public function dispatch(Action $action, ?Action $errorAction = null) : void
     {
@@ -73,7 +76,11 @@ class Front extends BaseObject
         }
 
         // если вернули строковой результат, то добавляем его в output
-        if (is_scalar($res)) {
+        if ($res instanceof \yii\web\Response) {
+            Yii::$app->set('response', $res);
+        } elseif ($res instanceof Throwable) {
+            throw $res;
+        } elseif (is_scalar($res)) {
             $res = (string)$res;
             if ($res !== '') {
                 Registry::app()->response->setOutput($res);

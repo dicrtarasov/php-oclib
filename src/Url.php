@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.12.20 20:03:42
+ * @version 23.12.20 20:13:29
  */
 
 declare(strict_types = 1);
@@ -43,7 +43,7 @@ class Url extends \dicr\helper\Url
      */
     public function redirectToCanonical(string $route, $params = []) : void
     {
-        $params = Url::normalizeQuery(Url::filterQuery($params));
+        $params = static::normalizeQuery(static::filterQuery($params));
 
         $url = $this->link($route, $params);
         $urlInfo = (array)parse_url($url);
@@ -98,7 +98,7 @@ class Url extends \dicr\helper\Url
 
         unset($params['_route_']);
 
-        return self::normalizeQuery($params);
+        return static::normalizeQuery($params);
     }
 
     /**

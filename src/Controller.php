@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.12.20 20:03:42
+ * @version 23.12.20 20:13:29
  */
 
 declare(strict_types = 1);
@@ -24,8 +24,10 @@ use function strtotime;
 /**
  * Контроллер OpenCart.
  */
-abstract class Controller extends RegistryProxy
+abstract class Controller implements RegistryProps
 {
+    use RegistryProxy;
+
     /**
      * Рендерит темплейт.
      *
