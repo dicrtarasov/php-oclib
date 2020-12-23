@@ -3,24 +3,39 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.12.20 19:25:18
+ * @version 23.12.20 20:03:42
  */
 
 declare(strict_types = 1);
 namespace dicr\oclib;
 
+use Throwable;
+use Yii;
+use yii\base\InvalidConfigException;
 use yii\db\Exception;
+use yii\di\Instance;
 
 use function ob_end_clean;
 use function ob_get_level;
 
 /**
- * Class Response.
- *
- * @noinspection MissingPropertyAnnotationsInspection
+ * Class Response
  */
-class Response extends \yii\web\Response
+class Response
 {
+    /** @var \yii\web\Response компонент Yii */
+    public $response = 'response';
+
+    /**
+     * Конструктор.
+     *
+     * @throws InvalidConfigException
+     */
+    public function __construct()
+    {
+        $this->response = Instance::ensure($this->response, \yii\web\Response::class);
+    }
+
     /**
      * Добавление заголовка.
      *
@@ -31,9 +46,9 @@ class Response extends \yii\web\Response
     {
         $matches = null;
         if (preg_match('~^\s*([^:]+)\s*:\s*(.+)\s*$~usm', $header, $matches)) {
-            $this->headers->add(trim($matches[1]), trim($matches[2]));
+            $this->response->headers->add(trim($matches[1]), trim($matches[2]));
         } elseif (preg_match('~^HTTP/[\d.]+\s+(\d+)~um', $header, $matches)) {
-            $this->statusCode = (int)$matches[1];
+            $this->response->statusCode = (int)$matches[1];
         } else {
             throw new Exception('Некорректный заголовок: ' . $header);
         }
@@ -47,6 +62,27 @@ class Response extends \yii\web\Response
         while (ob_get_level() > 0) {
             ob_end_clean();
         }
+    }
+
+    /**
+     * Переадресация.
+     *
+     * @param array|string $url
+     * @param int $status
+     */
+    public function redirect($url, int $status = 303) : void
+    {
+        $url = str_replace(['&amp;', "\n", "\r"], ['&', '', ''], $url);
+
+        static::cleanOutput();
+
+        try {
+            Yii::$app->end(0, $this->response->redirect($url, $status));
+        } catch (Throwable $ex) {
+            Yii::error($ex, __METHOD__);
+        }
+
+        exit;
     }
 
     /**
@@ -67,7 +103,7 @@ class Response extends \yii\web\Response
      */
     public function getOutput() : string
     {
-        return (string)$this->content;
+        return (string)$this->response->content;
     }
 
     /**
@@ -77,7 +113,7 @@ class Response extends \yii\web\Response
      */
     public function setOutput($output) : void
     {
-        $this->content = (string)$output;
+        $this->response->content = (string)$output;
     }
 
     /**
@@ -85,6 +121,6 @@ class Response extends \yii\web\Response
      */
     public function output() : void
     {
-        $this->send();
+        $this->response->send();
     }
 }

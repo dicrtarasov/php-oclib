@@ -3,64 +3,124 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.12.20 20:03:27
+ * @version 23.12.20 20:03:47
  */
 
 declare(strict_types = 1);
 namespace dicr\oclib;
 
+use Throwable;
 use Yii;
 use yii\web\NotFoundHttpException;
 
+use function array_pop;
+use function class_exists;
+use function constant;
+use function explode;
+use function implode;
+use function is_file;
 use function method_exists;
+use function preg_match;
+use function preg_replace;
+use function strncmp;
+use function trim;
+use function ucfirst;
 
 /**
  * Class Action.
  */
-class Action extends \yii\base\Action
+class Action
 {
+    /** @var string */
+    public $route;
+
+    /** @var ?array */
+    public $args;
+
     /**
-     * Выполнение акции.
-     *
+     * @param string $route
+     * @param array $args
+     */
+    public function __construct(string $route, array $args = [])
+    {
+        $this->route = trim($route, '/');
+        $this->args = $args;
+    }
+
+    /**
      * @return mixed
      * @throws NotFoundHttpException
+     * @noinspection PhpMissingReturnTypeInspection
      */
-    public function run()
+    public function execute()
     {
-        if (Yii::$app->requestedAction === null) {
-            Yii::$app->requestedAction = $this;
+        // проверяем маршрут
+        if (! preg_match('~^[a-z0-9_/]+$~u', $this->route)) {
+            return new NotFoundHttpException('route=' . $this->route);
         }
 
-        if (Yii::$app->requestedParams === null) {
-            Yii::$app->requestedParams = $this->controller->actionParams;
+        $controllerPath = null;
+        $method = null;
+
+        // разбиваем маршрут на части
+        $parts = (array)explode('/', $this->route);
+        while (! empty($parts)) {
+            $file = constant('DIR_APPLICATION') . 'controller/' . implode('/', $parts) . '.php';
+            if (is_file($file)) {
+                /** @noinspection PhpIncludeInspection */
+                include_once($file);
+                $controllerPath = $parts;
+                break;
+            }
+
+            $method = array_pop($parts);
+        }
+
+        // если контроллер не найден
+        if ($controllerPath === null) {
+            throw new NotFoundHttpException('route=' . $this->route);
+        }
+
+        // строим класс
+        $class = 'Controller';
+        foreach ($controllerPath as $part) {
+            $class .= ucfirst(preg_replace('~[^a-z0-9]+~', '', $part));
+        }
+
+        // проверяем наличие класса
+        if (! class_exists($class)) {
+            throw new NotFoundHttpException('class=' . $class);
+        }
+
+        // пытаемся создать контроллер
+        try {
+            $controller = new $class(Registry::app());
+        } catch (Throwable $ex) {
+            throw new NotFoundHttpException('class=' . $class, 0, $ex);
+        }
+
+        // проверяем метод
+        if ($method === null) {
+            $method = 'index';
+        } elseif (strncmp($method, '__', 2) === 0) {
+            throw new NotFoundHttpException('method=' . $method);
+        }
+
+        // проверяем наличие метода
+        if (! method_exists($controller, $method)) {
+            throw new NotFoundHttpException('class=' . $class . ', method=' . $method);
         }
 
         // устанавливаем маршрут в Yii
-        Yii::$app->requestedRoute = $this->uniqueId;
-
-        Yii::$app->controller = $this->controller;
+        Yii::$app->requestedRoute = $this->route;
 
         // сохраняем парамеры в Yii
         Yii::$app->request->queryParams = Registry::app()->request->get;
 
-        // проверяем наличие метода
-        if (! method_exists($this->controller, $this->id)) {
-            throw new NotFoundHttpException('method=' . $this->id . ', controller=' . $this->controller->id);
-        }
+        // создаем контроллер Yii
+        Yii::$app->controller = new \yii\web\Controller(implode('/', $controllerPath), Yii::$app);
 
-        return $this->controller->{$this->id}($this->controller->actionParams);
-    }
-
-    /**
-     * @inheritDoc
-     * @param array $params
-     * @return mixed|void|null
-     * @throws NotFoundHttpException
-     */
-    public function runWithParams($params = [])
-    {
-        $this->controller->actionParams = $params;
-
-        return $this->run();
+        // выполняем метод контроллера
+        return $controller->{$method}($this->args ?? []);
     }
 }

@@ -3,14 +3,13 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.12.20 19:19:39
+ * @version 23.12.20 20:03:42
  */
 
 declare(strict_types = 1);
 namespace dicr\oclib;
 
 use Yii;
-use yii\web\NotFoundHttpException;
 
 /**
  * Контроллер маршрутизации.
@@ -25,7 +24,6 @@ class ControllerAdminStartupUrl extends Controller
      * Индекс.
      *
      * @return ?Action
-     * @throws NotFoundHttpException
      */
     public function index() : ?Action
     {
@@ -40,6 +38,6 @@ class ControllerAdminStartupUrl extends Controller
         unset($this->request->get['route'], $this->request->get['_route_']);
 
         // возвращаем акцию
-        return $route === '' ? null : Front::createAction($route);
+        return $route === '' ? null : new Action($route);
     }
 }

@@ -3,20 +3,18 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.12.20 19:23:09
+ * @version 23.12.20 20:03:42
  */
 
 declare(strict_types = 1);
 namespace dicr\oclib;
-
-use Yii;
 
 use function is_array;
 
 /**
  * Запрос.
  */
-class Request extends \yii\web\Request
+class Request
 {
     /** @var array */
     public $get;
@@ -39,18 +37,14 @@ class Request extends \yii\web\Request
     /**
      * Инициализация.
      */
-    public function init() : void
+    public function __construct()
     {
-        $this->get = &$this->queryParams;
+        $this->get = &$_GET;
         $this->post = &$_POST;
         $this->request = &$_REQUEST;
         $this->cookie = &$_COOKIE;
         $this->files = &$_FILES;
         $this->server = &$_SERVER;
-
-        parent::init();
-
-        Yii::$app->request = $this;
     }
 
     /**

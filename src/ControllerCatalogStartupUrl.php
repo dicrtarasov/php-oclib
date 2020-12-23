@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.12.20 19:20:19
+ * @version 23.12.20 20:03:42
  */
 
 declare(strict_types = 1);
@@ -13,7 +13,6 @@ namespace dicr\oclib;
 use Throwable;
 use Yii;
 use yii\helpers\ArrayHelper;
-use yii\web\NotFoundHttpException;
 use yii\web\UrlNormalizerRedirectException;
 
 use function is_array;
@@ -32,7 +31,6 @@ class ControllerCatalogStartupUrl extends Controller
      * Декодирование ЧПУ.
      *
      * @return ?Action
-     * @throws NotFoundHttpException
      */
     public function index() : ?Action
     {
@@ -42,7 +40,7 @@ class ControllerCatalogStartupUrl extends Controller
         unset($this->request->get['route'], $this->request->get['_route_']);
 
         // возвращаем действие
-        return $route === null ? null : Front::createAction($route);
+        return $route === null ? null : new Action($route);
     }
 
     /**

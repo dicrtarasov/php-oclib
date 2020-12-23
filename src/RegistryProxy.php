@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.12.20 18:17:20
+ * @version 23.12.20 20:03:42
  */
 
 declare(strict_types = 1);
@@ -12,8 +12,21 @@ namespace dicr\oclib;
 /**
  * Прокси обращений объекта к OpenCart Registry.
  */
-trait RegistryProxy
+abstract class RegistryProxy implements RegistryProps
 {
+    /** Registry */
+    protected $registry;
+
+    /**
+     * RegistryProxy constructor.
+     *
+     * @param ?Registry $registry
+     */
+    public function __construct(?Registry $registry = null)
+    {
+        $this->registry = $registry ?: Registry::app();
+    }
+
     /**
      * Проверка наличия свойства в Registry.
      *
@@ -22,7 +35,7 @@ trait RegistryProxy
      */
     public function __isset(string $name) : bool
     {
-        return Registry::app()->has($name);
+        return $this->registry->has($name);
     }
 
     /**
@@ -33,7 +46,7 @@ trait RegistryProxy
      */
     public function __get(string $name)
     {
-        return Registry::app()->get($name);
+        return $this->registry->get($name);
     }
 
     /**
@@ -44,6 +57,6 @@ trait RegistryProxy
      */
     public function __set(string $name, $value) : void
     {
-        Registry::app()->set($name, $value);
+        $this->registry->set($name, $value);
     }
 }

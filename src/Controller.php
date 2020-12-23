@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.12.20 19:18:51
+ * @version 23.12.20 20:03:42
  */
 
 declare(strict_types = 1);
@@ -23,13 +23,50 @@ use function strtotime;
 
 /**
  * Контроллер OpenCart.
- *
- * @property-read Request $request
- * @property-read Response $response
  */
-abstract class Controller extends \yii\web\Controller implements RegistryProps
+abstract class Controller extends RegistryProxy
 {
-    use RegistryProxy;
+    /**
+     * Рендерит темплейт.
+     *
+     * @param string $route
+     * @param array $params
+     */
+    public function render(string $route, array $params) : void
+    {
+        $this->response->setOutput(Template::render($route, $params));
+    }
+
+    /**
+     * Возвращает ответ как JSON.
+     *
+     * @param mixed $data
+     */
+    public function asJson($data) : void
+    {
+        $response = Yii::$app->response;
+        $response->format = \yii\web\Response::FORMAT_JSON;
+        $response->data = $data;
+
+        try {
+            Yii::$app->end(0, $response);
+        } catch (Throwable $ex) {
+            Yii::error($ex, __METHOD__);
+        }
+
+        exit;
+    }
+
+    /**
+     * Переадресация на URL.
+     *
+     * @param string $url
+     * @param int $code
+     */
+    public function redirect(string $url, int $code = 303) : void
+    {
+        $this->response->redirect($url, $code);
+    }
 
     /**
      * Проверяет и устанавливает заголовки кэширования.
