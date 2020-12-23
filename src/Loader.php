@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.12.20 03:08:24
+ * @version 23.12.20 19:11:19
  */
 
 declare(strict_types = 1);
@@ -53,10 +53,10 @@ class Loader extends BaseObject
     public function controller(string $route, array $args = [])
     {
         // создаем акцию
-        $action = new Action($route, $args);
+        $action = Front::createAction($route, $args);
 
         // возвращаем результат
-        return $action->execute();
+        return $action->run();
     }
 
     /**

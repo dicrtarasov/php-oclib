@@ -2,8 +2,8 @@
 /**
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license proprietary
- * @version 28.09.20 01:16:40
+ * @license MIT
+ * @version 23.12.20 18:17:20
  */
 
 declare(strict_types = 1);
@@ -12,21 +12,8 @@ namespace dicr\oclib;
 /**
  * Прокси обращений объекта к OpenCart Registry.
  */
-abstract class RegistryProxy implements RegistryProps
+trait RegistryProxy
 {
-    /** Registry */
-    protected $registry;
-
-    /**
-     * RegistryProxy constructor.
-     *
-     * @param ?Registry $registry
-     */
-    public function __construct(?Registry $registry = null)
-    {
-        $this->registry = $registry ?: Registry::app();
-    }
-
     /**
      * Проверка наличия свойства в Registry.
      *
@@ -35,7 +22,7 @@ abstract class RegistryProxy implements RegistryProps
      */
     public function __isset(string $name) : bool
     {
-        return $this->registry->has($name);
+        return Registry::app()->has($name);
     }
 
     /**
@@ -46,7 +33,7 @@ abstract class RegistryProxy implements RegistryProps
      */
     public function __get(string $name)
     {
-        return $this->registry->get($name);
+        return Registry::app()->get($name);
     }
 
     /**
@@ -57,6 +44,6 @@ abstract class RegistryProxy implements RegistryProps
      */
     public function __set(string $name, $value) : void
     {
-        $this->registry->set($name, $value);
+        Registry::app()->set($name, $value);
     }
 }
