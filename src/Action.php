@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.12.20 20:03:47
+ * @version 24.12.20 01:07:20
  */
 
 declare(strict_types = 1);
@@ -55,8 +55,8 @@ class Action
     public function execute()
     {
         // проверяем маршрут
-        if (! preg_match('~^[a-z0-9_/]+$~u', $this->route)) {
-            return new NotFoundHttpException('route=' . $this->route);
+        if (! preg_match('~^[a-z0-9_\-/]+$~u', $this->route)) {
+            throw new NotFoundHttpException('invalid route=' . $this->route);
         }
 
         $controllerPath = null;
@@ -78,7 +78,7 @@ class Action
 
         // если контроллер не найден
         if ($controllerPath === null) {
-            throw new NotFoundHttpException('route=' . $this->route);
+            throw new NotFoundHttpException('not found route=' . $this->route);
         }
 
         // строим класс
