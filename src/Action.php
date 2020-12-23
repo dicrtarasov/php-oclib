@@ -3,13 +3,14 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.12.20 19:07:26
+ * @version 23.12.20 19:31:43
  */
 
 declare(strict_types = 1);
 namespace dicr\oclib;
 
 use Yii;
+use yii\base\InvalidConfigException;
 use yii\web\NotFoundHttpException;
 
 use function method_exists;
@@ -62,5 +63,18 @@ class Action extends \yii\base\Action
         $this->controller->actionParams = $params;
 
         return $this->run();
+    }
+
+    /**
+     * Синоним.
+     *
+     * @param array $args
+     * @return mixed|void|null
+     * @throws NotFoundHttpException
+     * @throws InvalidConfigException
+     */
+    public function execute(array $args = [])
+    {
+        return $this->runWithParams($args);
     }
 }
