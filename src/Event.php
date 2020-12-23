@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.12.20 20:13:29
+ * @version 23.12.20 20:27:03
  */
 
 declare(strict_types = 1);
@@ -11,6 +11,8 @@ declare(strict_types = 1);
 namespace dicr\oclib;
 
 use yii\web\NotFoundHttpException;
+
+use function usort;
 
 /**
  * Class Event
@@ -50,10 +52,10 @@ class Event
 
     /**
      * @param string $key
-     * @param array $arg
+     * @param array|string|float $args
      * @throws NotFoundHttpException
      */
-    public function trigger(string $key, array $arg = []) : void
+    public function trigger(string $key, $args = []) : void
     {
         if (isset($this->data[$key])) {
             usort($this->data[$key], static function (array $a, array $b) : int {
@@ -61,7 +63,7 @@ class Event
             });
 
             foreach ($this->data[$key] as $event) {
-                $action = new Action($event['action'], $arg);
+                $action = new Action($event['action'], (array)$args);
                 $action->execute();
             }
         }
