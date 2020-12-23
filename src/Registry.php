@@ -2,8 +2,8 @@
 /**
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license proprietary
- * @version 26.09.20 19:49:57
+ * @license MIT
+ * @version 23.12.20 20:20:18
  */
 
 declare(strict_types = 1);
@@ -15,7 +15,7 @@ namespace dicr\oclib;
 class Registry implements RegistryProps
 {
     /** @var self */
-    private static $_instance;
+    public static $app;
 
     /** @var array данные */
     private $data = [];
@@ -26,7 +26,7 @@ class Registry implements RegistryProps
      */
     public function __construct()
     {
-        self::$_instance = $this;
+        self::$app = $this;
     }
 
     /**
@@ -36,7 +36,7 @@ class Registry implements RegistryProps
      */
     public static function app() : self
     {
-        return self::$_instance;
+        return self::$app;
     }
 
     /** Волшебные методы ****************************************************/
