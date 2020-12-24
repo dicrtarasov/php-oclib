@@ -2,8 +2,8 @@
 /**
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license proprietary
- * @version 26.09.20 20:31:21
+ * @license MIT
+ * @version 24.12.20 05:51:39
  */
 
 declare(strict_types = 1);
@@ -92,13 +92,13 @@ class Language
         $file = static::langDir($lang) . '/' . $route . '.php';
         if (is_file($file)) {
             /** @noinspection PhpIncludeInspection */
-            include($file);
+            include $file;
         } elseif (strncmp($route, 'extension/', 10) === 0) {
             // загружаем данные расширения
             $file = static::langDir($lang) . '/' . substr($route, 10) . '.php';
             if (is_file($file)) {
                 /** @noinspection PhpIncludeInspection */
-                include($file);
+                include $file;
             }
         }
 

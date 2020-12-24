@@ -2,8 +2,8 @@
 /**
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license proprietary
- * @version 26.09.20 22:47:53
+ * @license MIT
+ * @version 24.12.20 05:49:45
  */
 
 declare(strict_types = 1);
@@ -72,7 +72,7 @@ class Config
         if (file_exists($file)) {
             $_ = [];
             /** @noinspection PhpIncludeInspection */
-            require($file);
+            require $file;
             $this->data = array_merge($this->data, $_);
         } else {
             throw new RuntimeException('Error: Could not load config ' . $filename . '!');

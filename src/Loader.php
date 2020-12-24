@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.12.20 20:03:42
+ * @version 24.12.20 05:51:39
  */
 
 declare(strict_types = 1);
@@ -78,7 +78,7 @@ class Loader extends BaseObject
             $file = ($path ?: DIR_APPLICATION . 'model/') . $route . '.php';
             if (is_file($file)) {
                 /** @noinspection PhpIncludeInspection */
-                include_once($file);
+                include_once $file;
                 $class = 'Model' . preg_replace('/[^a-zA-Z0-9]/', '', $route);
                 $model = new $class(static::registry());
                 static::registry()->set($key, $model);
@@ -100,7 +100,7 @@ class Loader extends BaseObject
      */
     public function view(string $route, array $data = []) : string
     {
-        return (string)(new Template($route, $data));
+        return (string)new Template($route, $data);
     }
 
     /**
@@ -118,7 +118,7 @@ class Loader extends BaseObject
         $file = DIR_SYSTEM . 'library/' . $route . '.php';
         if (is_file($file)) {
             /** @noinspection PhpIncludeInspection */
-            include_once($file);
+            include_once $file;
 
             $class = str_replace('/', '\\', $route);
             static::registry()->set(basename($route), new $class(static::registry()));
@@ -139,7 +139,7 @@ class Loader extends BaseObject
 
         if (is_file($file)) {
             /** @noinspection PhpIncludeInspection */
-            include_once($file);
+            include_once $file;
         } else {
             throw new Exception('Error: Could not load helper ' . $file . '!');
         }

@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.12.20 20:13:29
+ * @version 24.12.20 05:51:39
  */
 
 declare(strict_types = 1);
@@ -110,7 +110,7 @@ class Template implements RegistryProps
             extract($this->_vars, EXTR_REFS | EXTR_SKIP);
 
             /** @noinspection PhpIncludeInspection */
-            require($this->filePath());
+            require $this->filePath();
         };
 
         ob_start();

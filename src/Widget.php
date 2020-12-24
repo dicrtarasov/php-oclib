@@ -2,8 +2,8 @@
 /**
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license proprietary
- * @version 06.11.20 16:58:26
+ * @license MIT
+ * @version 24.12.20 05:51:39
  */
 
 declare(strict_types = 1);
@@ -63,7 +63,7 @@ abstract class Widget extends BaseObject
      */
     public static function widget(array $config = []) : string
     {
-        return (string)(new static($config));
+        return (string)new static($config);
     }
 
     /**

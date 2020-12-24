@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 24.12.20 01:07:20
+ * @version 24.12.20 05:51:39
  */
 
 declare(strict_types = 1);
@@ -50,7 +50,6 @@ class Action
     /**
      * @return mixed
      * @throws NotFoundHttpException
-     * @noinspection PhpMissingReturnTypeInspection
      */
     public function execute()
     {
@@ -68,7 +67,7 @@ class Action
             $file = constant('DIR_APPLICATION') . 'controller/' . implode('/', $parts) . '.php';
             if (is_file($file)) {
                 /** @noinspection PhpIncludeInspection */
-                include_once($file);
+                include_once $file;
                 $controllerPath = $parts;
                 break;
             }
@@ -111,14 +110,10 @@ class Action
             throw new NotFoundHttpException('class=' . $class . ', method=' . $method);
         }
 
-        // устанавливаем маршрут в Yii
-        Yii::$app->requestedRoute = $this->route;
-
         // сохраняем парамеры в Yii
         Yii::$app->request->queryParams = Registry::app()->request->get;
-
-        // создаем контроллер Yii
         Yii::$app->controller = new \yii\web\Controller(implode('/', $controllerPath), Yii::$app);
+        Yii::$app->requestedAction = new \yii\base\Action($method, Yii::$app->controller);
 
         // выполняем метод контроллера
         return $controller->{$method}($this->args ?? []);

@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.12.20 20:13:29
+ * @version 24.12.20 05:48:38
  */
 
 declare(strict_types = 1);
@@ -15,6 +15,8 @@ use Throwable;
 use Yii;
 use yii\base\BaseObject;
 use yii\web\NotFoundHttpException;
+
+use function is_scalar;
 
 /**
  * Class Front
@@ -46,6 +48,9 @@ class Front extends BaseObject
         if ($errorAction === null) {
             $errorAction = $this->errorAction;
         }
+
+        Yii::$app->requestedRoute = $action->route;
+        Yii::$app->requestedParams = $action->args;
 
         // результат выполнения акции
         $res = null;

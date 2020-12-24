@@ -2,8 +2,8 @@
 /**
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license proprietary
- * @version 28.09.20 01:04:03
+ * @license MIT
+ * @version 24.12.20 05:51:39
  */
 
 declare(strict_types = 1);
@@ -97,7 +97,7 @@ class Pagination extends Widget
         parent::init();
 
         if (isset($this->provider)) {
-            if (! ($this->provider instanceof DataProviderInterface)) {
+            if (! $this->provider instanceof DataProviderInterface) {
                 throw new InvalidConfigException('provider');
             }
 
@@ -111,7 +111,7 @@ class Pagination extends Widget
         }
 
         if (isset($this->pager)) {
-            if (! ($this->pager instanceof \yii\data\Pagination)) {
+            if (! $this->pager instanceof \yii\data\Pagination) {
                 throw new InvalidConfigException('pager');
             }
 
@@ -184,7 +184,7 @@ class Pagination extends Widget
                 }
 
                 if ($end > $num_pages) {
-                    $start -= ($end - $num_pages);
+                    $start -= $end - $num_pages;
                     $end = $num_pages;
                 }
             }
