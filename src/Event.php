@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.12.20 20:27:03
+ * @version 28.12.20 19:26:18
  */
 
 declare(strict_types = 1);
@@ -12,6 +12,7 @@ namespace dicr\oclib;
 
 use yii\web\NotFoundHttpException;
 
+use function is_string;
 use function usort;
 
 /**
@@ -24,26 +25,34 @@ class Event
 
     /**
      * @param string $key
-     * @param string $route
+     * @param string|Action $action
      * @param int $priority
      */
-    public function register(string $key, string $route, int $priority = 0) : void
+    public function register(string $key, $action, int $priority = 0) : void
     {
+        if (is_string($action)) {
+            $action = new Action($action);
+        }
+
         $this->data[$key][] = [
-            'action' => $route,
+            'action' => $action,
             'priority' => $priority,
         ];
     }
 
     /**
      * @param string $key
-     * @param string $route
+     * @param string|Action $action
      */
-    public function unregister(string $key, string $route) : void
+    public function unregister(string $key, $action) : void
     {
+        if ($action instanceof Action) {
+            $action = $action->route;
+        }
+
         if (isset($this->data[$key])) {
             foreach ($this->data[$key] as $index => $event) {
-                if ($event['action'] === $route) {
+                if ($event['action'] === $action) {
                     unset($this->data[$key][$index]);
                 }
             }
@@ -52,10 +61,10 @@ class Event
 
     /**
      * @param string $key
-     * @param array|string|float $args
+     * @param array|string|float|null $args
      * @throws NotFoundHttpException
      */
-    public function trigger(string $key, $args = []) : void
+    public function trigger(string $key, $args = null) : void
     {
         if (isset($this->data[$key])) {
             usort($this->data[$key], static function (array $a, array $b) : int {
@@ -63,7 +72,13 @@ class Event
             });
 
             foreach ($this->data[$key] as $event) {
-                $action = new Action($event['action'], (array)$args);
+                /** @var Action $action */
+                $action = $event['action'];
+
+                if ($args !== null) {
+                    $action->args = $args;
+                }
+
                 $action->execute();
             }
         }
