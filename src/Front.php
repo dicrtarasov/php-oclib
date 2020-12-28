@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 24.12.20 05:48:38
+ * @version 28.12.20 18:51:07
  */
 
 declare(strict_types = 1);
@@ -88,8 +88,10 @@ class Front extends BaseObject
         } elseif (is_scalar($res)) {
             $res = (string)$res;
             if ($res !== '') {
-                Registry::app()->response->setOutput($res);
+                Yii::$app->response->content = $res;
             }
+        } elseif ($res !== null && $res !== '') {
+            Yii::$app->response->data = $res;
         }
     }
 }

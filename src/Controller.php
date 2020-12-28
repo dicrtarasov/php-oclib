@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.12.20 20:13:29
+ * @version 28.12.20 18:49:50
  */
 
 declare(strict_types = 1);
@@ -33,30 +33,28 @@ abstract class Controller implements RegistryProps
      *
      * @param string $route
      * @param array $params
+     * @noinspection PhpMethodMayBeStaticInspection
+     * @return string
      */
-    public function render(string $route, array $params) : void
+    public function render(string $route, array $params) : string
     {
-        $this->response->setOutput(Template::render($route, $params));
+        return Template::render($route, $params);
     }
 
     /**
      * Возвращает ответ как JSON.
      *
      * @param mixed $data
+     * @noinspection PhpMethodMayBeStaticInspection
+     * @return \yii\web\Response
      */
-    public function asJson($data) : void
+    public function asJson($data) : \yii\web\Response
     {
         $response = Yii::$app->response;
         $response->format = \yii\web\Response::FORMAT_JSON;
         $response->data = $data;
 
-        try {
-            Yii::$app->end(0, $response);
-        } catch (Throwable $ex) {
-            Yii::error($ex, __METHOD__);
-        }
-
-        exit;
+        return $response;
     }
 
     /**
@@ -64,10 +62,11 @@ abstract class Controller implements RegistryProps
      *
      * @param string $url
      * @param int $code
+     * @return \yii\web\Response
      */
-    public function redirect(string $url, int $code = 303) : void
+    public function redirect(string $url, int $code = 303) : \yii\web\Response
     {
-        $this->response->redirect($url, $code);
+        return Yii::$app->response->redirect($url, $code);
     }
 
     /**
@@ -76,7 +75,7 @@ abstract class Controller implements RegistryProps
      * @param int $id id объекта
      * @param string $modified дата изменения
      */
-    protected static function ifModifiedSince(int $id, string $modified) : void
+    public static function ifModifiedSince(int $id, string $modified) : void
     {
         if ($id < 1) {
             throw new InvalidArgumentException('id');
