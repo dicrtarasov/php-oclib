@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 28.12.20 18:49:50
+ * @version 28.12.20 21:18:51
  */
 
 declare(strict_types = 1);
@@ -36,7 +36,7 @@ abstract class Controller implements RegistryProps
      * @noinspection PhpMethodMayBeStaticInspection
      * @return string
      */
-    public function render(string $route, array $params) : string
+    public function render(string $route, array $params = []) : string
     {
         return Template::render($route, $params);
     }
