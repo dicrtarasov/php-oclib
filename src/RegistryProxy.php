@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.12.20 20:13:29
+ * @version 28.12.20 21:00:26
  */
 
 declare(strict_types = 1);
@@ -23,7 +23,7 @@ trait RegistryProxy
      */
     public function __isset($name) : bool
     {
-        return Registry::app()->has($name);
+        return $name === 'registry' || Registry::app()->has($name);
     }
 
     /**
@@ -35,7 +35,7 @@ trait RegistryProxy
      */
     public function __get($name)
     {
-        return Registry::app()->get($name);
+        return $name === 'registry' ? Registry::app() : Registry::app()->get($name);
     }
 
     /**
@@ -47,6 +47,8 @@ trait RegistryProxy
      */
     public function __set($name, $value) : void
     {
-        Registry::app()->set($name, $value);
+        if ($name !== 'registry') {
+            Registry::app()->set($name, $value);
+        }
     }
 }
