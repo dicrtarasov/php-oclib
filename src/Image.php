@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 01.01.21 10:29:13
+ * @version 01.01.21 18:53:11
  */
 
 declare(strict_types = 1);
@@ -135,7 +135,7 @@ class Image
     public static function thumb(?string $src, $width = 0, $height = 0, array $options = []): ?string
     {
         // корректируем файл
-        $src = trim(trim((string)$src), '/');
+        $src = trim((string)$src, '/');
 
         // ширина
         $width = round($width);
