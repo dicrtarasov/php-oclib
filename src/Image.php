@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 01.01.21 10:25:56
+ * @version 01.01.21 10:29:13
  */
 
 declare(strict_types = 1);
@@ -132,7 +132,7 @@ class Image
      * @return string|null относительный URL превью
      * @throws Exception
      */
-    public static function thumb(?string $src, float $width = 0, float $height = 0, array $options = []): ?string
+    public static function thumb(?string $src, $width = 0, $height = 0, array $options = []): ?string
     {
         // корректируем файл
         $src = trim(trim((string)$src), '/');
