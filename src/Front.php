@@ -3,14 +3,13 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 01.01.21 10:18:26
+ * @version 02.01.21 03:14:31
  */
 
 declare(strict_types = 1);
 
 namespace dicr\oclib;
 
-use RuntimeException;
 use Throwable;
 use Yii;
 use yii\base\BaseObject;
@@ -75,14 +74,18 @@ class Front extends BaseObject
                 $errorAction->populate = true;
                 $return = $errorAction->execute();
             } else {
-                throw new RuntimeException('Акция ошибки не найдена', 0, $ex);
+                Yii::error('Акция ошибки не найдена: ' . $action->route, __METHOD__);
+                $return = $ex;
             }
+        } catch (Throwable $ex) {
+            $return = $ex;
         }
 
         // если вернули строковой результат, то добавляем его в output
         if ($return instanceof \yii\web\Response) {
             Yii::$app->set('response', $return);
         } elseif ($return instanceof Throwable) {
+            Yii::error($return, __METHOD__);
             throw $return;
         } elseif (is_scalar($return)) {
             $return = (string)$return;
