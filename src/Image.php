@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 01.01.21 19:01:54
+ * @version 01.01.21 19:04:49
  */
 
 declare(strict_types = 1);
@@ -64,7 +64,7 @@ class Image
      */
     public static function noImageDefault(): string
     {
-        return 'noimage.jpg';
+        return 'no_image.png';
     }
 
     /**
@@ -110,7 +110,7 @@ class Image
     {
         $pathInfo = pathinfo(ltrim($file, '/'));
 
-        $dirname = (string)($pathInfo['disname'] ?? '');
+        $dirname = (string)($pathInfo['dirname'] ?? '');
         $filename = (string)($pathInfo['filename'] ?? '');
         $extension = (string)($pathInfo['extension'] ?? '');
 
