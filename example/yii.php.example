@@ -8,13 +8,19 @@
 
 declare(strict_types = 1);
 
+/** @noinspection PhpIncludeInspection */
 require_once(__DIR__ . '/config/common.php');
+/**  */
 defined('YII_ENV') or define('YII_ENV', 'dev');
+/**  */
 defined('YII_DEBUG') or define('YII_DEBUG', DEBUG);
 
+/** @noinspection PhpIncludeInspection */
 require(__DIR__ . '/vendor/autoload.php');
+/** @noinspection PhpIncludeInspection */
 require(__DIR__ . '/vendor/yiisoft/yii2/Yii.php');
 
+/** @noinspection PhpIncludeInspection */
 $config = require(__DIR__ . '/config/yii.console.php');
 
 /** @noinspection PhpUnhandledExceptionInspection */

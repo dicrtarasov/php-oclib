@@ -1,9 +1,9 @@
 <?php
 /**
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 24.12.20 05:51:39
+ * @version 01.01.21 09:28:59
  */
 
 declare(strict_types = 1);
@@ -24,6 +24,7 @@ use const E_USER_ERROR;
 use const EXTR_REFS;
 use const EXTR_SKIP;
 use const PATHINFO_EXTENSION;
+use const YII_DEBUG;
 
 /**
  * Темплейт для OpenCart с проксированием к Registry.
@@ -66,7 +67,7 @@ class Template implements RegistryProps
      *
      * @return string
      */
-    private static function dirTemplate() : string
+    private static function dirTemplate(): string
     {
         /** @noinspection PhpUndefinedConstantInspection */
         return DIR_TEMPLATE;
@@ -80,7 +81,7 @@ class Template implements RegistryProps
      *
      * @return string полный путь файла для выполнения
      */
-    public function filePath() : string
+    public function filePath(): string
     {
         if ($this->_filePath === null) {
             $path = $this->_route;
@@ -102,10 +103,10 @@ class Template implements RegistryProps
      *
      * @return string
      */
-    public function run() : string
+    public function run(): string
     {
         // функция для сокрытия локальных переменных
-        $run = function () {
+        $run = function() {
             // распаковываем данные
             extract($this->_vars, EXTR_REFS | EXTR_SKIP);
 
@@ -129,13 +130,12 @@ class Template implements RegistryProps
      *
      * @return string
      */
-    public function __toString() : string
+    public function __toString(): string
     {
         try {
             return $this->run();
         } catch (Throwable $ex) {
-            /** @noinspection PhpUndefinedConstantInspection */
-            trigger_error(DEBUG ? (string)$ex : $ex->getMessage(), E_USER_ERROR);
+            trigger_error(YII_DEBUG ? (string)$ex : $ex->getMessage(), E_USER_ERROR);
         }
     }
 
@@ -146,7 +146,7 @@ class Template implements RegistryProps
      * @param array $params
      * @return string
      */
-    public static function render(string $route, array $params = []) : string
+    public static function render(string $route, array $params = []): string
     {
         $tpl = new static($route, $params);
 

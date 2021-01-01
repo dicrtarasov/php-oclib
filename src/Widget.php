@@ -1,9 +1,9 @@
 <?php
 /**
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 24.12.20 05:51:39
+ * @version 01.01.21 09:29:10
  */
 
 declare(strict_types = 1);
@@ -16,6 +16,7 @@ use yii\base\BaseObject;
 use function trigger_error;
 
 use const E_USER_ERROR;
+use const YII_DEBUG;
 
 /**
  * Виджет.
@@ -34,7 +35,7 @@ abstract class Widget extends BaseObject
     /**
      * Инициализация.
      */
-    public function init() : void
+    public function init(): void
     {
         parent::init();
 
@@ -53,7 +54,7 @@ abstract class Widget extends BaseObject
      *
      * @return string
      */
-    abstract public function run() : string;
+    abstract public function run(): string;
 
     /**
      * Выводит виджет. Для удобства в коде вместо new.
@@ -61,7 +62,7 @@ abstract class Widget extends BaseObject
      * @param array $config
      * @return string
      */
-    public static function widget(array $config = []) : string
+    public static function widget(array $config = []): string
     {
         return (string)new static($config);
     }
@@ -72,7 +73,7 @@ abstract class Widget extends BaseObject
      * @param string $name название плагина.
      * @return string
      */
-    public function plugin(string $name) : string
+    public function plugin(string $name): string
     {
         return Html::plugin('#' . $this->id, $name, $this->pluginOptions);
     }
@@ -82,13 +83,12 @@ abstract class Widget extends BaseObject
      *
      * @return string
      */
-    public function __toString() : string
+    public function __toString(): string
     {
         try {
             return $this->run();
         } catch (Throwable $ex) {
-            /** @noinspection PhpUndefinedConstantInspection */
-            trigger_error(DEBUG ? (string)$ex : $ex->getMessage(), E_USER_ERROR);
+            trigger_error(YII_DEBUG ? (string)$ex : $ex->getMessage(), E_USER_ERROR);
         }
     }
 }
