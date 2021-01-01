@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 01.01.21 09:25:23
+ * @version 01.01.21 10:25:56
  */
 
 declare(strict_types = 1);
@@ -99,7 +99,7 @@ class Image
         }
 
         $dst = 'cache';
-        if (! empty($pathInfo['dirname'])) {
+        if (! empty($pathInfo['dirname']) && $pathInfo['dirname'] !== '.') {
             $dst .= '/' . $pathInfo['dirname'];
         }
 
