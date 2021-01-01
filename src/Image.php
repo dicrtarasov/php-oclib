@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 01.01.21 18:53:11
+ * @version 01.01.21 19:01:54
  */
 
 declare(strict_types = 1);
@@ -18,6 +18,21 @@ use yii\base\Exception;
 use yii\helpers\FileHelper;
 
 use function dirname;
+use function file_exists;
+use function filemtime;
+use function is_dir;
+use function is_file;
+use function is_readable;
+use function ltrim;
+use function mkdir;
+use function pathinfo;
+use function round;
+use function trim;
+
+use const DIR_IMAGE;
+use const HTTP_CATALOG;
+use const PATHINFO_EXTENSION;
+use const YII_ENV_DEV;
 
 /**
  * Class Image
@@ -94,18 +109,21 @@ class Image
     public static function dst(string $file, int $width, int $height): string
     {
         $pathInfo = pathinfo(ltrim($file, '/'));
-        if (empty($pathInfo['filename']) || empty($pathInfo['extension'])) {
+
+        $dirname = (string)($pathInfo['disname'] ?? '');
+        $filename = (string)($pathInfo['filename'] ?? '');
+        $extension = (string)($pathInfo['extension'] ?? '');
+
+        if ($filename === '' || $extension === '') {
             throw new InvalidArgumentException('file: ' . $file);
         }
 
         $dst = 'cache';
-        if (! empty($pathInfo['dirname']) && $pathInfo['dirname'] !== '.') {
-            $dst .= '/' . $pathInfo['dirname'];
+        if ($dirname !== '' && $dirname !== '.') {
+            $dst .= '/' . $dirname;
         }
 
-        $dst .= '/' . $pathInfo['filename'] . '-' . $width . 'x' . $height . '.' . $pathInfo['extension'];
-
-        return $dst;
+        return $dst . '/' . $filename . '-' . $width . 'x' . $height . '.' . $extension;
     }
 
     /**
