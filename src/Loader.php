@@ -1,9 +1,9 @@
 <?php
 /**
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 24.12.20 05:51:39
+ * @version 01.01.21 10:43:10
  */
 
 declare(strict_types = 1);
@@ -13,7 +13,9 @@ use yii\base\BaseObject;
 use yii\base\Exception;
 use yii\web\NotFoundHttpException;
 
+use function basename;
 use function is_file;
+use function preg_replace;
 use function str_replace;
 
 /**
@@ -37,7 +39,7 @@ class Loader extends BaseObject
      *
      * @return Registry
      */
-    private static function registry() : Registry
+    private static function registry(): Registry
     {
         return Registry::app();
     }
@@ -50,7 +52,7 @@ class Loader extends BaseObject
      * @return mixed
      * @throws NotFoundHttpException
      */
-    public function controller(string $route, array $args = [])
+    public function controller(string $route, ...$args)
     {
         // создаем акцию
         $action = new Action($route, $args);
@@ -67,7 +69,7 @@ class Loader extends BaseObject
      * @return Model модель
      * @throws Exception
      */
-    public function model(string $route, string $path = '') : Model
+    public function model(string $route, string $path = ''): Model
     {
         $key = 'model_' . str_replace('/', '_', $route);
 
@@ -98,7 +100,7 @@ class Loader extends BaseObject
      * @return string
      * @noinspection PhpMethodMayBeStaticInspection
      */
-    public function view(string $route, array $data = []) : string
+    public function view(string $route, array $data = []): string
     {
         return (string)new Template($route, $data);
     }
@@ -109,7 +111,7 @@ class Loader extends BaseObject
      * @param string $route
      * @throws Exception
      */
-    public function library(string $route) : void
+    public function library(string $route): void
     {
         // Sanitize the call
         $route = preg_replace('/[^a-zA-Z0-9_\/]/', '', $route);
@@ -132,7 +134,7 @@ class Loader extends BaseObject
      * @throws Exception
      * @noinspection PhpMethodMayBeStaticInspection
      */
-    public function helper(string $name) : void
+    public function helper(string $name): void
     {
         /** @noinspection PhpUndefinedConstantInspection */
         $file = DIR_SYSTEM . 'helper/' . str_replace('../', '', $name) . '.php';
@@ -149,7 +151,7 @@ class Loader extends BaseObject
      * @param $name
      * @return Config
      */
-    public function config($name) : Config
+    public function config($name): Config
     {
         /** @var Config $config */
         $config = static::registry()->get('config');
@@ -164,7 +166,7 @@ class Loader extends BaseObject
      * @param string $route
      * @return Language
      */
-    public function language(string $route) : Language
+    public function language(string $route): Language
     {
         /** @var Language $language */
         $language = static::registry()->get('language');

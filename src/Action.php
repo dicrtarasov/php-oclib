@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 01.01.21 10:20:51
+ * @version 01.01.21 10:43:03
  */
 
 declare(strict_types = 1);
@@ -15,6 +15,7 @@ use yii\base\BaseObject;
 use yii\web\NotFoundHttpException;
 
 use function array_pop;
+use function call_user_func_array;
 use function class_exists;
 use function constant;
 use function explode;
@@ -125,7 +126,7 @@ class Action extends BaseObject
         }
 
         // выполняем метод контроллера
-        return $controller->{$method}($this->args ?? []);
+        return call_user_func_array([$controller, $method], $this->args ?: []);
     }
 
     /**
