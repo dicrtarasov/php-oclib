@@ -1,9 +1,9 @@
 <?php
 /**
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 28.12.20 18:51:07
+ * @version 01.01.21 07:21:54
  */
 
 declare(strict_types = 1);
@@ -32,7 +32,7 @@ class Front extends BaseObject
     /**
      * @param Action $preAction
      */
-    public function addPreAction(Action $preAction) : void
+    public function addPreAction(Action $preAction): void
     {
         $this->preActions[] = $preAction;
     }
@@ -43,55 +43,55 @@ class Front extends BaseObject
      * @throws NotFoundHttpException
      * @throws Throwable
      */
-    public function dispatch(Action $action, ?Action $errorAction = null) : void
+    public function dispatch(Action $action, ?Action $errorAction = null): void
     {
         if ($errorAction === null) {
             $errorAction = $this->errorAction;
         }
 
-        Yii::$app->requestedRoute = $action->route;
-        Yii::$app->requestedParams = $action->args;
-
-        // результат выполнения акции
-        $res = null;
+        // результат работы по-умолчанию - акция по-умолчанию
+        $return = $action;
 
         try {
             // запускаем пред-акции
             foreach ($this->preActions as $preAction) {
-                $result = $preAction->execute();
+                Yii::$app->requestedRoute = $preAction->route;
+                Yii::$app->requestedParams = $preAction->args;
+                $res = $preAction->execute();
 
-                // если в результате получили акцию, то заменяем ей основную
-                if ($result instanceof Action) {
-                    $action = $result;
+                // если акция вернула какой-то результат, то останавливаем обработку и используем его
+                if ($res !== null) {
+                    $return = $res;
                     break;
                 }
             }
 
-            // пока возвращается акция
-            while ($action) {
-                $res = $action->execute();
-                $action = $res instanceof Action ? $res : null;
+            // пока в результате акция
+            while ($return instanceof Action) {
+                Yii::$app->requestedRoute = $return->route;
+                Yii::$app->requestedParams = $return->args;
+                $return = $return->execute();
             }
         } catch (NotFoundHttpException $ex) {
             if ($errorAction !== null) {
-                $res = $errorAction->execute();
+                $return = $errorAction->execute();
             } else {
                 throw new RuntimeException('Акция ошибки не найдена', 0, $ex);
             }
         }
 
         // если вернули строковой результат, то добавляем его в output
-        if ($res instanceof \yii\web\Response) {
-            Yii::$app->set('response', $res);
-        } elseif ($res instanceof Throwable) {
-            throw $res;
-        } elseif (is_scalar($res)) {
-            $res = (string)$res;
-            if ($res !== '') {
-                Yii::$app->response->content = $res;
+        if ($return instanceof \yii\web\Response) {
+            Yii::$app->set('response', $return);
+        } elseif ($return instanceof Throwable) {
+            throw $return;
+        } elseif (is_scalar($return)) {
+            $return = (string)$return;
+            if ($return !== '') {
+                Yii::$app->response->content = $return;
             }
-        } elseif ($res !== null && $res !== '') {
-            Yii::$app->response->data = $res;
+        } elseif ($return !== null) {
+            Yii::$app->response->data = $return;
         }
     }
 }

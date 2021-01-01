@@ -1,9 +1,9 @@
 <?php
 /**
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 24.12.20 05:51:39
+ * @version 01.01.21 06:30:22
  */
 
 declare(strict_types = 1);
@@ -54,7 +54,7 @@ class Action
     public function execute()
     {
         // проверяем маршрут
-        if (! preg_match('~^[a-z0-9_\-/]+$~u', $this->route)) {
+        if (! preg_match('~^[a-z0-9_\-/]+$~ui', $this->route)) {
             throw new NotFoundHttpException('invalid route=' . $this->route);
         }
 
@@ -83,7 +83,7 @@ class Action
         // строим класс
         $class = 'Controller';
         foreach ($controllerPath as $part) {
-            $class .= ucfirst(preg_replace('~[^a-z0-9]+~', '', $part));
+            $class .= ucfirst(preg_replace('~[^a-z0-9]+~ui', '', $part));
         }
 
         // проверяем наличие класса

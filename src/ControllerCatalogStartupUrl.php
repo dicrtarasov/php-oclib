@@ -1,22 +1,16 @@
 <?php
 /**
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.12.20 20:03:42
+ * @version 01.01.21 07:20:15
  */
 
 declare(strict_types = 1);
 
 namespace dicr\oclib;
 
-use Throwable;
 use Yii;
-use yii\helpers\ArrayHelper;
-use yii\web\UrlNormalizerRedirectException;
-
-use function is_array;
-use function ltrim;
 
 /**
  * Контроллер маршрутизации.
@@ -32,88 +26,43 @@ class ControllerCatalogStartupUrl extends Controller
      *
      * @return ?Action
      */
-    public function index() : ?Action
+    public function index(): ?Action
     {
-        $route = $this->resolveRoute();
+        // если маршрут задан непосредственно (/index.php?route=catalog/product)
+        $route = (string)(Registry::$app->request->get['route'] ?? '');
+        $params = [];
 
-        // очищаем параметры
+        if (empty($route)) {
+            // если задан стандартный rewrite opencart
+            if (! empty(Registry::$app->request->get['_route_'])) {
+                // восстанавливаем pathInfo, которое opencart преобразовал в route
+                Yii::$app->request->pathInfo = Registry::$app->request->get['_route_'];
+            }
+
+            // используем стандартный UrlManager
+            $result = Yii::$app->urlManager->parseRequest(Yii::$app->request);
+            if ($result !== false) {
+                [$route, $params] = $result;
+            }
+        }
+
+        // принимаем путь в качестве ЧПУ
+        if (empty($route)) {
+            $route = (string)Yii::$app->request->pathInfo;
+        }
+
+        // если имеются дополнительные параметры, то помещаем их в $_GET
+        if (! empty($params)) {
+            Registry::$app->request->get = array_merge(Registry::$app->request->get, $params);
+        }
+
+        // очищаем служебные параметры уже после объединения
         unset($this->request->get['route'], $this->request->get['_route_']);
 
-        // возвращаем действие
-        return $route === null ? null : new Action($route);
-    }
+        // передаем Yii новые параметры GET
+        Yii::$app->request->queryParams = Registry::$app->request->get;
 
-    /**
-     * Получение маршрута.
-     *
-     * @return ?string
-     */
-    protected function resolveRoute() : ?string
-    {
-        // поддержка ссылок с прямым указанием маршрута, пример: /index.php?route=catalog/product
-        if (! empty($this->request->get['route'])) {
-            return $this->request->get['route'];
-        }
-
-        // поддержка prettyUrl-маршрутов и ЧПУ, переадресованных через .htaccess, пример: /catalog/product
-        if (! empty($this->request->get['_route_'])) {
-            // восстанавливаем путь переадресации
-            Yii::$app->request->pathInfo = $this->request->get['_route_'];
-
-            /** @var array|false $result */
-            $result = false;
-
-            // пытаемся разрешить как ЧПУ
-            try {
-                $result = Yii::$app->urlManager->parseRequest(Yii::$app->request);
-            } /** @noinspection PhpRedundantCatchClauseInspection */
-            catch (UrlNormalizerRedirectException $ex) {
-                // переадресация от нормализатора Url
-                $url = $ex->url;
-
-                // сроим ссылку переадресации
-                if (is_array($url)) {
-                    if (isset($url[0])) {
-                        // ensure the route is absolute
-                        $url[0] = '/' . ltrim($url[0], '/');
-                    }
-
-                    if (! empty(Yii::$app->request->queryParams)) {
-                        $url .= '?' . \dicr\helper\Url::buildQuery(Yii::$app->request->queryParams);
-                    }
-                }
-
-                // делаем переадресацию
-                try {
-                    Yii::$app->end(0,
-                        Yii::$app->response->redirect($ex->scheme ?
-                            Yii::$app->urlManager->createAbsoluteUrl($url) :
-                            Yii::$app->urlManager->createUrl($url), $ex->statusCode
-                        )
-                    );
-                } catch (Throwable $ex) {
-                    Yii::error($ex, __METHOD__);
-                    exit;
-                }
-            }
-
-            // если ЧПУ решен
-            /** @noinspection OffsetOperationsInspection */
-            if (is_array($result) && ! empty($result[0])) {
-                // добавляем парамеры ЧПУ в параметры запроса
-                /** @noinspection OffsetOperationsInspection */
-                $this->request->get = ArrayHelper::merge($this->request->get, $result[1] ?? []);
-
-                // возвращаем полученный из ЧПУ маршрут
-
-                /** @noinspection OffsetOperationsInspection */
-                return $result[0];
-            }
-
-            // возвращаем путь как маршрут, например /catalog/product
-            return $this->request->get['_route_'];
-        }
-
-        return null;
+        // возвращаем новую акцию
+        return empty($route) ? null : new Action($route);
     }
 }

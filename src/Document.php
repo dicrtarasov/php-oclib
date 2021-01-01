@@ -1,9 +1,9 @@
 <?php
 /**
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license proprietary
- * @version 26.09.20 19:39:05
+ * @license MIT
+ * @version 01.01.21 05:45:59
  */
 
 declare(strict_types = 1);
@@ -44,6 +44,9 @@ class Document extends BaseObject
 
     /** @var ?string PG Page Url */
     private $_ogUrl;
+
+    /** @var string|array канонический адрес страницы */
+    public $canonical;
 
     /** @var array */
     private $_links = [];
