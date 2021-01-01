@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 01.01.21 07:21:54
+ * @version 01.01.21 10:18:26
  */
 
 declare(strict_types = 1);
@@ -55,8 +55,7 @@ class Front extends BaseObject
         try {
             // запускаем пред-акции
             foreach ($this->preActions as $preAction) {
-                Yii::$app->requestedRoute = $preAction->route;
-                Yii::$app->requestedParams = $preAction->args;
+                $preAction->populate = true;
                 $res = $preAction->execute();
 
                 // если акция вернула какой-то результат, то останавливаем обработку и используем его
@@ -68,12 +67,12 @@ class Front extends BaseObject
 
             // пока в результате акция
             while ($return instanceof Action) {
-                Yii::$app->requestedRoute = $return->route;
-                Yii::$app->requestedParams = $return->args;
+                $return->populate = true;
                 $return = $return->execute();
             }
         } catch (NotFoundHttpException $ex) {
             if ($errorAction !== null) {
+                $errorAction->populate = true;
                 $return = $errorAction->execute();
             } else {
                 throw new RuntimeException('Акция ошибки не найдена', 0, $ex);
