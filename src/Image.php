@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 02.01.21 06:31:57
+ * @version 02.01.21 12:52:37
  */
 
 declare(strict_types = 1);
@@ -169,7 +169,7 @@ class Image
      */
     public static function path(string $file): string
     {
-        return rtrim(static::dirImage(), '/') . '/' . $file;
+        return $file === '' ? '' : rtrim(static::dirImage(), '/') . '/' . $file;
     }
 
     /**
@@ -236,7 +236,7 @@ class Image
 
         // проверяем наличие исходного файла
         $srcPath = static::path($src);
-        if ($src === '' || ! is_file($srcPath) || ! is_readable($srcPath)) {
+        if ($srcPath === '' || ! is_file($srcPath) || ! is_readable($srcPath)) {
             if (empty($noImage)) {
                 return null;
             }
