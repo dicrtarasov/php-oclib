@@ -1,9 +1,9 @@
 <?php
 /**
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.12.20 20:03:42
+ * @version 02.01.21 22:03:33
  */
 
 declare(strict_types = 1);
@@ -31,6 +31,8 @@ class Session
     public function __construct()
     {
         $this->session = Instance::ensure($this->session, \yii\web\Session::class);
+
+        $this->session->open();
     }
 
     /**
@@ -38,7 +40,7 @@ class Session
      *
      * @return string ID сессии
      */
-    public function start() : string
+    public function start(): string
     {
         $this->session->open();
         $this->data = &$_SESSION;
@@ -51,7 +53,7 @@ class Session
      *
      * @return string
      */
-    public function getId() : string
+    public function getId(): string
     {
         return $this->session->id;
     }
@@ -59,7 +61,7 @@ class Session
     /**
      * Закрытие сессии.
      */
-    public function close() : void
+    public function close(): void
     {
         $this->session->close();
     }
@@ -67,7 +69,7 @@ class Session
     /**
      * Удаление сессии.
      */
-    public function destroy() : void
+    public function destroy(): void
     {
         $this->session->destroy();
     }

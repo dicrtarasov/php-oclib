@@ -1,9 +1,9 @@
 <?php
 /**
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.12.20 20:03:42
+ * @version 03.01.21 01:30:02
  */
 
 declare(strict_types = 1);
@@ -42,7 +42,7 @@ class Response
      * @param $header
      * @throws Exception
      */
-    public function addHeader($header) : void
+    public function addHeader($header): void
     {
         $matches = null;
         if (preg_match('~^\s*([^:]+)\s*:\s*(.+)\s*$~usm', $header, $matches)) {
@@ -57,7 +57,7 @@ class Response
     /**
      * Очищает выходной буфер.
      */
-    public static function cleanOutput() : void
+    public static function clean(): void
     {
         while (ob_get_level() > 0) {
             ob_end_clean();
@@ -70,11 +70,11 @@ class Response
      * @param array|string $url
      * @param int $status
      */
-    public function redirect($url, int $status = 303) : void
+    public function redirect($url, int $status = 303): void
     {
         $url = str_replace(['&amp;', "\n", "\r"], ['&', '', ''], $url);
 
-        static::cleanOutput();
+        self::clean();
 
         try {
             Yii::$app->end(0, $this->response->redirect($url, $status));
@@ -91,7 +91,7 @@ class Response
      * @param int $level
      * @noinspection PhpMethodMayBeStaticInspection
      */
-    public function setCompression(int $level) : void
+    public function setCompression(int $level): void
     {
         // noop
     }
@@ -101,7 +101,7 @@ class Response
      *
      * @return string
      */
-    public function getOutput() : string
+    public function getOutput(): string
     {
         return (string)$this->response->content;
     }
@@ -111,7 +111,7 @@ class Response
      *
      * @param mixed $output
      */
-    public function setOutput($output) : void
+    public function setOutput($output): void
     {
         $this->response->content = (string)$output;
     }
@@ -119,7 +119,7 @@ class Response
     /**
      * Отправка ответа.
      */
-    public function output() : void
+    public function output(): void
     {
         $this->response->send();
     }

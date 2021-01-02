@@ -1,9 +1,9 @@
 <?php
 /**
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.12.20 20:13:29
+ * @version 03.01.21 00:21:43
  */
 
 declare(strict_types = 1);
@@ -41,7 +41,7 @@ class Url extends \dicr\helper\Url
      * @param string $route
      * @param array|string $params
      */
-    public function redirectToCanonical(string $route, $params = []) : void
+    public function redirectToCanonical(string $route, $params = []): void
     {
         $params = static::normalizeQuery(static::filterQuery($params));
 
@@ -67,7 +67,7 @@ class Url extends \dicr\helper\Url
      * @return string
      * @noinspection PhpMethodMayBeStaticInspection
      */
-    public function link(string $route, $args = []) : string
+    public function link(string $route, $args = []): string
     {
         if (empty($args)) {
             $args = [];
@@ -88,7 +88,7 @@ class Url extends \dicr\helper\Url
      * @param array $params
      * @return array
      */
-    public static function filterParams(array $params) : array
+    public static function filterParams(array $params): array
     {
         $params = static::filterQuery($params);
 
@@ -107,7 +107,7 @@ class Url extends \dicr\helper\Url
      * @param string $route
      * @return string[]
      */
-    public static function parseRoute(string $route) : array
+    public static function parseRoute(string $route): array
     {
         if (empty($route)) {
             throw new InvalidArgumentException('route');
@@ -122,7 +122,7 @@ class Url extends \dicr\helper\Url
      * @param array $parts
      * @return string
      */
-    public static function buildRoute(array $parts) : string
+    public static function buildRoute(array $parts): string
     {
         if (empty($parts)) {
             throw new InvalidArgumentException('parts');

@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 01.01.21 07:20:15
+ * @version 02.01.21 21:54:13
  */
 
 declare(strict_types = 1);
@@ -44,11 +44,6 @@ class ControllerCatalogStartupUrl extends Controller
             if ($result !== false) {
                 [$route, $params] = $result;
             }
-        }
-
-        // принимаем путь в качестве ЧПУ
-        if (empty($route)) {
-            $route = (string)Yii::$app->request->pathInfo;
         }
 
         // если имеются дополнительные параметры, то помещаем их в $_GET
