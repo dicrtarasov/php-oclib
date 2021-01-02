@@ -1,8 +1,9 @@
 {
     "type": "library",
     "name": "dicr/php-oclib",
-    "license": "Apache-2.0",
+    "license": "MIT",
     "homepage": "https://gitlab.com/dicr/php-oclib",
+    "keywords": ["dicr", "opencart", "yii"],
     "description": "Библиотека для подключения классов Yii к OpenCart",
     "authors": [
         {
@@ -12,7 +13,6 @@
             "role": "developer"
         }
     ],
-    "keywords": ["dicr", "opencart", "yii"],
     "support": {
         "source": "https://gitlab.com/dicr/php-oclib.git"
     },

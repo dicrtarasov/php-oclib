@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 01.01.21 19:04:49
+ * @version 02.01.21 06:31:57
  */
 
 declare(strict_types = 1);
@@ -17,6 +17,7 @@ use Yii;
 use yii\base\Exception;
 use yii\helpers\FileHelper;
 
+use function constant;
 use function dirname;
 use function file_exists;
 use function filemtime;
@@ -27,10 +28,9 @@ use function ltrim;
 use function mkdir;
 use function pathinfo;
 use function round;
+use function rtrim;
 use function trim;
 
-use const DIR_IMAGE;
-use const HTTP_CATALOG;
 use const PATHINFO_EXTENSION;
 use const YII_ENV_DEV;
 
@@ -88,14 +88,49 @@ class Image
     }
 
     /**
-     * Возвращает полный путь исходного файла.
+     * Директория картинок.
      *
-     * @param string $file
      * @return string
      */
-    public static function path(string $file): string
+    protected static function dirImage(): string
     {
-        return DIR_IMAGE . $file;
+        static $dir;
+
+        if ($dir === null) {
+            /** @noinspection PhpUsageOfSilenceOperatorInspection */
+            $dir = @constant('DIR_IMAGE');
+            if (empty($dir)) {
+                Yii::warning('Не установлена константа DIR_IMAGE', __METHOD__);
+                $dir = $_SERVER['DOCUMENT_ROOT'] . '/image/';
+            }
+        }
+
+        return $dir;
+    }
+
+    /**
+     * Базовый путь каталога.
+     *
+     * @return string
+     */
+    protected static function urlCatalog(): string
+    {
+        static $url;
+
+        if ($url === null) {
+            /** @noinspection PhpUsageOfSilenceOperatorInspection */
+            $url = @constant('HTTP_CATALOG');
+            if (empty($url)) {
+                /** @noinspection PhpUsageOfSilenceOperatorInspection */
+                $url = @constant('HTTP_SERVER');
+                if (empty($url)) {
+                    Yii::warning('Не установлена константа HTTP_CATALOG или HTTP_SERVER', __METHOD__);
+                    $url = '/';
+                }
+            }
+        }
+
+        return $url;
     }
 
     /**
@@ -127,6 +162,17 @@ class Image
     }
 
     /**
+     * Возвращает полный путь исходного файла.
+     *
+     * @param string $file
+     * @return string
+     */
+    public static function path(string $file): string
+    {
+        return rtrim(static::dirImage(), '/') . '/' . $file;
+    }
+
+    /**
      * Возвращает URL файла.
      *
      * @param string $file относительное имя файла
@@ -134,7 +180,7 @@ class Image
      */
     public static function url(string $file): string
     {
-        return HTTP_CATALOG . 'image/' . ltrim($file, '/');
+        return rtrim(static::urlCatalog(), '/') . '/image/' . ltrim($file, '/');
     }
 
     /**
@@ -261,7 +307,7 @@ class Image
         }
 
         $dir = FileHelper::normalizePath($dir);
-        if (! YII_ENV_DEV && mb_strpos($dir, DIR_IMAGE) !== 0) {
+        if (! YII_ENV_DEV && mb_strpos($dir, static::dirImage()) !== 0) {
             throw new Exception('Некорректный путь директории: ' . $dir);
         }
 
