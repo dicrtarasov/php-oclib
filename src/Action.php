@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 01.01.21 10:43:03
+ * @version 02.01.21 12:23:31
  */
 
 declare(strict_types = 1);
@@ -105,12 +105,13 @@ class Action extends BaseObject
 
         // проверяем наличие класса
         if (! class_exists($class)) {
+            Yii::error('Класс "' . $class . '" не найден в файле: ' . $file, __METHOD__);
             throw new NotFoundHttpException('Controller class: ' . $class);
         }
 
         // пытаемся создать контроллер
         try {
-            $controller = new $class(Registry::app());
+            $controller = new $class(Registry::$app);
         } catch (Throwable $ex) {
             throw new NotFoundHttpException('Controller class: ' . $class, 0, $ex);
         }
