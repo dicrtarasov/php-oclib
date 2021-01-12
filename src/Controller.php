@@ -1,9 +1,9 @@
 <?php
 /**
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 28.12.20 21:18:51
+ * @version 12.01.21 17:20:49
  */
 
 declare(strict_types = 1);
@@ -60,11 +60,11 @@ abstract class Controller implements RegistryProps
     /**
      * Переадресация на URL.
      *
-     * @param string $url
+     * @param string|array $url
      * @param int $code
      * @return \yii\web\Response
      */
-    public function redirect(string $url, int $code = 303) : \yii\web\Response
+    public function redirect($url, int $code = 303): \yii\web\Response
     {
         return Yii::$app->response->redirect($url, $code);
     }

@@ -1,140 +1,167 @@
 <?php
 /**
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license proprietary
- * @version 27.09.20 19:55:16
+ * @license MIT
+ * @version 12.01.21 17:19:41
  */
 
 declare(strict_types = 1);
 namespace dicr\oclib;
 
+use dicr\validate\ValidateException;
 use Yii;
-use yii\base\InvalidConfigException;
+use yii\base\Exception;
 
 /**
  * Class Mail
  */
-class Mail
+class Mail extends \yii\base\Model
 {
     /** @var string|array */
-    protected $from;
+    public $from;
 
     /** @var ?string */
-    protected $sender;
+    public $sender;
 
     /** @var string|array */
-    protected $to;
-
-    /** @var string */
-    protected $reply_to;
-
-    /** @var string */
-    protected $subject;
+    public $to;
 
     /** @var ?string */
-    protected $text;
+    public $replyTo;
+
+    /** @var string */
+    public $subject;
 
     /** @var ?string */
-    protected $html;
+    public $text;
+
+    /** @var ?string */
+    public $html;
 
     /** @var string[] */
-    protected $attachments = [];
+    public $attachments = [];
 
     /**
-     * Mail constructor.
+     * @inheritDoc
      *
-     * @param array $config
+     * @return array
      */
-    public function __construct(array $config = [])
+    public function rules(): array
     {
-        foreach ($config as $key => $value) {
-            $this->{$key} = $value;
-        }
+        return [
+            [['from', 'to'], 'required'],
+
+            [['sender', 'replyTo'], 'trim'],
+            [['sender', 'replyTo'], 'default'],
+
+            ['subject', 'trim'],
+            ['subject', 'required'],
+
+            [['text', 'html'], 'trim'],
+            [['text', 'html'], 'default']
+        ];
     }
 
     /**
      * @param array|string $from
+     * @return $this
      */
-    public function setFrom($from) : void
+    public function setFrom($from): self
     {
         $this->from = $from;
+
+        return $this;
     }
 
     /**
      * @param string $sender
+     * @return $this
      */
-    public function setSender(string $sender) : void
+    public function setSender(string $sender): self
     {
         $this->sender = $sender;
+
+        return $this;
     }
 
     /**
      * @param string|array $to
+     * @return $this
      */
-    public function setTo($to) : void
+    public function setTo($to): self
     {
         $this->to = $to;
+
+        return $this;
     }
 
     /**
-     * @param string|array $reply_to
+     * @param string|array $replyTo
+     * @return $this
      */
-    public function setReplyTo($reply_to) : void
+    public function setReplyTo($replyTo): self
     {
-        $this->reply_to = $reply_to;
+        $this->replyTo = $replyTo;
+
+        return $this;
     }
 
     /**
      * @param string $subject
+     * @return $this
      */
-    public function setSubject(string $subject) : void
+    public function setSubject(string $subject): self
     {
         $this->subject = $subject;
+
+        return $this;
     }
 
     /**
      * @param string $text
+     * @return $this
      */
-    public function setText(string $text) : void
+    public function setText(string $text): self
     {
         $this->text = $text;
+
+        return $this;
     }
 
     /**
      * @param string $html
+     * @return $this
      */
-    public function setHtml(string $html) : void
+    public function setHtml(string $html): self
     {
         $this->html = $html;
+
+        return $this;
     }
 
     /**
      * @param string $filename
+     * @return $this
      */
-    public function addAttachment(string $filename) : void
+    public function addAttachment(string $filename): self
     {
         $this->attachments[] = $filename;
+
+        return $this;
     }
 
     /**
      * Отправка сообщения.
      *
+     * @param bool $throw при ошибке выдавать Exception вместо возврата false
      * @return bool
-     * @throws InvalidConfigException
+     * @throws Exception
      */
-    public function send() : bool
+    public function send(bool $throw = true): bool
     {
-        if ($this->from === null) {
-            throw new InvalidConfigException('from');
-        }
-
-        if ($this->to === null) {
-            throw new InvalidConfigException('to');
-        }
-
-        if ($this->subject === null) {
-            throw new InvalidConfigException('subject');
+        if (! $this->validate()) {
+            throw new ValidateException($this);
         }
 
         $message = Yii::$app->mailer->compose()
@@ -142,8 +169,8 @@ class Mail
             ->setTo($this->to)
             ->setSubject($this->subject);
 
-        if ($this->reply_to !== null) {
-            $message->setReplyTo($this->reply_to);
+        if ($this->replyTo !== null) {
+            $message->setReplyTo($this->replyTo);
         }
 
         if ($this->text !== null) {
@@ -154,6 +181,12 @@ class Mail
             $message->setHtmlBody($this->html);
         }
 
-        return $message->send();
+        $ret = $message->send();
+
+        if (! $ret && $throw) {
+            throw new Exception('Ошибка отправки сообщения: ' . $this->to);
+        }
+
+        return $ret;
     }
 }
