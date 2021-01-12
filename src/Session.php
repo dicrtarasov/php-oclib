@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 02.01.21 22:03:33
+ * @version 12.01.21 17:39:36
  */
 
 declare(strict_types = 1);
@@ -31,8 +31,7 @@ class Session
     public function __construct()
     {
         $this->session = Instance::ensure($this->session, \yii\web\Session::class);
-
-        $this->session->open();
+        $this->start();
     }
 
     /**
