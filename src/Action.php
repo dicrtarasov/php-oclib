@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 02.01.21 12:23:31
+ * @version 14.01.21 01:56:57
  */
 
 declare(strict_types = 1);
@@ -225,7 +225,9 @@ class Action extends BaseObject
     {
         Yii::$app->requestedRoute = $this->route;
         Yii::$app->requestedParams = $this->args;
+
         Yii::$app->controller = new \yii\web\Controller($this->controllerPath, Yii::$app);
-        Yii::$app->requestedAction = new \yii\base\Action($this->method, Yii::$app->controller);
+        Yii::$app->controller->action = new \yii\base\Action($this->method, Yii::$app->controller);
+        Yii::$app->requestedAction = Yii::$app->controller->action;
     }
 }
