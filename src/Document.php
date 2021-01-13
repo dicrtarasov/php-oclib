@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 01.01.21 05:45:59
+ * @version 13.01.21 21:17:11
  */
 
 declare(strict_types = 1);
@@ -12,8 +12,10 @@ namespace dicr\oclib;
 
 use dicr\helper\Html;
 use dicr\helper\StringHelper;
+use InvalidArgumentException;
 use Yii;
 use yii\base\BaseObject;
+use yii\data\Pagination;
 use yii\data\Sort;
 
 /**
@@ -24,9 +26,14 @@ use yii\data\Sort;
  * @property ?string $keywords
  * @property ?string $ogImage
  * @property ?string $ogUrl
+ * @property string|array|null $canonical
  * @property-read array $links
- * @property ?array $styles
  * @property-read array $scripts
+ * @property-read array $styles
+ * @property ?string $h1
+ * @property ?array $breadcrumbs
+ * @property Sort|false|null $sort
+ * @property Pagination|false|null $pager
  */
 class Document extends BaseObject
 {
@@ -40,13 +47,13 @@ class Document extends BaseObject
     private $_keywords;
 
     /** @var ?string OG Image Url */
-    private $_ogImage = '';
+    private $_ogImage;
 
     /** @var ?string PG Page Url */
     private $_ogUrl;
 
-    /** @var string|array канонический адрес страницы */
-    public $canonical;
+    /** @var string|array|null канонический адрес страницы */
+    private $_canonical;
 
     /** @var array */
     private $_links = [];
@@ -54,25 +61,31 @@ class Document extends BaseObject
     /** @var array */
     private $_scripts = [];
 
-    /** @var Sort|false */
-    public $sort;
+    /** @var ?string */
+    private $_h1;
 
-    /** @var \yii\data\Pagination|false */
-    public $pager;
+    /** @var ?array */
+    private $_breadcrumbs = [];
+
+    /** @var Sort|false|null */
+    private $_sort;
+
+    /** @var Pagination|false|null */
+    private $_pager;
 
     /**
      * @inheritDoc
      */
-    public function init() : void
+    public function init(): void
     {
         parent::init();
 
-        if (! isset($this->sort)) {
+        if ($this->_sort === null) {
             $this->sort = new Sort(['route' => Yii::$app->requestedRoute]);
         }
 
-        if (! isset($this->pager)) {
-            $this->pager = new \yii\data\Pagination(['route' => Yii::$app->requestedRoute]);
+        if ($this->pager === null) {
+            $this->pager = new Pagination(['route' => Yii::$app->requestedRoute]);
         }
     }
 
@@ -81,7 +94,7 @@ class Document extends BaseObject
      *
      * @return ?string
      */
-    public function getTitle() : ?string
+    public function getTitle(): ?string
     {
         return $this->_title;
     }
@@ -91,7 +104,7 @@ class Document extends BaseObject
      *
      * @param ?string $title
      */
-    public function setTitle(?string $title) : void
+    public function setTitle(?string $title): void
     {
         if ($title !== null) {
             $title = StringHelper::mb_ucfirst(Html::decode($title));
@@ -105,7 +118,7 @@ class Document extends BaseObject
      *
      * @return ?string
      */
-    public function getDescription() : ?string
+    public function getDescription(): ?string
     {
         return $this->_description;
     }
@@ -115,7 +128,7 @@ class Document extends BaseObject
      *
      * @param ?string $description
      */
-    public function setDescription(?string $description) : void
+    public function setDescription(?string $description): void
     {
         if ($description !== null) {
             $description = Html::decode($description);
@@ -129,7 +142,7 @@ class Document extends BaseObject
      *
      * @return ?string
      */
-    public function getKeywords() : ?string
+    public function getKeywords(): ?string
     {
         return $this->_keywords;
     }
@@ -139,7 +152,7 @@ class Document extends BaseObject
      *
      * @param ?string $keywords
      */
-    public function setKeywords(?string $keywords) : void
+    public function setKeywords(?string $keywords): void
     {
         if ($keywords !== null) {
             $keywords = Html::decode($keywords);
@@ -149,35 +162,11 @@ class Document extends BaseObject
     }
 
     /**
-     * Возвращает OG Url.
-     *
-     * @return ?string
-     */
-    public function getOgUrl() : ?string
-    {
-        return $this->_ogUrl;
-    }
-
-    /**
-     * Устанавливает OG Url
-     *
-     * @param ?string $ogUrl
-     */
-    public function setOgUrl(?string $ogUrl) : void
-    {
-        if ($ogUrl !== null) {
-            $ogUrl = Html::decode($ogUrl);
-        }
-
-        $this->_ogUrl = $ogUrl;
-    }
-
-    /**
      * Возвращает OG Image.
      *
      * @return ?string
      */
-    public function getOgImage() : ?string
+    public function getOgImage(): ?string
     {
         return $this->_ogImage;
     }
@@ -187,7 +176,7 @@ class Document extends BaseObject
      *
      * @param ?string $image
      */
-    public function setOgImage(?string $image) : void
+    public function setOgImage(?string $image): void
     {
         if ($image !== null) {
             $image = Html::decode($image);
@@ -197,16 +186,60 @@ class Document extends BaseObject
     }
 
     /**
+     * Возвращает OG Url.
+     *
+     * @return ?string
+     */
+    public function getOgUrl(): string
+    {
+        return $this->_ogUrl;
+    }
+
+    /**
+     * Устанавливает OG Url
+     *
+     * @param ?string $ogUrl
+     */
+    public function setOgUrl(?string $ogUrl): void
+    {
+        if ($ogUrl !== null) {
+            $ogUrl = Html::decode($ogUrl);
+        }
+
+        $this->_ogUrl = $ogUrl;
+    }
+
+    /**
+     * Канонический адрес страницы.
+     *
+     * @return array|string|null
+     */
+    public function getCanonical()
+    {
+        return $this->_canonical;
+    }
+
+    /**
+     * Устанавливает канонический адрес страницы.
+     *
+     * @param string|array|null $canonical
+     */
+    public function setCanonical($canonical): void
+    {
+        $this->_canonical = $canonical;
+    }
+
+    /**
      * Добавляет ссылку link.
      *
      * @param string $href
      * @param string $rel
      */
-    public function addLink(string $href, string $rel) : void
+    public function addLink(string $href, string $rel = 'stylesheet'): void
     {
         $this->_links[$href] = [
-            'href' => $href,
-            'rel' => $rel
+            'rel' => $rel,
+            'href' => $href
         ];
     }
 
@@ -215,9 +248,9 @@ class Document extends BaseObject
      *
      * @return array
      */
-    public function getLinks() : array
+    public function getLinks(): array
     {
-        return $this->_links;
+        return array_values($this->_links ?: []);
     }
 
     /**
@@ -227,7 +260,7 @@ class Document extends BaseObject
      * @param string $rel
      * @param string $media
      */
-    public function addStyle(string $href, string $rel = 'stylesheet', string $media = 'screen') : void
+    public function addStyle(string $href, string $rel = 'stylesheet', string $media = 'screen'): void
     {
         $this->_links[$href] = [
             'href' => $href,
@@ -237,13 +270,13 @@ class Document extends BaseObject
     }
 
     /**
-     * Возвращает пустой массив, так как стили хранятся в links.
+     * Возвращает пустой массив, так как стили уже возвращены в links.
      *
      * @return array
      * @deprecated используйте getLinks()
      * @noinspection PhpMethodMayBeStaticInspection
      */
-    public function getStyles() : array
+    public function getStyles(): array
     {
         return [];
     }
@@ -254,7 +287,7 @@ class Document extends BaseObject
      * @param string $href
      * @param string $position
      */
-    public function addScript(string $href, string $position = 'header') : void
+    public function addScript(string $href, string $position = 'header'): void
     {
         $this->_scripts[$href] = $position;
     }
@@ -262,15 +295,107 @@ class Document extends BaseObject
     /**
      * Возвращает скрипты.
      *
-     * @param string $position
+     * @param ?string $position
      * @return array
      */
-    public function getScripts(string $position = 'header') : array
+    public function getScripts(?string $position = null): array
     {
         if (empty($position)) {
             return $this->_scripts;
         }
 
-        return array_values($this->_scripts[$position] ?? []);
+        return array_filter($this->_scripts, static fn(string $pos) => $pos === $position);
+    }
+
+    /**
+     * H1 страницы.
+     *
+     * @return string|null
+     */
+    public function getH1(): ?string
+    {
+        return $this->_h1;
+    }
+
+    /**
+     * Возвращает H1.
+     *
+     * @param string|null $h1
+     */
+    public function setH1(?string $h1): void
+    {
+        if ($h1 !== null) {
+            $h1 = Html::decode($h1);
+        }
+
+        $this->_h1 = $h1;
+    }
+
+    /**
+     * Возвращает breadcrumbs.
+     *
+     * @return array|null
+     */
+    public function getBreadcrumbs(): ?array
+    {
+        return $this->_breadcrumbs;
+    }
+
+    /**
+     * Хлебные крошки.
+     *
+     * @param array|null $breadcrumbs
+     */
+    public function setBreadcrumbs(?array $breadcrumbs): void
+    {
+        $this->_breadcrumbs = $breadcrumbs;
+    }
+
+    /**
+     * Сортировка.
+     *
+     * @return false|Sort|null
+     */
+    public function getSort()
+    {
+        return $this->_sort;
+    }
+
+    /**
+     * Установить сортировку.
+     *
+     * @param Sort|false|null $sort
+     */
+    public function setSort($sort): void
+    {
+        if ($sort !== null || $sort !== false || ! $sort instanceof Sort) {
+            throw new InvalidArgumentException('sort');
+        }
+
+        $this->_sort = $sort;
+    }
+
+    /**
+     * Пагинация.
+     *
+     * @return Pagination|false|null
+     */
+    public function getPager()
+    {
+        return $this->_pager;
+    }
+
+    /**
+     * Устанавливает пейджер.
+     *
+     * @param Pagination|false|null $pager
+     */
+    public function setPager($pager): void
+    {
+        if ($pager !== null && $pager !== false && ! $pager instanceof Pagination) {
+            throw new InvalidArgumentException('pager');
+        }
+
+        $this->_pager = $pager;
     }
 }

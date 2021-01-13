@@ -1,9 +1,9 @@
 <?php
 /**
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 28.12.20 19:26:18
+ * @version 13.01.21 21:17:12
  */
 
 declare(strict_types = 1);
@@ -67,9 +67,10 @@ class Event
     public function trigger(string $key, $args = null) : void
     {
         if (isset($this->data[$key])) {
-            usort($this->data[$key], static function (array $a, array $b) : int {
-                return $a['priority'] <=> $b['priority'];
-            });
+            usort(
+                $this->data[$key],
+                static fn(array $a, array $b): int => $a['priority'] <=> $b['priority']
+            );
 
             foreach ($this->data[$key] as $event) {
                 /** @var Action $action */
