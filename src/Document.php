@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 13.01.21 21:17:11
+ * @version 13.01.21 21:24:09
  */
 
 declare(strict_types = 1);
@@ -368,7 +368,7 @@ class Document extends BaseObject
      */
     public function setSort($sort): void
     {
-        if ($sort !== null || $sort !== false || ! $sort instanceof Sort) {
+        if ($sort !== null && $sort !== false && ! $sort instanceof Sort) {
             throw new InvalidArgumentException('sort');
         }
 
