@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 15.01.21 21:10:55
+ * @version 15.01.21 21:18:53
  */
 
 declare(strict_types = 1);
@@ -54,7 +54,8 @@ class Breadcrumbs extends Widget
         // обрабатываем ссылки
         $this->links = array_filter(
             array_map(fn($link): array => $this->parseLink($link), $this->links ?: []),
-            static fn($link): bool => ! empty($link)
+            // пропускаем Главная
+            static fn(array $link): bool => $link['label'] !== 'Главная' && $link['url'] !== '/'
         );
 
         Html::addCssClass($this->options, 'widget-breadcrumbs');
@@ -91,7 +92,7 @@ class Breadcrumbs extends Widget
      * @return array
      * @throws InvalidConfigException
      */
-    protected function parseLink($link): ?array
+    protected function parseLink($link): array
     {
         if (empty($link)) {
             throw new InvalidConfigException('link');
@@ -115,10 +116,6 @@ class Breadcrumbs extends Widget
 
         if ((string)$link['label'] === '') {
             throw new InvalidConfigException('Пустой текст ссылки');
-        }
-
-        if ($link['label'] === 'Главная' || $link['url'] === '/') {
-            return null;
         }
 
         return $link;
