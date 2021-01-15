@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 15.01.21 20:22:49
+ * @version 15.01.21 20:38:58
  */
 
 declare(strict_types = 1);
@@ -28,7 +28,10 @@ class Breadcrumbs extends Widget
     public $encodeLabels = true;
 
     /** @var array|string|null домашняя ссылка */
-    public $homeLink;
+    public $homeLink = [
+        'label' => 'Главная',
+        'url' => '/'
+    ];
 
     /** @var array ссылки [label|text, url|href, encode|null] */
     public $links = [];
