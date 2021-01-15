@@ -1,9 +1,9 @@
 <?php
 /**
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 24.12.20 05:51:39
+ * @version 15.01.21 22:31:17
  */
 
 declare(strict_types = 1);
@@ -14,9 +14,15 @@ use yii\base\InvalidArgumentException;
 use yii\base\InvalidConfigException;
 use yii\data\DataProviderInterface;
 
+use function abs;
+use function ceil;
+use function floor;
+use function html_entity_decode;
 use function is_array;
 use function ob_get_clean;
 use function ob_start;
+use function rtrim;
+use function str_replace;
 
 use const ENT_QUOTES;
 
@@ -92,7 +98,7 @@ class Pagination extends Widget
      *
      * @throws InvalidConfigException
      */
-    public function init() : void
+    public function init(): void
     {
         parent::init();
 
@@ -143,7 +149,7 @@ class Pagination extends Widget
      *
      * @throws InvalidConfigException
      */
-    public function run() : string
+    public function run(): string
     {
         if (empty($this->url)) {
             throw new InvalidConfigException('url');
@@ -218,7 +224,7 @@ class Pagination extends Widget
      *
      * @throws InvalidConfigException
      */
-    protected function validate() : void
+    protected function validate(): void
     {
         $this->page = (int)$this->page;
         if ($this->page < 0) {
@@ -264,7 +270,7 @@ class Pagination extends Widget
      *
      * @return int
      */
-    public function getNumPages() : int
+    public function getNumPages(): int
     {
         return $this->limit > 0 ? (int)ceil($this->total / $this->limit) : 0;
     }
@@ -275,7 +281,7 @@ class Pagination extends Widget
      * @param ?int $page номер страницы. Если пустая, то текущая.
      * @return string
      */
-    public function getUrl(?int $page = null) : string
+    public function getUrl(?int $page = null): string
     {
         if ($page === null) {
             $page = $this->page;
@@ -293,8 +299,9 @@ class Pagination extends Widget
      *
      * @return string
      * @throws InvalidConfigException
+     * @noinspection PhpDocSignatureInspection
      */
-    public function render() : string
+    public function render($view = null, $params = null): string
     {
         return $this->run();
     }
