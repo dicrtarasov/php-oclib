@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 15.01.21 21:18:53
+ * @version 15.01.21 21:26:30
  */
 
 declare(strict_types = 1);
@@ -100,7 +100,7 @@ class Breadcrumbs extends Widget
 
         if (is_scalar($link)) {
             $link = [
-                'label' => $link
+                'label' => $link,
             ];
         }
 
@@ -110,7 +110,7 @@ class Breadcrumbs extends Widget
 
         $link = [
             'label' => $link['label'] ?? $link['text'] ?? null,
-            'url' => $link['url'] ?? $link['href'] ?? null,
+            'url' => $link['url'] ?? $link['href'] ?? '',
             'encode' => $link['encode'] ?? null
         ];
 
@@ -196,7 +196,7 @@ class Breadcrumbs extends Widget
                 '@type' => 'ListItem',
                 'position' => count($json['itemListElement']) + 1,
                 'item' => [
-                    '@id' => Url::to($link['url'], true),
+                    '@id' => Url::to($link['url'] ?? '', true),
                     'name' => Html::toText($link['label'])
                 ]
             ];
