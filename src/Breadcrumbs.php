@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 15.01.21 21:26:30
+ * @version 15.01.21 21:37:45
  */
 
 declare(strict_types = 1);
@@ -110,7 +110,7 @@ class Breadcrumbs extends Widget
 
         $link = [
             'label' => $link['label'] ?? $link['text'] ?? null,
-            'url' => $link['url'] ?? $link['href'] ?? '',
+            'url' => $link['url'] ?? $link['href'] ?? null,
             'encode' => $link['encode'] ?? null
         ];
 
