@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 03.01.21 01:28:31
+ * @version 18.01.21 06:17:43
  */
 
 declare(strict_types = 1);
@@ -228,7 +228,7 @@ class Image
         // водяной знак
         $watermark = $options['watermark'] ?? null;
         if ($watermark === null || $watermark === true) {
-            $watermark = self::watermarkDefault();
+            $watermark = static::watermarkDefault();
         }
 
         /** @var bool $isNoImage */
@@ -261,7 +261,7 @@ class Image
         $dstPath = static::path($dst);
 
         if (is_file($dstPath) && filemtime($dstPath) >= filemtime($srcPath)) {
-            return self::url($dst);
+            return static::url($dst);
         }
 
         // создаем директорию назначения
@@ -290,7 +290,7 @@ class Image
         }
 
         // возвращаем URL
-        return self::url($dst);
+        return static::url($dst);
     }
 
     /**
@@ -358,7 +358,7 @@ class Image
 
         $fill = $options['fill'] ?? null;
         if ($fill === true) {
-            $fill = self::fillDefault();
+            $fill = static::fillDefault();
         }
 
         $image->setOption('filter:support', '2.0');

@@ -4,14 +4,14 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fc83e80fd2a29c679fd7bee9a76c6c83",
+    "content-hash": "6576eea35762be31660b2f5bcfb5f8b6",
     "packages": [
         {
             "name": "bower-asset/inputmask",
             "version": "3.3.11",
             "source": {
                 "type": "git",
-                "url": "https://github.com/RobinHerbots/Inputmask.git",
+                "url": "git@github.com:RobinHerbots/Inputmask.git",
                 "reference": "5e670ad62f50c738388d4dcec78d2888505ad77b"
             },
             "dist": {
@@ -50,7 +50,7 @@
             "version": "v1.3.2",
             "source": {
                 "type": "git",
-                "url": "git@github.com:bestiejs/punycode.js.git",
+                "url": "https://github.com/bestiejs/punycode.js.git",
                 "reference": "38c8d3131a82567bfef18da09f7f4db68c84f8a3"
             },
             "dist": {
@@ -147,11 +147,11 @@
         },
         {
             "name": "dicr/yii2-helper",
-            "version": "4.0.13",
+            "version": "4.0.13.1",
             "source": {
                 "type": "git",
                 "url": "https://gitlab.com/dicr/yii2-helper.git",
-                "reference": "099ff402b2095de910a3bf4bf9a4e74e23efb7d2"
+                "reference": "5dc7e5f11b1f6abc0c6ec6204b782cd234483f44"
             },
             "require": {
                 "ext-intl": "*",
@@ -199,22 +199,22 @@
             "support": {
                 "source": "https://gitlab.com/dicr/yii2-helper.git"
             },
-            "time": "2020-12-26T02:30:40+00:00"
+            "time": "2021-01-05T14:27:36+00:00"
         },
         {
             "name": "dicr/yii2-validate",
-            "version": "2.3.1",
+            "version": "2.3.2",
             "source": {
                 "type": "git",
                 "url": "https://gitlab.com/dicr/yii2-validate.git",
-                "reference": "a46e747947ad2d59b0903a14cdee0ef180f393a1"
+                "reference": "8d8243d60f2d31891b09365bc55803c2de67966c"
             },
             "require": {
-                "php": "~7.3",
+                "php": "~7.4",
                 "yiisoft/yii2": "~2.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "~9.4"
+                "phpunit/phpunit": "~9.5"
             },
             "type": "yii2-extension",
             "autoload": {
@@ -248,7 +248,7 @@
             "support": {
                 "source": "https://gitlab.com/dicr/yii2-validate.git"
             },
-            "time": "2020-12-03T15:18:18+00:00"
+            "time": "2021-01-16T01:33:15+00:00"
         },
         {
             "name": "ezyang/htmlpurifier",
@@ -621,7 +621,7 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": "~7.3",
+        "php": "~7.4",
         "ext-imagick": "*",
         "ext-json": "*",
         "ext-mbstring": "*",
