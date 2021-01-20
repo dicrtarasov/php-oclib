@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 15.01.21 21:37:45
+ * @version 21.01.21 04:07:44
  */
 
 declare(strict_types = 1);
@@ -12,6 +12,8 @@ namespace dicr\oclib;
 
 use yii\base\InvalidConfigException;
 
+use function array_filter;
+use function array_map;
 use function array_shift;
 use function count;
 use function is_array;
@@ -52,11 +54,16 @@ class Breadcrumbs extends Widget
         }
 
         // обрабатываем ссылки
-        $this->links = array_filter(
-            array_map(fn($link): array => $this->parseLink($link), $this->links ?: []),
-            // пропускаем Главная
-            static fn(array $link): bool => $link['label'] !== 'Главная' && $link['url'] !== '/'
-        );
+        $this->links = array_map(fn($link): array => $this->parseLink($link), $this->links ?: []);
+
+        // удаляем ссылку на главную страницу
+        if ($this->homeLink !== null) {
+            $this->links = array_filter(
+                $this->links,
+                static fn(array $link): bool => $link['label'] !== 'Главная' && $link['url'] !== '/' &&
+                    $link['url'] !== Registry::$app->url->link('common/home')
+            );
+        }
 
         Html::addCssClass($this->options, 'widget-breadcrumbs');
     }
