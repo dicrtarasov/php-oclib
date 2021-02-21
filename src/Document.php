@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 13.01.21 21:24:09
+ * @version 21.02.21 10:10:22
  */
 
 declare(strict_types = 1);
@@ -17,6 +17,10 @@ use Yii;
 use yii\base\BaseObject;
 use yii\data\Pagination;
 use yii\data\Sort;
+
+use function array_filter;
+use function array_keys;
+use function array_values;
 
 /**
  * Страница сайта.
@@ -301,10 +305,13 @@ class Document extends BaseObject
     public function getScripts(?string $position = null): array
     {
         if (empty($position)) {
-            return $this->_scripts;
+            return array_keys($this->_scripts);
         }
 
-        return array_filter($this->_scripts, static fn(string $pos) => $pos === $position);
+        return array_keys(array_filter(
+            $this->_scripts,
+            static fn(string $pos) => $pos === $position
+        ));
     }
 
     /**
