@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 18.01.21 06:17:43
+ * @version 21.02.21 10:04:28
  */
 
 declare(strict_types = 1);
@@ -14,7 +14,9 @@ use ImagickException;
 use ImagickPixel;
 use InvalidArgumentException;
 use Yii;
+use yii\base\Component;
 use yii\base\Exception;
+use yii\base\InvalidConfigException;
 use yii\helpers\FileHelper;
 
 use function constant;
@@ -35,9 +37,9 @@ use const PATHINFO_EXTENSION;
 use const YII_ENV_DEV;
 
 /**
- * Class Image
+ * Компонент для создания превью картинок (настраивается через config Yii)
  */
-class Image
+class Image extends Component
 {
     /** @var string */
     public const EXT_SVG = 'svg';
@@ -54,37 +56,30 @@ class Image
     /** @var string формат масштабированных файлов */
     public const FORMAT = 'jpg';
 
+    /** @var ?string картинка no-image по-умолчанию */
+    public $noImage = 'no_image.png';
+
+    /** @var string заполнение по-умолчанию */
+    public $fill = self::FILL_WHITE;
+
+    /** @var ?string картинка водяного знака по-умолчанию */
+    public $watermark;
+
     /** @var float качество сжатия файлов */
-    public const QUALITY = 0.95;
+    public $quality = 0.95;
 
     /**
-     * Возвращает путь файла noimage (относительно DIR_IMAGE)
+     * @inheritDoc
      *
-     * @return string
+     * @throws InvalidConfigException
      */
-    public static function noImageDefault(): string
+    public function init(): void
     {
-        return 'no_image.png';
-    }
+        parent::init();
 
-    /**
-     * Заполнение по-умолчанию
-     *
-     * @return string|null
-     */
-    public static function fillDefault(): ?string
-    {
-        return self::FILL_WHITE;
-    }
-
-    /**
-     * Путь картинки водяного знака.
-     *
-     * @return ?string
-     */
-    public static function watermarkDefault(): ?string
-    {
-        return null;
+        if ($this->quality <= 0 || $this->quality > 1) {
+            throw new InvalidConfigException('quality');
+        }
     }
 
     /**
@@ -153,7 +148,7 @@ class Image
             throw new InvalidArgumentException('file: ' . $file);
         }
 
-        $dst = 'cache';
+        $dst = self::DIR_CACHE;
         if ($dirname !== '' && $dirname !== '.') {
             $dst .= '/' . $dirname;
         }
@@ -196,7 +191,7 @@ class Image
      * @return string|null относительный URL превью
      * @throws Exception
      */
-    public static function thumb(?string $src, $width = 0, $height = 0, array $options = []): ?string
+    public function thumb(?string $src, $width = 0, $height = 0, array $options = []): ?string
     {
         // корректируем файл
         $src = trim((string)$src, '/');
@@ -216,19 +211,19 @@ class Image
         // noimage
         $noImage = $options['noimage'] ?? null;
         if ($noImage === null || $noImage === true) {
-            $noImage = static::noImageDefault();
+            $noImage = $this->noImage;
         }
 
         // заполнение (false или цвет, например "fff")
         $fill = $options['fill'] ?? null;
         if ($fill === null || $fill === true) {
-            $fill = static::fillDefault();
+            $fill = $this->fill;
         }
 
         // водяной знак
         $watermark = $options['watermark'] ?? null;
         if ($watermark === null || $watermark === true) {
-            $watermark = static::watermarkDefault();
+            $watermark = $this->watermark;
         }
 
         /** @var bool $isNoImage */
@@ -273,7 +268,7 @@ class Image
 
             // изменяем размер
             if ($width !== 0 || $height !== 0) {
-                $image = static::resizeImage($image, (int)$width, (int)$height, [
+                $image = $this->resizeImage($image, (int)$width, (int)$height, [
                     'fill' => $fill
                 ]);
             }
@@ -284,7 +279,7 @@ class Image
             }
 
             // сохраняем
-            static::saveImage($image, $dstPath);
+            $this->saveImage($image, $dstPath);
         } catch (ImagickException $ex) {
             throw new Exception('Ошибка обработки картинки', 0, $ex);
         }
@@ -347,7 +342,7 @@ class Image
      * @param array $options
      * @return Imagick
      */
-    protected static function resizeImage(Imagick $image, int $width, int $height, array $options = []): Imagick
+    protected function resizeImage(Imagick $image, int $width, int $height, array $options = []): Imagick
     {
         // проверяем текущие размеры
         $w = $image->getImageWidth();
@@ -358,7 +353,7 @@ class Image
 
         $fill = $options['fill'] ?? null;
         if ($fill === true) {
-            $fill = static::fillDefault();
+            $fill = $this->fill;
         }
 
         $image->setOption('filter:support', '2.0');
@@ -428,7 +423,7 @@ class Image
      * @param string $path полный путь назначения
      * @throws Exception
      */
-    protected static function saveImage(Imagick $image, string $path): void
+    protected function saveImage(Imagick $image, string $path): void
     {
         // формат
         if ($image->setImageFormat(self::FORMAT) === false) {
@@ -438,8 +433,8 @@ class Image
         $image->setImageCompression(Imagick::COMPRESSION_JPEG);
 
         // сжатие
-        if ($image->setImageCompressionQuality((int)round(self::QUALITY * 100)) === false) {
-            throw new Exception('Ошибка установки качества изображения: ' . self::QUALITY);
+        if ($image->setImageCompressionQuality((int)round($this->quality * 100)) === false) {
+            throw new Exception('Ошибка установки качества изображения: ' . $this->quality);
         }
 
         // очищаем лишнюю информацию

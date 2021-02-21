@@ -23,7 +23,7 @@
     },
     "minimum-stability": "stable",
     "require": {
-        "php": "~7.4",
+        "php": "~7.4 || ~8.0.1",
         "ext-imagick": "*",
         "ext-json": "*",
         "ext-mbstring": "*",
@@ -32,7 +32,7 @@
 
         "yiisoft/yii2": "~2.0",
 
-        "dicr/yii2-helper": "~4.0",
+        "dicr/yii2-helper": "~4.1",
         "dicr/yii2-validate": "~2.3"
     },
     "repositories": [

@@ -3,12 +3,13 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 01.01.21 09:18:34
+ * @version 21.02.21 10:07:21
  */
 
 declare(strict_types = 1);
 namespace dicr\oclib;
 
+use Yii;
 use yii\base\Exception;
 
 /**
@@ -22,10 +23,12 @@ class ModelToolImage extends Model
      * @param float|string $height
      * @return ?string
      * @throws Exception
-     * @noinspection PhpMethodMayBeStaticInspection
      */
     public function resize(?string $filename, $width = 0, $height = 0): ?string
     {
-        return Image::thumb($filename, $width, $height);
+        /** @var Image $image */
+        $image = Yii::$app->get('image');
+
+        return $image->thumb($filename, $width, $height);
     }
 }
