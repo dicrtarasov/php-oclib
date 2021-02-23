@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 21.02.21 10:10:22
+ * @version 23.02.21 13:34:00
  */
 
 declare(strict_types = 1);
@@ -25,17 +25,17 @@ use function array_values;
 /**
  * Страница сайта.
  *
- * @property ?string $title
- * @property ?string $description
- * @property ?string $keywords
- * @property ?string $ogImage
- * @property ?string $ogUrl
+ * @property string $title title страницы
+ * @property string $description meta description
+ * @property string $keywords meta keywords
+ * @property string $image ogImage
  * @property string|array|null $canonical
  * @property-read array $links
  * @property-read array $scripts
  * @property-read array $styles
- * @property ?string $h1
- * @property ?array $breadcrumbs
+ * @property string $h1
+ * @property array $breadcrumbs
+ * @property string $robots meta robots
  * @property Sort|false|null $sort
  * @property Pagination|false|null $pager
  */
@@ -51,25 +51,25 @@ class Document extends BaseObject
     private $_keywords;
 
     /** @var ?string OG Image Url */
-    private $_ogImage;
-
-    /** @var ?string PG Page Url */
-    private $_ogUrl;
+    private $_image;
 
     /** @var string|array|null канонический адрес страницы */
     private $_canonical;
 
-    /** @var array */
-    private $_links = [];
+    /** @var ?array */
+    private $_links;
 
-    /** @var array */
-    private $_scripts = [];
+    /** @var ?array */
+    private $_scripts;
 
     /** @var ?string */
     private $_h1;
 
     /** @var ?array */
-    private $_breadcrumbs = [];
+    private $_breadcrumbs;
+
+    /** @var ?string meta robots */
+    private $_robots;
 
     /** @var Sort|false|null */
     private $_sort;
@@ -91,16 +91,20 @@ class Document extends BaseObject
         if ($this->pager === null) {
             $this->pager = new Pagination(['route' => Yii::$app->requestedRoute]);
         }
+
+        if ($this->canonical === null) {
+            $this->canonical = [Yii::$app->controller->route] + Yii::$app->request->get();
+        }
     }
 
     /**
      * Возвращает заголовок.
      *
-     * @return ?string
+     * @return string
      */
-    public function getTitle(): ?string
+    public function getTitle(): string
     {
-        return $this->_title;
+        return (string)$this->_title;
     }
 
     /**
@@ -110,7 +114,8 @@ class Document extends BaseObject
      */
     public function setTitle(?string $title): void
     {
-        if ($title !== null) {
+        $title = (string)$title;
+        if ($title !== '') {
             $title = StringHelper::mb_ucfirst(Html::decode($title));
         }
 
@@ -120,11 +125,11 @@ class Document extends BaseObject
     /**
      * Возвращает meta description.
      *
-     * @return ?string
+     * @return string
      */
-    public function getDescription(): ?string
+    public function getDescription(): string
     {
-        return $this->_description;
+        return (string)$this->_description;
     }
 
     /**
@@ -134,7 +139,8 @@ class Document extends BaseObject
      */
     public function setDescription(?string $description): void
     {
-        if ($description !== null) {
+        $description = (string)$description;
+        if ($description !== '') {
             $description = Html::decode($description);
         }
 
@@ -144,11 +150,11 @@ class Document extends BaseObject
     /**
      * Возвращает meta keywords.
      *
-     * @return ?string
+     * @return string
      */
-    public function getKeywords(): ?string
+    public function getKeywords(): string
     {
-        return $this->_keywords;
+        return (string)$this->_keywords;
     }
 
     /**
@@ -158,7 +164,8 @@ class Document extends BaseObject
      */
     public function setKeywords(?string $keywords): void
     {
-        if ($keywords !== null) {
+        $keywords = (string)$keywords;
+        if ($keywords !== '') {
             $keywords = Html::decode($keywords);
         }
 
@@ -168,11 +175,11 @@ class Document extends BaseObject
     /**
      * Возвращает OG Image.
      *
-     * @return ?string
+     * @return string
      */
-    public function getOgImage(): ?string
+    public function getImage(): string
     {
-        return $this->_ogImage;
+        return (string)$this->_image;
     }
 
     /**
@@ -180,37 +187,14 @@ class Document extends BaseObject
      *
      * @param ?string $image
      */
-    public function setOgImage(?string $image): void
+    public function setImage(?string $image): void
     {
-        if ($image !== null) {
+        $image = (string)$image;
+        if ($image !== '') {
             $image = Html::decode($image);
         }
 
-        $this->_ogImage = $image;
-    }
-
-    /**
-     * Возвращает OG Url.
-     *
-     * @return ?string
-     */
-    public function getOgUrl(): string
-    {
-        return $this->_ogUrl;
-    }
-
-    /**
-     * Устанавливает OG Url
-     *
-     * @param ?string $ogUrl
-     */
-    public function setOgUrl(?string $ogUrl): void
-    {
-        if ($ogUrl !== null) {
-            $ogUrl = Html::decode($ogUrl);
-        }
-
-        $this->_ogUrl = $ogUrl;
+        $this->_image = $image;
     }
 
     /**
@@ -317,11 +301,11 @@ class Document extends BaseObject
     /**
      * H1 страницы.
      *
-     * @return string|null
+     * @return string
      */
-    public function getH1(): ?string
+    public function getH1(): string
     {
-        return $this->_h1;
+        return (string)$this->_h1;
     }
 
     /**
@@ -331,7 +315,8 @@ class Document extends BaseObject
      */
     public function setH1(?string $h1): void
     {
-        if ($h1 !== null) {
+        $h1 = (string)$h1;
+        if ($h1 !== '') {
             $h1 = Html::decode($h1);
         }
 
@@ -341,11 +326,11 @@ class Document extends BaseObject
     /**
      * Возвращает breadcrumbs.
      *
-     * @return array|null
+     * @return array
      */
-    public function getBreadcrumbs(): ?array
+    public function getBreadcrumbs(): array
     {
-        return $this->_breadcrumbs;
+        return $this->_breadcrumbs ?: [];
     }
 
     /**
@@ -356,6 +341,26 @@ class Document extends BaseObject
     public function setBreadcrumbs(?array $breadcrumbs): void
     {
         $this->_breadcrumbs = $breadcrumbs;
+    }
+
+    /**
+     * Возвращает meta robots
+     *
+     * @return string
+     */
+    public function getRobots(): string
+    {
+        return (string)$this->_robots;
+    }
+
+    /**
+     * Устанавливает meta robots.
+     *
+     * @param string|null $robots
+     */
+    public function setRobots(?string $robots): void
+    {
+        $this->_robots = $robots;
     }
 
     /**
