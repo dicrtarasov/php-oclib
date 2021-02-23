@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.02.21 13:43:21
+ * @version 23.02.21 13:45:41
  */
 
 declare(strict_types = 1);
@@ -57,16 +57,16 @@ class Document extends BaseObject
     private $_canonical;
 
     /** @var ?array */
-    private $_links;
+    private $_links = [];
 
     /** @var ?array */
-    private $_scripts;
+    private $_scripts = [];
 
     /** @var ?string */
     private $_h1;
 
     /** @var ?array */
-    private $_breadcrumbs;
+    private $_breadcrumbs = [];
 
     /** @var ?string meta robots */
     private $_robots;
