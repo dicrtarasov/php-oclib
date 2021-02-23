@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.02.21 13:34:00
+ * @version 23.02.21 13:43:21
  */
 
 declare(strict_types = 1);
@@ -90,10 +90,6 @@ class Document extends BaseObject
 
         if ($this->pager === null) {
             $this->pager = new Pagination(['route' => Yii::$app->requestedRoute]);
-        }
-
-        if ($this->canonical === null) {
-            $this->canonical = [Yii::$app->controller->route] + Yii::$app->request->get();
         }
     }
 
