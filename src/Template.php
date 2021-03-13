@@ -3,15 +3,21 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 01.01.21 09:28:59
+ * @version 14.03.21 03:12:38
  */
 
 declare(strict_types = 1);
 namespace dicr\oclib;
 
+use dicr\asset\BaseResAsset;
 use Throwable;
+use Yii;
+use yii\base\Exception;
+use yii\base\InvalidArgumentException;
 
 use function extract;
+use function is_array;
+use function is_string;
 use function ob_get_clean;
 use function ob_start;
 use function pathinfo;
@@ -114,11 +120,37 @@ class Template implements RegistryProps
             require $this->filePath();
         };
 
-        ob_start();
+        if ($this->_route === 'common/header') {
+            $this->beginPage();
+        }
 
         try {
+            ob_start();
             $run();
         } finally {
+            $ret = ob_get_clean();
+        }
+
+        if ($this->_route === 'common/footer') {
+            // выводим футер
+            echo $ret;
+
+            // завершаем всю страницу
+            $ret = ob_get_clean();
+
+            // начинаем свой буфер
+            ob_start();
+
+            // начинаем буфер страницы
+            ob_start();
+
+            // выводим всю страницу
+            echo $ret;
+
+            // обрабатываем и завершаем буфер страницы
+            $this->endPage();
+
+            // завершаем свой буфер
             $ret = ob_get_clean();
         }
 
@@ -151,5 +183,64 @@ class Template implements RegistryProps
         $tpl = new static($route, $params);
 
         return (string)$tpl;
+    }
+
+    /**
+     * Начало страницы
+     */
+    public function beginPage(): void
+    {
+        Yii::$app->view->beginPage();
+    }
+
+    /**
+     * Конец страницы.
+     *
+     * @noinspection PhpMethodMayBeStaticInspection
+     */
+    public function endPage(): void
+    {
+        Yii::$app->view->endPage();
+    }
+
+    /**
+     * Помечает заголовок страницы.
+     */
+    public function head(): void
+    {
+        Yii::$app->view->head();
+    }
+
+    /**
+     * Помечает начало страницы.
+     */
+    public function beginBody(): void
+    {
+        Yii::$app->view->beginBody();
+    }
+
+    /**
+     * Помечает конец страницы.
+     */
+    public function endBody(): void
+    {
+        Yii::$app->view->endBody();
+    }
+
+    /**
+     * Регистрирует ресурсы
+     *
+     * @param string|array $asset
+     * @throws Exception
+     */
+    public function registerAsset($asset): void
+    {
+        if (is_string($asset)) {
+            Yii::$app->view->registerAssetBundle($asset);
+        } elseif (is_array($asset)) {
+            BaseResAsset::registerConfig(Yii::$app->view, $asset);
+        } else {
+            throw new InvalidArgumentException('asset');
+        }
     }
 }

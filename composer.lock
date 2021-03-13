@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2bbe27581d13f516b67b5dedf458701c",
+    "content-hash": "8c76718b0c1240c88392adce73a98fc2",
     "packages": [
         {
             "name": "bower-asset/inputmask",
@@ -32,7 +32,7 @@
             "version": "3.5.1",
             "source": {
                 "type": "git",
-                "url": "git@github.com:jquery/jquery-dist.git",
+                "url": "https://github.com/jquery/jquery-dist.git",
                 "reference": "4c0e4becb8263bb5b3e6dadc448d8e7305ef8215"
             },
             "dist": {
@@ -146,12 +146,137 @@
             "time": "2018-03-26T11:24:36+00:00"
         },
         {
+            "name": "dicr/yii2-asset",
+            "version": "1.7.17",
+            "source": {
+                "type": "git",
+                "url": "https://gitlab.com/dicr/yii2-asset.git",
+                "reference": "5ebd4dd3743967406c9bcf4f7c83be16b3c1e349"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://gitlab.com/api/v4/projects/dicr%2Fyii2-asset/repository/archive.zip?sha=5ebd4dd3743967406c9bcf4f7c83be16b3c1e349",
+                "reference": "5ebd4dd3743967406c9bcf4f7c83be16b3c1e349",
+                "shasum": ""
+            },
+            "require": {
+                "php": "~7.4 || ~8.0.0",
+                "scssphp/scssphp": "~v1.4",
+                "yiisoft/yii2": "~2.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~9.5",
+                "roave/security-advisories": "dev-master"
+            },
+            "type": "yii2-extension",
+            "autoload": {
+                "psr-4": {
+                    "dicr\\asset\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Igor Tarasov",
+                    "email": "develop@dicr.org",
+                    "homepage": "http://dicr.org",
+                    "role": "developer"
+                }
+            ],
+            "description": "Ресурсы библиотек для Yii2",
+            "homepage": "https://gitlab.com/dicr/yii2-asset",
+            "keywords": [
+                "asset",
+                "dicr",
+                "yii2"
+            ],
+            "support": {
+                "issues": "https://gitlab.com/api/v4/projects/10744876/issues",
+                "source": "https://gitlab.com/dicr/yii2-asset.git"
+            },
+            "time": "2021-03-08T17:14:09+00:00"
+        },
+        {
+            "name": "dicr/yii2-file",
+            "version": "6.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://gitlab.com/dicr/yii2-file.git",
+                "reference": "b27d73cae651fc688b4b203bc0e593becae8cdd6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://gitlab.com/api/v4/projects/dicr%2Fyii2-file/repository/archive.zip?sha=b27d73cae651fc688b4b203bc0e593becae8cdd6",
+                "reference": "b27d73cae651fc688b4b203bc0e593becae8cdd6",
+                "shasum": ""
+            },
+            "require": {
+                "dicr/yii2-asset": "~1.7",
+                "ext-fileinfo": "*",
+                "ext-ftp": "*",
+                "ext-iconv": "*",
+                "ext-imagick": "*",
+                "ext-mbstring": "*",
+                "php": "~7.4 || ~8.0.1",
+                "yiisoft/yii2": "~2.0"
+            },
+            "require-dev": {
+                "league/flysystem": "~1.1",
+                "phpunit/phpunit": "~9.5",
+                "roave/security-advisories": "dev-master"
+            },
+            "suggest": {
+                "ext-ftp": "for LocalFileStore with ftp:// wrapper",
+                "ext-imagick": "for creating thumbnails",
+                "ext-ssh2": "for LocalFileStore with ssh2.sftp:// wrapper",
+                "ext-zip": "for LocalFileStore with zip://wrapper",
+                "league/flysystem": "for FlysystemFileStore"
+            },
+            "type": "yii2-extension",
+            "extra": {
+                "bootstrap": "dicr\\file\\Bootstrap"
+            },
+            "autoload": {
+                "psr-4": {
+                    "dicr\\file\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Igor Tarasov",
+                    "email": "develop@dicr.org",
+                    "homepage": "http://dicr.org",
+                    "role": "developer"
+                }
+            ],
+            "description": "Filesystem components for Yii2",
+            "homepage": "https://gitlab.com/dicr/yii2-file",
+            "keywords": [
+                "dicr",
+                "file",
+                "store",
+                "yii2"
+            ],
+            "support": {
+                "issues": "https://gitlab.com/api/v4/projects/9710563/issues",
+                "source": "https://gitlab.com/dicr/yii2-file.git"
+            },
+            "time": "2021-01-27T19:27:04+00:00"
+        },
+        {
             "name": "dicr/yii2-helper",
-            "version": "4.1.0",
+            "version": "4.4",
             "source": {
                 "type": "git",
                 "url": "https://gitlab.com/dicr/yii2-helper.git",
-                "reference": "393dc4f55f440a9f86b174fc3a0748f5694f7620"
+                "reference": "687d452dc4641a64bddd7e6713f71780307a1fa6"
             },
             "require": {
                 "ext-intl": "*",
@@ -199,7 +324,70 @@
             "support": {
                 "source": "https://gitlab.com/dicr/yii2-helper.git"
             },
-            "time": "2021-02-20T16:35:48+00:00"
+            "time": "2021-03-11T13:54:44+00:00"
+        },
+        {
+            "name": "dicr/yii2-site",
+            "version": "6.4.1",
+            "source": {
+                "type": "git",
+                "url": "https://gitlab.com/dicr/yii2-site.git",
+                "reference": "6c9ae2ee3ce5c232f4f79cafb7e231142840a7ab"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://gitlab.com/api/v4/projects/dicr%2Fyii2-site/repository/archive.zip?sha=6c9ae2ee3ce5c232f4f79cafb7e231142840a7ab",
+                "reference": "6c9ae2ee3ce5c232f4f79cafb7e231142840a7ab",
+                "shasum": ""
+            },
+            "require": {
+                "dicr/yii2-asset": "~1.7",
+                "dicr/yii2-file": "~6.0",
+                "dicr/yii2-helper": "~4.4",
+                "dicr/yii2-validate": "~2.3",
+                "dicr/yii2-widgets": "~4.1",
+                "ext-intl": "*",
+                "ext-mbstring": "*",
+                "php": "~7.4 || ~8.0.1",
+                "yiisoft/yii2": "~2.0",
+                "yiisoft/yii2-bootstrap4": "~2.0"
+            },
+            "require-dev": {
+                "roave/security-advisories": "dev-master"
+            },
+            "type": "yii2-extension",
+            "extra": {
+                "bootstrap": "dicr\\site\\Bootstrap"
+            },
+            "autoload": {
+                "psr-4": {
+                    "dicr\\site\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Igor Tarasov",
+                    "email": "develop@dicr.org",
+                    "homepage": "http://dicr.org",
+                    "role": "developer"
+                }
+            ],
+            "description": "Компоненты сайта для Yii2",
+            "homepage": "https://gitlab.com/dicr/yii2-site",
+            "keywords": [
+                "dicr",
+                "site",
+                "yii2"
+            ],
+            "support": {
+                "issues": "https://gitlab.com/api/v4/projects/19762591/issues",
+                "source": "https://gitlab.com/dicr/yii2-site.git"
+            },
+            "time": "2021-03-11T20:21:41+00:00"
         },
         {
             "name": "dicr/yii2-validate",
@@ -249,6 +437,64 @@
                 "source": "https://gitlab.com/dicr/yii2-validate.git"
             },
             "time": "2021-01-22T22:20:37+00:00"
+        },
+        {
+            "name": "dicr/yii2-widgets",
+            "version": "4.1.5",
+            "source": {
+                "type": "git",
+                "url": "https://gitlab.com/dicr/yii2-widgets.git",
+                "reference": "1083aebe32fd7644471283a40374df6a0a07cb38"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://gitlab.com/api/v4/projects/dicr%2Fyii2-widgets/repository/archive.zip?sha=1083aebe32fd7644471283a40374df6a0a07cb38",
+                "reference": "1083aebe32fd7644471283a40374df6a0a07cb38",
+                "shasum": ""
+            },
+            "require": {
+                "dicr/yii2-asset": "~1.7",
+                "dicr/yii2-helper": "~4.4",
+                "php": "~7.4 || ~8.0.1",
+                "yiisoft/yii2": "~2.0",
+                "yiisoft/yii2-bootstrap4": "~2.0"
+            },
+            "require-dev": {
+                "roave/security-advisories": "dev-master"
+            },
+            "type": "yii2-extension",
+            "extra": {
+                "bootstrap": "dicr\\widgets\\Bootstrap"
+            },
+            "autoload": {
+                "psr-4": {
+                    "dicr\\widgets\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Igor Tarasov",
+                    "email": "develop@dicr.org",
+                    "homepage": "http://dicr.org",
+                    "role": "developer"
+                }
+            ],
+            "description": "Виджеты для Yii2",
+            "homepage": "https://gitlab.com/dicr/yii2-widgets",
+            "keywords": [
+                "dicr",
+                "widgets",
+                "yii2"
+            ],
+            "support": {
+                "issues": "https://gitlab.com/api/v4/projects/12653694/issues",
+                "source": "https://gitlab.com/dicr/yii2-widgets.git"
+            },
+            "time": "2021-03-13T19:38:18+00:00"
         },
         {
             "name": "ezyang/htmlpurifier",
@@ -317,17 +563,84 @@
             ]
         },
         {
-            "name": "yiisoft/yii2",
-            "version": "2.0.40",
+            "name": "scssphp/scssphp",
+            "version": "v1.4.1",
             "source": {
                 "type": "git",
-                "url": "https://github.com/yiisoft/yii2-framework.git",
-                "reference": "debb520c1d72a2c97c09d70a2a2a4f600ef3958e"
+                "url": "https://github.com/scssphp/scssphp.git",
+                "reference": "ba86c963b94ec7ebd6e19d90cdab90d89667dbf7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/yiisoft/yii2-framework/zipball/debb520c1d72a2c97c09d70a2a2a4f600ef3958e",
-                "reference": "debb520c1d72a2c97c09d70a2a2a4f600ef3958e",
+                "url": "https://api.github.com/repos/scssphp/scssphp/zipball/ba86c963b94ec7ebd6e19d90cdab90d89667dbf7",
+                "reference": "ba86c963b94ec7ebd6e19d90cdab90d89667dbf7",
+                "shasum": ""
+            },
+            "require": {
+                "ext-ctype": "*",
+                "ext-json": "*",
+                "php": ">=5.6.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^5.7 || ^6.5 || ^7.5 || ^8.3 || ^9.4",
+                "sass/sass-spec": "2020.12.29",
+                "squizlabs/php_codesniffer": "~3.5",
+                "symfony/phpunit-bridge": "^5.1",
+                "twbs/bootstrap": "~4.3",
+                "zurb/foundation": "~6.5"
+            },
+            "bin": [
+                "bin/pscss"
+            ],
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "ScssPhp\\ScssPhp\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Anthon Pang",
+                    "email": "apang@softwaredevelopment.ca",
+                    "homepage": "https://github.com/robocoder"
+                },
+                {
+                    "name": "Cédric Morin",
+                    "email": "cedric@yterium.com",
+                    "homepage": "https://github.com/Cerdic"
+                }
+            ],
+            "description": "scssphp is a compiler for SCSS written in PHP.",
+            "homepage": "http://scssphp.github.io/scssphp/",
+            "keywords": [
+                "css",
+                "less",
+                "sass",
+                "scss",
+                "stylesheet"
+            ],
+            "support": {
+                "issues": "https://github.com/scssphp/scssphp/issues",
+                "source": "https://github.com/scssphp/scssphp/tree/v1.4.1"
+            },
+            "time": "2021-01-04T13:23:23+00:00"
+        },
+        {
+            "name": "yiisoft/yii2",
+            "version": "2.0.41.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/yiisoft/yii2-framework.git",
+                "reference": "2ad0894a2ccbd3912b33de4419ad1ae3df0595c4"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/yiisoft/yii2-framework/zipball/2ad0894a2ccbd3912b33de4419ad1ae3df0595c4",
+                "reference": "2ad0894a2ccbd3912b33de4419ad1ae3df0595c4",
                 "shasum": ""
             },
             "require": {
@@ -435,7 +748,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2020-12-23T15:44:43+00:00"
+            "time": "2021-03-04T15:45:04+00:00"
         },
         {
             "name": "yiisoft/yii2-bootstrap4",

@@ -32,7 +32,8 @@
 
         "yiisoft/yii2": "~2.0",
 
-        "dicr/yii2-helper": "~4.1",
+        "dicr/yii2-helper": "~4.4",
+        "dicr/yii2-site": "~6.4",
         "dicr/yii2-validate": "~2.3"
     },
     "repositories": [

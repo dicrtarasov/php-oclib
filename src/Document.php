@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 23.02.21 13:45:41
+ * @version 14.03.21 03:10:51
  */
 
 declare(strict_types = 1);
@@ -15,8 +15,10 @@ use dicr\helper\StringHelper;
 use InvalidArgumentException;
 use Yii;
 use yii\base\BaseObject;
+use yii\base\InvalidConfigException;
 use yii\data\Pagination;
 use yii\data\Sort;
+use yii\web\View;
 
 use function array_filter;
 use function array_keys;
@@ -41,41 +43,11 @@ use function array_values;
  */
 class Document extends BaseObject
 {
-    /** @var ?string meta title */
-    private $_title;
-
-    /** @var ?string meta description */
-    private $_description;
-
-    /** @var ?string meta keywords */
-    private $_keywords;
-
-    /** @var ?string OG Image Url */
-    private $_image;
-
-    /** @var string|array|null канонический адрес страницы */
-    private $_canonical;
-
     /** @var ?array */
     private $_links = [];
 
     /** @var ?array */
     private $_scripts = [];
-
-    /** @var ?string */
-    private $_h1;
-
-    /** @var ?array */
-    private $_breadcrumbs = [];
-
-    /** @var ?string meta robots */
-    private $_robots;
-
-    /** @var Sort|false|null */
-    private $_sort;
-
-    /** @var Pagination|false|null */
-    private $_pager;
 
     /**
      * @inheritDoc
@@ -84,7 +56,7 @@ class Document extends BaseObject
     {
         parent::init();
 
-        if ($this->_sort === null) {
+        if ($this->sort === null) {
             $this->sort = new Sort(['route' => Yii::$app->requestedRoute]);
         }
 
@@ -97,16 +69,18 @@ class Document extends BaseObject
      * Возвращает заголовок.
      *
      * @return string
+     * @noinspection PhpMethodMayBeStaticInspection
      */
     public function getTitle(): string
     {
-        return (string)$this->_title;
+        return (string)Yii::$app->view->title;
     }
 
     /**
      * Установить заголовок.
      *
      * @param ?string $title
+     * @noinspection PhpMethodMayBeStaticInspection
      */
     public function setTitle(?string $title): void
     {
@@ -115,23 +89,25 @@ class Document extends BaseObject
             $title = StringHelper::mb_ucfirst(Html::decode($title));
         }
 
-        $this->_title = $title;
+        Yii::$app->view->title = $title;
     }
 
     /**
      * Возвращает meta description.
      *
      * @return string
+     * @noinspection PhpMethodMayBeStaticInspection
      */
     public function getDescription(): string
     {
-        return (string)$this->_description;
+        return (string)(Yii::$app->view->params['description'] ?? '');
     }
 
     /**
      * Устанавливает meta description.
      *
      * @param ?string $description
+     * @noinspection PhpMethodMayBeStaticInspection
      */
     public function setDescription(?string $description): void
     {
@@ -140,48 +116,47 @@ class Document extends BaseObject
             $description = Html::decode($description);
         }
 
-        $this->_description = $description;
+        Yii::$app->view->params['description'] = $description;
     }
 
     /**
      * Возвращает meta keywords.
      *
      * @return string
+     * @noinspection PhpMethodMayBeStaticInspection
      */
     public function getKeywords(): string
     {
-        return (string)$this->_keywords;
+        return (string)(Yii::$app->view->params['keywords'] ?? '');
     }
 
     /**
      * Устанавливает meta keywords.
      *
      * @param ?string $keywords
+     * @noinspection PhpMethodMayBeStaticInspection
      */
     public function setKeywords(?string $keywords): void
     {
-        $keywords = (string)$keywords;
-        if ($keywords !== '') {
-            $keywords = Html::decode($keywords);
-        }
-
-        $this->_keywords = $keywords;
+        Yii::$app->view->params['keywords'] = $keywords;
     }
 
     /**
      * Возвращает OG Image.
      *
      * @return string
+     * @noinspection PhpMethodMayBeStaticInspection
      */
     public function getImage(): string
     {
-        return (string)$this->_image;
+        return (string)(Yii::$app->view->params['image'] ?? '');
     }
 
     /**
      * Устанавливает OG Image.
      *
      * @param ?string $image
+     * @noinspection PhpMethodMayBeStaticInspection
      */
     public function setImage(?string $image): void
     {
@@ -190,27 +165,29 @@ class Document extends BaseObject
             $image = Html::decode($image);
         }
 
-        $this->_image = $image;
+        Yii::$app->view->params['image'] = $image;
     }
 
     /**
      * Канонический адрес страницы.
      *
      * @return array|string|null
+     * @noinspection PhpMethodMayBeStaticInspection
      */
     public function getCanonical()
     {
-        return $this->_canonical;
+        return Yii::$app->view->params['canonical'] ?? null;
     }
 
     /**
      * Устанавливает канонический адрес страницы.
      *
      * @param string|array|null $canonical
+     * @noinspection PhpMethodMayBeStaticInspection
      */
     public function setCanonical($canonical): void
     {
-        $this->_canonical = $canonical;
+        Yii::$app->view->params['canonical'] = $canonical;
     }
 
     /**
@@ -225,6 +202,11 @@ class Document extends BaseObject
             'rel' => $rel,
             'href' => $href
         ];
+
+        Yii::$app->view->registerLinkTag([
+            'rel' => $rel,
+            'href' => $href
+        ], $href);
     }
 
     /**
@@ -242,15 +224,20 @@ class Document extends BaseObject
      *
      * @param string $href
      * @param string $rel
-     * @param string $media
+     * @param ?string $media
+     * @throws InvalidConfigException
      */
-    public function addStyle(string $href, string $rel = 'stylesheet', string $media = 'screen'): void
+    public function addStyle(string $href, string $rel = 'stylesheet', ?string $media = null): void
     {
         $this->_links[$href] = [
             'href' => $href,
             'rel' => $rel,
             'media' => $media
         ];
+
+        Yii::$app->view->registerCssFile($href, [
+            'media' => $media
+        ], $href);
     }
 
     /**
@@ -270,10 +257,15 @@ class Document extends BaseObject
      *
      * @param string $href
      * @param string $position
+     * @throws InvalidConfigException
      */
-    public function addScript(string $href, string $position = 'header'): void
+    public function addScript(string $href, string $position = View::POS_HEAD): void
     {
         $this->_scripts[$href] = $position;
+
+        Yii::$app->view->registerJsFile($href, [
+            'position' => $position
+        ], $href);
     }
 
     /**
@@ -298,16 +290,18 @@ class Document extends BaseObject
      * H1 страницы.
      *
      * @return string
+     * @noinspection PhpMethodMayBeStaticInspection
      */
     public function getH1(): string
     {
-        return (string)$this->_h1;
+        return (string)(Yii::$app->view->params['h1'] ?? '');
     }
 
     /**
      * Возвращает H1.
      *
      * @param string|null $h1
+     * @noinspection PhpMethodMayBeStaticInspection
      */
     public function setH1(?string $h1): void
     {
@@ -316,63 +310,69 @@ class Document extends BaseObject
             $h1 = Html::decode($h1);
         }
 
-        $this->_h1 = $h1;
+        Yii::$app->view->params['h1'] = $h1;
     }
 
     /**
      * Возвращает breadcrumbs.
      *
      * @return array
+     * @noinspection PhpMethodMayBeStaticInspection
      */
     public function getBreadcrumbs(): array
     {
-        return $this->_breadcrumbs ?: [];
+        return Yii::$app->view->params['breadcrumbs'] ?? [];
     }
 
     /**
      * Хлебные крошки.
      *
      * @param array|null $breadcrumbs
+     * @noinspection PhpMethodMayBeStaticInspection
      */
     public function setBreadcrumbs(?array $breadcrumbs): void
     {
-        $this->_breadcrumbs = $breadcrumbs;
+        Yii::$app->view->params['breadcrumbs'] = $breadcrumbs;
     }
 
     /**
      * Возвращает meta robots
      *
      * @return string
+     * @noinspection PhpMethodMayBeStaticInspection
      */
     public function getRobots(): string
     {
-        return (string)$this->_robots;
+        return (string)(Yii::$app->view->params['robots'] ?? '');
     }
 
     /**
      * Устанавливает meta robots.
      *
      * @param string|null $robots
+     * @noinspection PhpMethodMayBeStaticInspection
      */
     public function setRobots(?string $robots): void
     {
-        $this->_robots = $robots;
+        Yii::$app->view->params['robots'] = $robots;
     }
 
     /**
      * Сортировка.
      *
      * @return false|Sort|null
+     * @noinspection PhpMethodMayBeStaticInspection
      */
     public function getSort()
     {
-        return $this->_sort;
+        return Yii::$app->view->params['sort'] ?? null;
     }
 
     /**
      * Установить сортировку.
      *
      * @param Sort|false|null $sort
+     * @noinspection PhpMethodMayBeStaticInspection
      */
     public function setSort($sort): void
     {
@@ -380,23 +380,25 @@ class Document extends BaseObject
             throw new InvalidArgumentException('sort');
         }
 
-        $this->_sort = $sort;
+        Yii::$app->view->params['sort'] = $sort;
     }
 
     /**
      * Пагинация.
      *
      * @return Pagination|false|null
+     * @noinspection PhpMethodMayBeStaticInspection
      */
     public function getPager()
     {
-        return $this->_pager;
+        return Yii::$app->view->params['pager'] ?? null;
     }
 
     /**
      * Устанавливает пейджер.
      *
      * @param Pagination|false|null $pager
+     * @noinspection PhpMethodMayBeStaticInspection
      */
     public function setPager($pager): void
     {
@@ -404,6 +406,6 @@ class Document extends BaseObject
             throw new InvalidArgumentException('pager');
         }
 
-        $this->_pager = $pager;
+        Yii::$app->view->params['pager'] = $pager;
     }
 }
