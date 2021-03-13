@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 14.03.21 03:12:38
+ * @version 14.03.21 03:53:07
  */
 
 declare(strict_types = 1);
@@ -14,6 +14,7 @@ use Throwable;
 use Yii;
 use yii\base\Exception;
 use yii\base\InvalidArgumentException;
+use yii\web\View;
 
 use function extract;
 use function is_array;
@@ -242,5 +243,17 @@ class Template implements RegistryProps
         } else {
             throw new InvalidArgumentException('asset');
         }
+    }
+
+    /**
+     * Регистрация скрипта.
+     *
+     * @param string $script
+     * @param int $position
+     * @param array $options
+     */
+    public function registerJs(string $script, int $position = View::POS_READY, array $options = []): void
+    {
+        Yii::$app->view->registerJs($script, $position, $options);
     }
 }
