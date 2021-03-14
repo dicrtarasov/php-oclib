@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 21.01.21 04:07:44
+ * @version 15.03.21 00:15:17
  */
 
 declare(strict_types = 1);
@@ -60,8 +60,7 @@ class Breadcrumbs extends Widget
         if ($this->homeLink !== null) {
             $this->links = array_filter(
                 $this->links,
-                static fn(array $link): bool => $link['label'] !== 'Главная' && $link['url'] !== '/' &&
-                    $link['url'] !== Registry::$app->url->link('common/home')
+                static fn(array $link): bool => $link['label'] !== 'Главная' && $link['url'] !== '/'
             );
         }
 
