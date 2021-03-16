@@ -1,9 +1,9 @@
 <?php
 /**
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 24.12.20 05:48:04
+ * @version 15.03.21 06:02:58
  */
 
 declare(strict_types = 1);
@@ -30,7 +30,7 @@ class Html extends \dicr\helper\Html
     public static function request(?array $url = null) : string
     {
         $params = Url::buildQuery(Url::normalizeQuery(Url::filterQuery(
-            [0 => null] + ($url ?? Registry::$app->request->get)
+            [0 => null] + ($url ?? Yii::$app->request->get())
         )));
 
         return

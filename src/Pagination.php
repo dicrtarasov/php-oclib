@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 15.01.21 22:31:17
+ * @version 16.03.21 05:08:03
  */
 
 declare(strict_types = 1);
@@ -288,7 +288,7 @@ class Pagination extends Widget
         }
 
         return rtrim($page > 1 ?
-            str_replace('{page}', $page, $this->url) :
+            str_replace('{page}', (string)$page, $this->url) :
             str_replace('page={page}', '', $this->url),
             '?&'
         );
