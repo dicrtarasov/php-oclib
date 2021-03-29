@@ -1,9 +1,9 @@
 <?php
 /**
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license proprietary
- * @version 30.09.20 10:55:12
+ * @license MIT
+ * @version 29.03.21 13:20:58
  */
 
 declare(strict_types = 1);
@@ -24,9 +24,10 @@ class Asset extends BaseObject
      * Выводит link rel=stylesheet
      *
      * @param string $href
+     * @param array $options опции Html::cssFile
      * @return string
      */
-    public static function css(string $href) : string
+    public static function css(string $href, array $options = []): string
     {
         if (isset(self::$links[$href])) {
             return '';
@@ -34,16 +35,17 @@ class Asset extends BaseObject
 
         self::$links[$href] = true;
 
-        return Html::cssLink($href);
+        return Html::cssFile($href, $options);
     }
 
     /**
      * Возвращает script src.
      *
      * @param string $src
+     * @param array $options опции Html::jsFile
      * @return string
      */
-    public static function js(string $src) : string
+    public static function js(string $src, array $options = []): string
     {
         if (isset(self::$links[$src])) {
             return '';
@@ -51,6 +53,6 @@ class Asset extends BaseObject
 
         self::$links[$src] = true;
 
-        return Html::jsLink($src);
+        return Html::jsFile($src, $options);
     }
 }

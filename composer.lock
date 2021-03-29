@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8c76718b0c1240c88392adce73a98fc2",
+    "content-hash": "f818c6b10f8614948b0a1817926f8260",
     "packages": [
         {
             "name": "bower-asset/inputmask",
@@ -201,16 +201,16 @@
         },
         {
             "name": "dicr/yii2-file",
-            "version": "6.0.0",
+            "version": "6.0.3",
             "source": {
                 "type": "git",
                 "url": "https://gitlab.com/dicr/yii2-file.git",
-                "reference": "b27d73cae651fc688b4b203bc0e593becae8cdd6"
+                "reference": "a0f00a64bc5e69ae3a6388cfd8948a0a7efd956d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://gitlab.com/api/v4/projects/dicr%2Fyii2-file/repository/archive.zip?sha=b27d73cae651fc688b4b203bc0e593becae8cdd6",
-                "reference": "b27d73cae651fc688b4b203bc0e593becae8cdd6",
+                "url": "https://gitlab.com/api/v4/projects/dicr%2Fyii2-file/repository/archive.zip?sha=a0f00a64bc5e69ae3a6388cfd8948a0a7efd956d",
+                "reference": "a0f00a64bc5e69ae3a6388cfd8948a0a7efd956d",
                 "shasum": ""
             },
             "require": {
@@ -226,7 +226,7 @@
             "require-dev": {
                 "league/flysystem": "~1.1",
                 "phpunit/phpunit": "~9.5",
-                "roave/security-advisories": "dev-master"
+                "roave/security-advisories": "dev-latest"
             },
             "suggest": {
                 "ext-ftp": "for LocalFileStore with ftp:// wrapper",
@@ -268,15 +268,15 @@
                 "issues": "https://gitlab.com/api/v4/projects/9710563/issues",
                 "source": "https://gitlab.com/dicr/yii2-file.git"
             },
-            "time": "2021-01-27T19:27:04+00:00"
+            "time": "2021-03-27T21:37:05+00:00"
         },
         {
             "name": "dicr/yii2-helper",
-            "version": "4.4",
+            "version": "4.5.6",
             "source": {
                 "type": "git",
                 "url": "https://gitlab.com/dicr/yii2-helper.git",
-                "reference": "687d452dc4641a64bddd7e6713f71780307a1fa6"
+                "reference": "0806ced27ae6de7af4e0f1ea91ae3db7eba164ea"
             },
             "require": {
                 "ext-intl": "*",
@@ -324,26 +324,20 @@
             "support": {
                 "source": "https://gitlab.com/dicr/yii2-helper.git"
             },
-            "time": "2021-03-11T13:54:44+00:00"
+            "time": "2021-03-23T13:04:27+00:00"
         },
         {
             "name": "dicr/yii2-site",
-            "version": "6.4.1",
+            "version": "7.0.0",
             "source": {
                 "type": "git",
                 "url": "https://gitlab.com/dicr/yii2-site.git",
-                "reference": "6c9ae2ee3ce5c232f4f79cafb7e231142840a7ab"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://gitlab.com/api/v4/projects/dicr%2Fyii2-site/repository/archive.zip?sha=6c9ae2ee3ce5c232f4f79cafb7e231142840a7ab",
-                "reference": "6c9ae2ee3ce5c232f4f79cafb7e231142840a7ab",
-                "shasum": ""
+                "reference": "82005af6a24621b24c7f0e3f2300669ed0e93673"
             },
             "require": {
                 "dicr/yii2-asset": "~1.7",
                 "dicr/yii2-file": "~6.0",
-                "dicr/yii2-helper": "~4.4",
+                "dicr/yii2-helper": "~4.5",
                 "dicr/yii2-validate": "~2.3",
                 "dicr/yii2-widgets": "~4.1",
                 "ext-intl": "*",
@@ -353,7 +347,7 @@
                 "yiisoft/yii2-bootstrap4": "~2.0"
             },
             "require-dev": {
-                "roave/security-advisories": "dev-master"
+                "roave/security-advisories": "dev-latest"
             },
             "type": "yii2-extension",
             "extra": {
@@ -364,7 +358,6 @@
                     "dicr\\site\\": "src/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -384,10 +377,9 @@
                 "yii2"
             ],
             "support": {
-                "issues": "https://gitlab.com/api/v4/projects/19762591/issues",
                 "source": "https://gitlab.com/dicr/yii2-site.git"
             },
-            "time": "2021-03-11T20:21:41+00:00"
+            "time": "2021-03-27T17:25:49+00:00"
         },
         {
             "name": "dicr/yii2-validate",

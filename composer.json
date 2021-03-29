@@ -32,13 +32,14 @@
 
         "yiisoft/yii2": "~2.0",
 
-        "dicr/yii2-helper": "~4.4",
-        "dicr/yii2-site": "~6.4",
+        "dicr/yii2-helper": "~4.5",
+        "dicr/yii2-site": "~7.0",
         "dicr/yii2-validate": "~2.3"
     },
     "repositories": [
         {"type": "composer", "url": "https://asset-packagist.org"},
         {"type": "git", "url": "https://gitlab.com/dicr/yii2-helper.git"},
+        {"type": "git", "url": "https://gitlab.com/dicr/yii2-site.git"},
         {"type": "git", "url": "https://gitlab.com/dicr/yii2-validate.git"}
     ]
 }
