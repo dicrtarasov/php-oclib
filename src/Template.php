@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 14.03.21 03:53:07
+ * @version 02.04.21 18:57:03
  */
 
 declare(strict_types = 1);
@@ -121,37 +121,12 @@ class Template implements RegistryProps
             require $this->filePath();
         };
 
-        if ($this->_route === 'common/header') {
-            $this->beginPage();
-        }
+        $ret = null;
 
         try {
             ob_start();
             $run();
         } finally {
-            $ret = ob_get_clean();
-        }
-
-        if ($this->_route === 'common/footer') {
-            // выводим футер
-            echo $ret;
-
-            // завершаем всю страницу
-            $ret = ob_get_clean();
-
-            // начинаем свой буфер
-            ob_start();
-
-            // начинаем буфер страницы
-            ob_start();
-
-            // выводим всю страницу
-            echo $ret;
-
-            // обрабатываем и завершаем буфер страницы
-            $this->endPage();
-
-            // завершаем свой буфер
             $ret = ob_get_clean();
         }
 
