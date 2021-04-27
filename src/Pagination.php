@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 16.03.21 05:08:03
+ * @version 27.04.21 12:09:42
  */
 
 declare(strict_types = 1);
@@ -33,16 +33,16 @@ use const ENT_QUOTES;
  */
 class Pagination extends Widget
 {
-    /** @var int общее количество записей */
+    /** @var int|string общее количество записей */
     public $total;
 
-    /** @var int номер страницы, начиная с 1 */
+    /** @var int|string номер страницы, начиная с 1 */
     public $page;
 
-    /** @var int лимит записей на страницу */
+    /** @var int|string лимит записей на страницу */
     public $limit;
 
-    /** @var int количество ссылок на страницы */
+    /** @var int|string количество ссылок на страницы */
     public $num_links;
 
     /** @var string шаблон URL страницы, где номер страницы помечен как "{page}" */
@@ -112,7 +112,7 @@ class Pagination extends Widget
             }
 
             if (empty($this->pager->totalCount)) {
-                $this->pager->totalCount = (int)$this->provider->getTotalCount();
+                $this->pager->totalCount = $this->provider->getTotalCount();
             }
         }
 
@@ -284,7 +284,7 @@ class Pagination extends Widget
     public function getUrl(?int $page = null): string
     {
         if ($page === null) {
-            $page = $this->page;
+            $page = (int)$this->page;
         }
 
         return rtrim($page > 1 ?
@@ -297,9 +297,10 @@ class Pagination extends Widget
     /**
      * Рендер.
      *
+     * @param ?string $view
+     * @param ?array $params
      * @return string
      * @throws InvalidConfigException
-     * @noinspection PhpDocSignatureInspection
      */
     public function render($view = null, $params = null): string
     {

@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 01.01.21 10:43:10
+ * @version 27.04.21 12:10:19
  */
 
 declare(strict_types = 1);
@@ -130,7 +130,7 @@ class Loader extends BaseObject
     }
 
     /**
-     * @param $name
+     * @param string $name
      * @throws Exception
      * @noinspection PhpMethodMayBeStaticInspection
      */

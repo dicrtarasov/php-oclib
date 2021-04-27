@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 02.04.21 18:57:03
+ * @version 27.04.21 12:14:16
  */
 
 declare(strict_types = 1);
@@ -120,8 +120,6 @@ class Template implements RegistryProps
             /** @noinspection PhpIncludeInspection */
             require $this->filePath();
         };
-
-        $ret = null;
 
         try {
             ob_start();

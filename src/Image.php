@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 21.02.21 10:04:28
+ * @version 27.04.21 12:07:32
  */
 
 declare(strict_types = 1);
@@ -12,6 +12,7 @@ namespace dicr\oclib;
 use Imagick;
 use ImagickException;
 use ImagickPixel;
+use ImagickPixelException;
 use InvalidArgumentException;
 use Yii;
 use yii\base\Component;
@@ -190,6 +191,7 @@ class Image extends Component
      * - string|bool|null $watermark - относительный путь водяного знака
      * @return string|null относительный URL превью
      * @throws Exception
+     * @throws ImagickPixelException
      */
     public function thumb(?string $src, $width = 0, $height = 0, array $options = []): ?string
     {
@@ -296,7 +298,7 @@ class Image extends Component
      */
     protected static function checkDir(string $path): void
     {
-        $dir = (string)dirname($path);
+        $dir = dirname($path);
         if ($dir === '') {
             throw new InvalidArgumentException('path: ' . $path);
         }
@@ -328,9 +330,8 @@ class Image extends Component
     {
         $image = new Imagick();
         $image->readImage($path);
-        $image = $image->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
 
-        return $image;
+        return $image->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
     }
 
     /**
@@ -341,6 +342,8 @@ class Image extends Component
      * @param int $height
      * @param array $options
      * @return Imagick
+     * @throws ImagickException
+     * @throws ImagickPixelException
      */
     protected function resizeImage(Imagick $image, int $width, int $height, array $options = []): Imagick
     {
@@ -407,6 +410,7 @@ class Image extends Component
                 (int)round(($iWidth - $wWidth) / 2), (int)round(($iHeight - $wHeight) / 2)
             );
         } finally {
+            /** @noinspection PhpConditionAlreadyCheckedInspection */
             if ($watermark !== null) {
                 $watermark->clear();
                 $watermark->destroy();
@@ -422,6 +426,7 @@ class Image extends Component
      * @param Imagick $image
      * @param string $path полный путь назначения
      * @throws Exception
+     * @throws ImagickException
      */
     protected function saveImage(Imagick $image, string $path): void
     {

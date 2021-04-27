@@ -1,9 +1,9 @@
 <?php
 /**
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license proprietary
- * @version 12.10.20 14:10:00
+ * @license MIT
+ * @version 27.04.21 12:12:52
  */
 
 declare(strict_types = 1);
@@ -83,15 +83,12 @@ class DB
      */
     public function escape($value)
     {
+        /** @var string|float|null $value */
         $value = Yii::$app->db->quoteValue($value);
 
-        if (is_string($value)) {
-            $value = (string)$value;
-
-            // удаляем кавычки по краям
-            if (mb_strpos($value, "'") === 0 && mb_substr($value, -1, 1) === "'") {
-                $value = mb_substr($value, 1, -1);
-            }
+        // удаляем кавычки по краям
+        if (is_string($value) && mb_strpos($value, "'") === 0 && mb_substr($value, -1, 1) === "'") {
+            $value = mb_substr($value, 1, -1);
         }
 
         return $value;
@@ -101,7 +98,7 @@ class DB
      * Синоним escape.
      *
      * @param mixed $value
-     * @return mixed
+     * @return string|float|null
      */
     public function esc($value)
     {
