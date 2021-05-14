@@ -1,10 +1,10 @@
 {
-    "type": "library",
+    "type": "yii2-extension",
     "name": "dicr/php-oclib",
-    "license": "MIT",
-    "homepage": "https://gitlab.com/dicr/php-oclib",
-    "keywords": ["dicr", "opencart", "yii"],
+    "license": "GPL-3.0-or-later",
     "description": "Библиотека для подключения классов Yii к OpenCart",
+    "keywords": ["dicr", "opencart", "yii"],
+    "homepage": "https://gitlab.com/dicr/php-oclib",
     "authors": [
         {
             "name": "Igor Tarasov",
@@ -35,6 +35,9 @@
         "dicr/yii2-helper": "~4.5",
         "dicr/yii2-site": "~7.0",
         "dicr/yii2-validate": "~2.3"
+    },
+    "require-dev": {
+        "roave/security-advisories": "dev-latest"
     },
     "repositories": [
         {"type": "composer", "url": "https://asset-packagist.org"},

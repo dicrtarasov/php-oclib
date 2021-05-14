@@ -3,7 +3,7 @@
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 27.04.21 12:12:52
+ * @version 14.05.21 11:30:36
  */
 
 declare(strict_types = 1);
@@ -16,6 +16,7 @@ use yii\db\Exception;
 use yii\di\Instance;
 
 use function is_string;
+use function preg_match;
 
 /**
  * Прокси базы данных Opencart на Yii.
@@ -43,36 +44,14 @@ class DB
      * @noinspection PhpUnusedParameterInspection
      */
     public function __construct(
-        $adaptor = null,
-        $hostname = null,
-        $username = null,
-        $password = null,
-        $database = null,
-        $port = null
+        string $adaptor = null,
+        string $hostname = null,
+        string $username = null,
+        string $password = null,
+        string $database = null,
+        string $port = null
     ) {
         $this->db = Instance::ensure($this->db, Connection::class);
-    }
-
-    /**
-     * Запрос данных.
-     *
-     * @param string $sql
-     * @return DBResult|int
-     * @throws Exception
-     */
-    public function query(string $sql)
-    {
-        $cmd = $this->db->createCommand($sql);
-
-        if (! preg_match('~^\s*(select|show)\s+~ui', $sql)) {
-            $this->affectedRows = (int)$cmd->execute();
-
-            return $this->affectedRows;
-        }
-
-        $this->affectedRows = 0;
-
-        return DBResult::fromCommand($cmd);
     }
 
     /**
@@ -130,19 +109,41 @@ class DB
      *
      * @return bool
      */
-    public function isConnected() : bool
+    public function isConnected(): bool
     {
         return $this->db->isActive;
+    }
+
+    /**
+     * Запрос данных.
+     *
+     * @param string $sql
+     * @return DBResult|int
+     * @throws Exception
+     */
+    public function query(string $sql)
+    {
+        $cmd = $this->db->createCommand($sql);
+
+        if (! preg_match('~^\s*(select|show)\s+~ui', $sql)) {
+            $this->affectedRows = (int)$cmd->execute();
+
+            return $this->affectedRows;
+        }
+
+        $this->affectedRows = 0;
+
+        return DBResult::fromCommand($cmd);
     }
 
     /**
      * Возвращает все строки результата.
      *
      * @param string $sql
-     * @return array
+     * @return array[]
      * @throws Exception
      */
-    public function queryAll(string $sql) : array
+    public function queryAll(string $sql): array
     {
         return $this->db->createCommand($sql)->queryAll() ?: [];
     }
@@ -175,7 +176,7 @@ class DB
      * Возвращает скалярное значение колонки первой строки
      *
      * @param string $sql
-     * @return ?mixed
+     * @return string|int|null|false
      * @throws Exception
      */
     public function queryScalar(string $sql)
