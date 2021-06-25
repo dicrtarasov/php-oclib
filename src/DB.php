@@ -2,8 +2,8 @@
 /**
  * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license MIT
- * @version 14.05.21 11:30:36
+ * @license GPL-3.0-or-later
+ * @version 25.06.21 10:21:48
  */
 
 declare(strict_types = 1);
@@ -39,7 +39,7 @@ class DB
      * @param ?string $username
      * @param ?string $password
      * @param ?string $database
-     * @param ?string $port
+     * @param string|int|null $port
      * @throws InvalidConfigException
      * @noinspection PhpUnusedParameterInspection
      */
@@ -49,7 +49,7 @@ class DB
         string $username = null,
         string $password = null,
         string $database = null,
-        string $port = null
+        $port = null
     ) {
         $this->db = Instance::ensure($this->db, Connection::class);
     }
